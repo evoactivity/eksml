@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Complex HTML fixture with scripts, styles &amp; void elements">
+  <meta name="robots" content="index, follow">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Dashboard — Analytics &amp; Reports</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/dashboard.css" media="screen">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="canonical" href="https://example.com/dashboard">
+  <link rel="alternate" hreflang="es" href="https://example.com/es/dashboard">
+  <style>
+    /* Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Base typography */
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1f2937; }
+
+    /* Layout — uses > child combinator which looks like XML close bracket */
+    .layout > .sidebar { width: 260px; flex-shrink: 0; }
+    .layout > .main { flex: 1; min-width: 0; }
+    nav > ul > li > a { display: block; padding: 0.5rem 1rem; }
+
+    /* <tag> inside a CSS comment — must not break the parser */
+    .card { border: 1px solid #e5e7eb; border-radius: 0.5rem; }
+
+    /* Media queries with comparison operators */
+    @media (max-width: 768px) {
+      .layout > .sidebar { display: none; }
+      .mobile-menu { display: block; }
+    }
+
+    /* Nested selectors */
+    .data-table > thead > tr > th { background: #f9fafb; font-weight: 600; text-align: left; padding: 0.75rem; }
+    .data-table > tbody > tr > td { padding: 0.75rem; border-bottom: 1px solid #f3f4f6; }
+    .data-table > tbody > tr:hover > td { background: #eff6ff; }
+
+    /* Attribute selectors */
+    input[type="text"], input[type="email"], input[type="search"] { border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem 0.75rem; }
+    button[disabled] { opacity: 0.5; cursor: not-allowed; }
+    a[href^="https://"] { padding-right: 1.25rem; }
+  </style>
+</head>
+<body>
+  <!-- ================================
+       Skip navigation link
+       ================================ -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top banner -->
+  <div class="banner" role="banner" hidden>
+    <p>System maintenance scheduled for <time datetime="2026-04-05T02:00:00Z">April 5 at 2:00 AM UTC</time>.</p>
+    <button type="button" aria-label="Dismiss banner">&times;</button>
+  </div>
+
+  <!-- Primary navigation -->
+  <header>
+    <nav aria-label="Primary navigation">
+      <a href="/" class="logo">
+        <img src="/img/logo.svg" alt="Acme Corp" width="120" height="40">
+      </a>
+      <ul role="menubar">
+        <li role="none"><a role="menuitem" href="/dashboard" aria-current="page">Dashboard</a></li>
+        <li role="none"><a role="menuitem" href="/analytics">Analytics</a></li>
+        <li role="none"><a role="menuitem" href="/reports">Reports</a></li>
+        <li role="none">
+          <a role="menuitem" href="/settings" aria-haspopup="true" aria-expanded="false">Settings</a>
+          <ul role="menu" aria-label="Settings submenu">
+            <li role="none"><a role="menuitem" href="/settings/profile">Profile</a></li>
+            <li role="none"><a role="menuitem" href="/settings/team">Team</a></li>
+            <li role="none"><a role="menuitem" href="/settings/billing">Billing</a></li>
+          </ul>
+        </li>
+      </ul>
+      <div class="search-box">
+        <input type="search" placeholder="Search..." aria-label="Search" autocomplete="off">
+        <button type="submit" aria-label="Submit search">
+          <img src="/img/search-icon.svg" alt="" width="16" height="16">
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Layout wrapper -->
+  <div class="layout" id="main-content">
+    <!-- Sidebar -->
+    <aside class="sidebar" aria-label="Sidebar navigation">
+      <nav>
+        <h2>Filters</h2>
+        <form id="filter-form" method="get" action="/dashboard">
+          <fieldset>
+            <legend>Date Range</legend>
+            <label for="date-from">From</label>
+            <input type="date" id="date-from" name="from" value="2026-03-01">
+            <label for="date-to">To</label>
+            <input type="date" id="date-to" name="to" value="2026-03-31">
+          </fieldset>
+          <fieldset>
+            <legend>Status</legend>
+            <label><input type="checkbox" name="status" value="active" checked> Active</label>
+            <label><input type="checkbox" name="status" value="pending"> Pending</label>
+            <label><input type="checkbox" name="status" value="closed"> Closed</label>
+          </fieldset>
+          <fieldset>
+            <legend>Priority</legend>
+            <label><input type="radio" name="priority" value="all" checked> All</label>
+            <label><input type="radio" name="priority" value="high"> High</label>
+            <label><input type="radio" name="priority" value="medium"> Medium</label>
+            <label><input type="radio" name="priority" value="low"> Low</label>
+          </fieldset>
+          <button type="submit">Apply Filters</button>
+          <button type="reset">Reset</button>
+        </form>
+      </nav>
+    </aside>
+
+    <!-- Main content area -->
+    <main class="main">
+      <h1>Dashboard Overview</h1>
+
+      <!-- Summary cards -->
+      <section class="grid" aria-label="Key metrics">
+        <div class="card" data-metric="revenue">
+          <h2>Revenue</h2>
+          <p class="value">$142,384.00</p>
+          <p class="trend up">+12.5% vs last month</p>
+          <hr>
+          <small>Updated <time datetime="2026-04-03T14:30:00Z">3 minutes ago</time></small>
+        </div>
+        <div class="card" data-metric="users">
+          <h2>Active Users</h2>
+          <p class="value">8,294</p>
+          <p class="trend up">+3.2% vs last month</p>
+          <hr>
+          <small>Updated <time datetime="2026-04-03T14:30:00Z">3 minutes ago</time></small>
+        </div>
+        <div class="card" data-metric="orders">
+          <h2>Orders</h2>
+          <p class="value">1,847</p>
+          <p class="trend down">-1.8% vs last month</p>
+          <hr>
+          <small>Updated <time datetime="2026-04-03T14:30:00Z">3 minutes ago</time></small>
+        </div>
+        <div class="card" data-metric="conversion">
+          <h2>Conversion Rate</h2>
+          <p class="value">3.24%</p>
+          <p class="trend up">+0.4% vs last month</p>
+          <hr>
+          <small>Updated <time datetime="2026-04-03T14:30:00Z">3 minutes ago</time></small>
+        </div>
+      </section>
+
+      <!-- Data table -->
+      <section aria-label="Recent orders">
+        <h2>Recent Orders</h2>
+        <table class="data-table">
+          <col>
+          <col>
+          <col style="width: 120px">
+          <col style="width: 100px">
+          <col style="width: 150px">
+          <thead>
+            <tr>
+              <th scope="col">Order ID</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Amount</th>
+              <th scope="col">Status</th>
+              <th scope="col">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="/orders/10247">#10247</a></td>
+              <td>Alice Johnson</td>
+              <td>$284.99</td>
+              <td><span class="badge active">Shipped</span></td>
+              <td><time datetime="2026-04-02">Apr 2, 2026</time></td>
+            </tr>
+            <tr>
+              <td><a href="/orders/10246">#10246</a></td>
+              <td>Bob Smith &amp; Partners</td>
+              <td>$1,249.00</td>
+              <td><span class="badge pending">Processing</span></td>
+              <td><time datetime="2026-04-02">Apr 2, 2026</time></td>
+            </tr>
+            <tr>
+              <td><a href="/orders/10245">#10245</a></td>
+              <td>Carol &lt;CW&gt; Williams</td>
+              <td>$67.50</td>
+              <td><span class="badge active">Delivered</span></td>
+              <td><time datetime="2026-04-01">Apr 1, 2026</time></td>
+            </tr>
+            <!-- More rows loaded dynamically -->
+          </tbody>
+        </table>
+        <nav aria-label="Table pagination">
+          <ul class="pagination">
+            <li><a href="?page=1" aria-label="Previous page">&laquo;</a></li>
+            <li><a href="?page=1" aria-current="page">1</a></li>
+            <li><a href="?page=2">2</a></li>
+            <li><a href="?page=3">3</a></li>
+            <li><a href="?page=2" aria-label="Next page">&raquo;</a></li>
+          </ul>
+        </nav>
+      </section>
+
+      <!-- Chart placeholder with embedded media -->
+      <section aria-label="Revenue chart">
+        <h2>Revenue Trend</h2>
+        <figure>
+          <div class="chart-container" data-chart="line" data-period="30d">
+            <img src="/img/chart-placeholder.png" alt="Revenue trend chart showing growth over 30 days" width="800" height="400">
+          </div>
+          <figcaption>Daily revenue for the past 30 days. Data source: internal analytics.</figcaption>
+        </figure>
+      </section>
+
+      <!-- Video tutorial section -->
+      <section aria-label="Video tutorials">
+        <h2>Getting Started</h2>
+        <video controls preload="metadata" poster="/img/tutorial-poster.jpg" width="640" height="360">
+          <source src="/video/tutorial.mp4" type="video/mp4">
+          <source src="/video/tutorial.webm" type="video/webm">
+          <track kind="captions" src="/video/tutorial-en.vtt" srclang="en" label="English" default>
+          <track kind="captions" src="/video/tutorial-es.vtt" srclang="es" label="Spanish">
+          <p>Your browser does not support the video element. <a href="/video/tutorial.mp4">Download the video</a>.</p>
+        </video>
+      </section>
+
+      <!-- Embedded content -->
+      <section aria-label="Live map">
+        <h2>Visitor Map</h2>
+        <embed type="application/pdf" src="/reports/q1-2026.pdf" width="600" height="400">
+      </section>
+
+      <!-- Notification area with word break opportunities -->
+      <section aria-label="Notifications">
+        <h2>System Notifications</h2>
+        <ul class="notification-list">
+          <li class="notification info">
+            <p>Deployment <code>v3.14.159</code> completed successfully at <time datetime="2026-04-03T12:00:00Z">12:00 PM</time>.</p>
+          </li>
+          <li class="notification warning">
+            <p>Storage usage at 89%. Consider archiving old data<wbr> before it reaches the limit.</p>
+          </li>
+          <li class="notification error">
+            <p>Failed to sync with <code>api.<wbr>partner<wbr>-service<wbr>.example<wbr>.com</code>. Retrying in 5 minutes.</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Contact form -->
+      <section aria-label="Feedback form">
+        <h2>Send Feedback</h2>
+        <form id="feedback-form" method="post" action="/api/feedback" novalidate>
+          <div class="form-group">
+            <label for="feedback-name">Name</label>
+            <input type="text" id="feedback-name" name="name" required placeholder="Your name" autofocus>
+          </div>
+          <div class="form-group">
+            <label for="feedback-email">Email</label>
+            <input type="email" id="feedback-email" name="email" required placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label for="feedback-category">Category</label>
+            <select id="feedback-category" name="category">
+              <option value="">— Select —</option>
+              <option value="bug">Bug Report</option>
+              <option value="feature">Feature Request</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="feedback-message">Message</label>
+            <textarea id="feedback-message" name="message" rows="5" required placeholder="Tell us what's on your mind..."></textarea>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" name="agree" required> I agree to the <a href="/terms">terms of service</a></label>
+          </div>
+          <div class="form-actions">
+            <button type="submit">Send Feedback</button>
+            <button type="button" class="secondary" disabled>Save Draft</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <nav aria-label="Footer navigation">
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </nav>
+      <p>&copy; 2026 Acme Corp. All rights reserved.</p>
+    </div>
+    <hr>
+    <p class="build-info">Build <code>abc123f</code> &middot; Node 24.11.1 &middot; <time datetime="2026-04-03">April 3, 2026</time></p>
+  </footer>
+
+  <!-- Structured data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Acme Dashboard",
+    "url": "https://example.com/dashboard",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "All",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
+  <!-- Inline JavaScript — contains angle brackets, DOM manipulation, template strings -->
+  <script>
+    // Initialize dashboard
+    (function() {
+      'use strict';
+
+      // DOM creation with angle brackets in strings
+      var container = document.getElementById('main-content');
+      var banner = document.createElement('div');
+      banner.innerHTML = '<span class="icon">&#9888;</span> <strong>Notice:</strong> Data is delayed by 15 minutes.';
+
+      // Template literal with embedded HTML (ES6)
+      var template = `
+        <div class="tooltip">
+          <span class="arrow"></span>
+          <p>Revenue: <strong>$${(142384).toLocaleString()}</strong></p>
+        </div>
+      `;
+
+      // Comparison operators that look like XML
+      var metrics = [142384, 8294, 1847];
+      var filtered = metrics.filter(function(v) { return v > 1000 && v < 10000; });
+
+      // Creating script elements dynamically
+      var s = document.createElement('script');
+      s.src = 'https://cdn.example.com/analytics.js';
+      s.async = true;
+      document.head.appendChild(s);
+
+      // Regex with angle brackets
+      var tagPattern = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+      var stripped = '<p>Hello <b>world</b></p>'.replace(tagPattern, '');
+
+      // Console output with objects that look like tags
+      console.log('Dashboard initialized', { version: '3.14', env: '<production>' });
+    })();
+  </script>
+
+  <!-- Module script -->
+  <script type="module">
+    import { Chart } from '/js/chart.js';
+
+    const ctx = document.querySelector('.chart-container');
+    if (ctx) {
+      const data = await fetch('/api/revenue?days=30').then(r => r.json());
+      // Arrow function with comparison
+      const points = data.filter(d => d.value > 0 && d.date < '2026-04-01');
+      new Chart(ctx, { type: 'line', data: points });
+    }
+  </script>
+</body>
+</html>
