@@ -153,14 +153,16 @@ attribute2="attribute2"
 
   it("should parse value with &amp; entity", () => {
     const result = lossy(
-      "<rootNode>jekyll &amp; hyde</rootNode>"
+      "<rootNode>jekyll &amp; hyde</rootNode>",
+      { entities: true },
     ) as any;
     expect(result.rootNode).toBe("jekyll & hyde");
   });
 
   it("should parse value with decimal character reference", () => {
     const result = lossy(
-      "<rootNode>jekyll &#123; hyde</rootNode>"
+      "<rootNode>jekyll &#123; hyde</rootNode>",
+      { entities: true },
     ) as any;
     // &#123; = {
     expect(result.rootNode).toBe("jekyll { hyde");

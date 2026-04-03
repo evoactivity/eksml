@@ -75,6 +75,12 @@ export interface LossyOptions {
    * Strict mode: throw on malformed XML instead of recovering silently.
    */
   strict?: boolean;
+  /**
+   * Decode XML/HTML entities in text content and attribute values.
+   * Uses HTML entity set when `html: true`, XML entity set otherwise.
+   * Defaults to `false`.
+   */
+  entities?: boolean;
 }
 
 /** The value of a converted element — null (empty), string, or an object with keys. */
@@ -231,6 +237,7 @@ export function lossy(
     if (options.trimWhitespace !== undefined)
       parseOpts.trimWhitespace = options.trimWhitespace;
     if (options.strict !== undefined) parseOpts.strict = options.strict;
+    if (options.entities !== undefined) parseOpts.entities = options.entities;
   }
 
   const dom = parse(xml, parseOpts);

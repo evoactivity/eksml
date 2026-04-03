@@ -26,43 +26,43 @@ describe("entity handling (from entities_spec)", () => {
 
   it("should decode &amp; in text content", () => {
     const xml = `<root>test&amp;value</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root).toBe("test&value");
   });
 
   it("should decode &lt; in text content", () => {
     const xml = `<root>test&lt;value</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root).toBe("test<value");
   });
 
   it("should decode &gt; in text content", () => {
     const xml = `<root>test&gt;value</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root).toBe("test>value");
   });
 
   it("should decode &apos; in text content", () => {
     const xml = `<root>test&apos;value</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root).toBe("test'value");
   });
 
   it("should decode &quot; in text content", () => {
     const xml = `<root>test&quot;value</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root).toBe('test"value');
   });
 
   it("should decode multiple entities in text", () => {
     const xml = `<root>test&amp;\nтест&lt;\ntest</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root).toBe("test&\nтест<\ntest");
   });
 
   it("should decode entities in attribute values", () => {
     const xml = `<root attr="2foo&amp;bar&apos;">text</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root.$attr).toBe("2foo&bar'");
   });
 
@@ -72,7 +72,7 @@ describe("entity handling (from entities_spec)", () => {
     const xml = `<SimpleScalarPropertiesInputOutput>
         <stringValue>&amp;lt;</stringValue>
       </SimpleScalarPropertiesInputOutput>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.SimpleScalarPropertiesInputOutput.stringValue).toBe("&lt;");
   });
 
@@ -81,14 +81,14 @@ describe("entity handling (from entities_spec)", () => {
   it("should decode hex character references in text", () => {
     // &#xe4; = ä (Latin small letter a with diaerma)
     const xml = `<root>B&#xe4;ren</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root).toBe("Bären");
   });
 
   it("should decode hex character references in attributes", () => {
     // &#x295; = ʕ, &#x2022; = •, &#x1D25; = ᴥ, &#x294; = ʔ
     const xml = `<root face="&#x295;&#x2022;&#x1D25;&#x2022;&#x294;">text</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root.$face).toBe("ʕ•ᴥ•ʔ");
   });
 
@@ -97,7 +97,7 @@ describe("entity handling (from entities_spec)", () => {
   it("should decode decimal character references", () => {
     // &#228; = ä
     const xml = `<root>B&#228;ren</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root).toBe("Bären");
   });
 
@@ -106,7 +106,7 @@ describe("entity handling (from entities_spec)", () => {
   it("should decode high Unicode codepoints (emoji)", () => {
     // &#x1F60A; = 😊, &#128523; = 😋 (decimal for U+1F60B)
     const xml = `<root smile="&#x1F60A;&#128523;">text</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result.root.$smile).toBe("\u{1F60A}\u{1F60B}");
   });
 
@@ -204,7 +204,7 @@ describe("entity handling (from entities_spec)", () => {
 
   it("should not decode entities inside CDATA", () => {
     const xml = `<root><![CDATA[&amp; &lt; &gt;]]></root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     // CDATA content should be literal, no entity decoding
     expect(result.root).toBe("&amp; &lt; &gt;");
   });
@@ -215,7 +215,7 @@ describe("entity handling (from entities_spec)", () => {
     const xml = `<a:root xmlns:a="urn:none">
         <a:c>test&amp;\nтест&lt;\ntest</a:c>
     </a:root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     expect(result["a:root"]["a:c"]).toBe("test&\nтест<\ntest");
   });
 
@@ -223,7 +223,7 @@ describe("entity handling (from entities_spec)", () => {
 
   it("should preserve unknown entities as-is", () => {
     const xml = `<root>&unknown;</root>`;
-    const result = lossy(xml) as any;
+    const result = lossy(xml, { entities: true }) as any;
     // eksml only decodes built-in XML entities; unknown ones are preserved
     expect(result.root).toBe("&unknown;");
   });

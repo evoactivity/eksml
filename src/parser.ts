@@ -4,6 +4,8 @@
  * I needed a small xmlparser that can be used in a worker.
  */
 
+import { decodeXML, decodeHTML } from "entities";
+
 /**
  * A parsed XML node
  */
@@ -68,6 +70,20 @@ export interface ParseOptions {
    * close tags, and open tags that reach end-of-input without closing.
    */
   strict?: boolean;
+  /**
+   * Decode XML/HTML entities in text content and attribute values.
+   * When enabled, named entities (`&amp;`, `&lt;`, etc.), decimal character
+   * references (`&#228;`), and hex character references (`&#xe4;`) are decoded.
+   *
+   * In HTML mode (`html: true`), the full set of HTML named entities is
+   * supported (e.g. `&nbsp;`, `&copy;`, `&mdash;`). In XML mode, only the
+   * five standard XML entities plus numeric references are decoded.
+   *
+   * CDATA sections are never decoded regardless of this setting.
+   *
+   * Defaults to `false` — entities are preserved as-is in the output.
+   */
+  entities?: boolean;
   /** Attribute name to search for (used with attrValue) */
   attrName?: string;
   /** Attribute value to search for (regex pattern) */
@@ -150,6 +166,7 @@ export function parse(
   const trimWhitespace = !!opts.trimWhitespace;
   const strict = !!opts.strict;
   const htmlMode = !!opts.html;
+  const decode = opts.entities === true ? (htmlMode ? decodeHTML : decodeXML) : null;
 
   const selfClosingArr: string[] =
     opts.selfClosingTags ?? (htmlMode ? HTML_VOID_ELEMENTS : []);
@@ -311,7 +328,8 @@ export function parse(
           node.children = [];
         }
       } else {
-        const text = parseText();
+        let text = parseText();
+        if (decode) text = decode(text);
         if (trimWhitespace) {
           const trimmed = text.trim();
           if (trimmed.length > 0) {
@@ -394,6 +412,7 @@ export function parse(
           if (pos === -1) {
             return { tagName, attributes, children };
           }
+          if (decode) value = decode(value);
         } else {
           value = null;
           pos--;

@@ -60,6 +60,12 @@ export interface LosslessOptions {
    * Strict mode: throw on malformed XML instead of recovering silently.
    */
   strict?: boolean;
+  /**
+   * Decode XML/HTML entities in text content and attribute values.
+   * Uses HTML entity set when `html: true`, XML entity set otherwise.
+   * Defaults to `false`.
+   */
+  entities?: boolean;
 }
 
 function convertNode(node: TNode): LosslessEntry {
@@ -114,6 +120,7 @@ export function lossless(
     if (options.trimWhitespace !== undefined)
       parseOpts.trimWhitespace = options.trimWhitespace;
     if (options.strict !== undefined) parseOpts.strict = options.strict;
+    if (options.entities !== undefined) parseOpts.entities = options.entities;
   }
 
   const dom = parse(xml, parseOpts);

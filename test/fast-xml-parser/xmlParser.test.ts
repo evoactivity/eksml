@@ -292,7 +292,7 @@ describe("whitespace handling (from xmlParser_spec)", () => {
   it("should encode default XML entities", () => {
     const xmlData = "<rootNode>       foo&amp;bar&apos;        </rootNode>";
     // &amp; → &, &apos; → '
-    const result = lossy(xmlData) as any;
+    const result = lossy(xmlData, { entities: true }) as any;
     expect(result.rootNode).toContain("foo&bar'");
   });
 });
@@ -318,7 +318,6 @@ describe("namespace handling (from xmlParser_spec)", () => {
     // We preserve namespace prefixes (no removeNSPrefix option)
     expect(result).toHaveProperty("soap-env:Envelope");
     const envelope = result["soap-env:Envelope"];
-    console.log(JSON.stringify(result, null, 2));
     expect(envelope).toHaveProperty("soap-env:Header");
     expect(envelope).toHaveProperty("soap-env:Body");
     expect(envelope["soap-env:Header"]["cor:applicationID"]).toBe(
