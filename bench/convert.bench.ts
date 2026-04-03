@@ -14,6 +14,8 @@ import { lossy } from "../src/converters/lossy.ts";
 // --- competitors ---
 import { XMLParser } from "fast-xml-parser";
 import { parseStringPromise } from "xml2js";
+// @ts-expect-error — txml's package.json exports don't include types
+import { parse as txmlParse, simplify as txmlSimplify } from "txml";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -51,6 +53,10 @@ describe("convert: small XML (~100 B)", () => {
   bench("xml2js", async () => {
     await parseStringPromise(small);
   });
+
+  bench("txml (simplify)", () => {
+    txmlSimplify(txmlParse(small));
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -71,6 +77,10 @@ describe("convert: RSS feed (~3 KB)", () => {
 
   bench("xml2js", async () => {
     await parseStringPromise(rssFeed);
+  });
+
+  bench("txml (simplify)", () => {
+    txmlSimplify(txmlParse(rssFeed));
   });
 });
 
@@ -93,6 +103,10 @@ describe("convert: SOAP envelope (~3 KB)", () => {
   bench("xml2js", async () => {
     await parseStringPromise(soapEnvelope);
   });
+
+  bench("txml (simplify)", () => {
+    txmlSimplify(txmlParse(soapEnvelope));
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -113,6 +127,10 @@ describe("convert: Atom feed (~6 KB)", () => {
 
   bench("xml2js", async () => {
     await parseStringPromise(atomFeed);
+  });
+
+  bench("txml (simplify)", () => {
+    txmlSimplify(txmlParse(atomFeed));
   });
 });
 
@@ -135,6 +153,10 @@ describe("convert: Maven POM (~8 KB)", () => {
   bench("xml2js", async () => {
     await parseStringPromise(pomXml);
   });
+
+  bench("txml (simplify)", () => {
+    txmlSimplify(txmlParse(pomXml));
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -155,5 +177,9 @@ describe("convert: XMLTV EPG (~30 KB)", () => {
 
   bench("xml2js", async () => {
     await parseStringPromise(xmltvEpg);
+  });
+
+  bench("txml (simplify)", () => {
+    txmlSimplify(txmlParse(xmltvEpg));
   });
 });

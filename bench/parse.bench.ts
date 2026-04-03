@@ -1,5 +1,5 @@
 /**
- * DOM/tree-parsing benchmarks: eksml vs fast-xml-parser, xml2js, @xmldom/xmldom, htmlparser2
+ * DOM/tree-parsing benchmarks: eksml vs fast-xml-parser, xml2js, @xmldom/xmldom, htmlparser2, txml
  *
  * sax and saxes are SAX (event-based) parsers — they don't produce a tree,
  * so they are benchmarked in stream.bench.ts instead.
@@ -17,6 +17,8 @@ import { XMLParser } from "fast-xml-parser";
 import { parseStringPromise } from "xml2js";
 import { DOMParser } from "@xmldom/xmldom";
 import { parseDocument } from "htmlparser2";
+// @ts-expect-error — txml's package.json exports don't include types
+import { parse as txmlParse } from "txml";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -60,6 +62,10 @@ describe("small XML (~100 B)", () => {
   bench("htmlparser2", () => {
     parseDocument(small);
   });
+
+  bench("txml", () => {
+    txmlParse(small);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -84,6 +90,10 @@ describe("RSS feed (~3 KB)", () => {
 
   bench("htmlparser2", () => {
     parseDocument(rssFeed);
+  });
+
+  bench("txml", () => {
+    txmlParse(rssFeed);
   });
 });
 
@@ -110,6 +120,10 @@ describe("SOAP envelope (~2 KB)", () => {
   bench("htmlparser2", () => {
     parseDocument(soapEnvelope);
   });
+
+  bench("txml", () => {
+    txmlParse(soapEnvelope);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -134,6 +148,10 @@ describe("Atom feed (~3 KB)", () => {
 
   bench("htmlparser2", () => {
     parseDocument(atomFeed);
+  });
+
+  bench("txml", () => {
+    txmlParse(atomFeed);
   });
 });
 
@@ -160,6 +178,10 @@ describe("XHTML page (~6 KB)", () => {
   bench("htmlparser2", () => {
     parseDocument(xhtmlPage);
   });
+
+  bench("txml", () => {
+    txmlParse(xhtmlPage);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -185,6 +207,10 @@ describe("Maven POM (~5 KB)", () => {
   bench("htmlparser2", () => {
     parseDocument(pomXml);
   });
+
+  bench("txml", () => {
+    txmlParse(pomXml);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -209,5 +235,9 @@ describe("XMLTV EPG (~9 KB)", () => {
 
   bench("htmlparser2", () => {
     parseDocument(xmltvEpg);
+  });
+
+  bench("txml", () => {
+    txmlParse(xmltvEpg);
   });
 });
