@@ -44,7 +44,7 @@ export function writer(
         for (let i = 0; i < nodes.length; i++) {
           const node = nodes[i]!;
           if (typeof node === "string") {
-            out += node.trim();
+            out += node;
           } else if (node) {
             writeNode(node);
           }
@@ -71,9 +71,9 @@ export function writer(
         if (attrValue === null) {
           out += " " + i;
         } else if (attrValue.indexOf('"') === -1) {
-          out += " " + i + '="' + attrValue.trim() + '"';
+          out += " " + i + '="' + attrValue + '"';
         } else {
-          out += " " + i + "='" + attrValue.trim() + "'";
+          out += " " + i + "='" + attrValue + "'";
         }
       }
     }
@@ -137,7 +137,7 @@ export function writer(
       for (let i = 0; i < len; i++) {
         const child = children[i]!;
         if (typeof child === "string") {
-          out += child.trim();
+          out += child;
         } else {
           // Inline nested element within mixed content
           inlineWriteNode(child);
@@ -154,7 +154,7 @@ export function writer(
     for (let i = 0; i < len; i++) {
       const child = children[i]!;
       if (typeof child === "string") {
-        out += child.trim();
+        out += child;
       } else {
         out += newline;
         prettyWriteNode(child, depth + 1);
@@ -180,7 +180,7 @@ export function writer(
     for (let i = 0; i < N.children.length; i++) {
       const child = N.children[i]!;
       if (typeof child === "string") {
-        out += child.trim();
+        out += child;
       } else {
         inlineWriteNode(child);
       }
@@ -193,8 +193,7 @@ export function writer(
     const node = nodes[i]!;
     if (i > 0) out += newline;
     if (typeof node === "string") {
-      const trimmed = node.trim();
-      if (trimmed) out += trimmed;
+      out += node;
     } else {
       prettyWriteNode(node, 0);
     }

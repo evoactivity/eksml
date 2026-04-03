@@ -102,7 +102,7 @@ describe("writer", () => {
 
   it("pretty: mixed content stays inline", () => {
     const tree = parse("<p>Hello <b>world</b>!</p>");
-    expect(writer(tree, { pretty: true })).toBe("<p>Hello<b>world</b>!</p>");
+    expect(writer(tree, { pretty: true })).toBe("<p>Hello <b>world</b>!</p>");
   });
 
   it("pretty: processing instructions render correctly", () => {
@@ -165,7 +165,7 @@ describe("writer", () => {
   it("pretty: mixed content with nested inline elements", () => {
     const tree = parse("<p>Click <a><b>here</b></a> now</p>");
     expect(writer(tree, { pretty: true })).toBe(
-      "<p>Click<a><b>here</b></a>now</p>",
+      "<p>Click <a><b>here</b></a> now</p>",
     );
   });
 
