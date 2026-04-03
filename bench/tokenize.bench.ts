@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { bench, describe } from "vitest";
 
 // --- eksml ---
-import { fastStream } from "../src/fastStream.js";
+import { fastStream } from "#src/fastStream.ts";
 
 // --- competitors ---
 import { Parser as Htmlparser2 } from "htmlparser2";

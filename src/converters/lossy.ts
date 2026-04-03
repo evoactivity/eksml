@@ -51,7 +51,7 @@
  * ```
  */
 
-import { parse, type TNode, type ParseOptions } from "../parser.ts";
+import { parse, type TNode, type ParseOptions } from "#src/parser.ts";
 // @generated:char-codes:begin
 const DOLLAR = 36; // $
 // @generated:char-codes:end

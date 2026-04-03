@@ -1,9 +1,9 @@
 import { decodeXML, decodeHTML } from "entities";
-import { filter } from "./utilities/filter.ts";
+import { filter } from "#src/utilities/filter.ts";
 import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
-} from "./utilities/htmlConstants.ts";
+} from "#src/utilities/htmlConstants.ts";
 // @generated:char-codes:begin
 const LT = 60; // <
 const GT = 62; // >

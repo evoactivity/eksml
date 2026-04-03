@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { parse } from "../src/parser.js";
-import { writer } from "../src/writer.js";
-import type { TNode } from "../src/parser.js";
+import { parse } from "#src/parser.ts";
+import { writer } from "#src/writer.ts";
+import type { TNode } from "#src/parser.ts";
 
 // =================================================================
 // writer

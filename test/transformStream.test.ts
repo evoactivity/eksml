@@ -2,9 +2,9 @@ import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
-import { transformStream } from "../src/transformStream.js";
-import { type TNode } from "../src/parser.js";
-import { isElementNode } from "../src/utilities/isElementNode.js";
+import { transformStream } from "#src/transformStream.ts";
+import { type TNode } from "#src/parser.ts";
+import { isElementNode } from "#src/utilities/isElementNode.ts";
 import assert from "node:assert";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

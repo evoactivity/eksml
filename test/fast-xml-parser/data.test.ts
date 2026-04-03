@@ -11,7 +11,7 @@
  *   - Validation-only tests — we don't have a separate XMLValidator
  */
 import { describe, it, expect } from "vitest";
-import { lossy } from "../../src/converters/lossy.ts";
+import { lossy } from "#src/converters/lossy.ts";
 
 describe("mixed data (from data_spec)", () => {
   // ─── "should parse attributes having '>' in value" ─────────────────

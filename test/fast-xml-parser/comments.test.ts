@@ -8,8 +8,8 @@
  *   - preserveOrder mode — use lossless() for that
  */
 import { describe, it, expect } from "vitest";
-import { lossy } from "../../src/converters/lossy.ts";
-import { lossless } from "../../src/converters/lossless.ts";
+import { lossy } from "#src/converters/lossy.ts";
+import { lossless } from "#src/converters/lossless.ts";
 
 describe("comment handling (from comments_spec)", () => {
   const XMLdata = `

@@ -1,10 +1,10 @@
-import type { TNode, ParseOptions } from "./parser.js";
-import { fastStream } from "./fastStream.js";
-import type { Attributes } from "./fastStream.js";
+import type { TNode, ParseOptions } from "#src/parser.ts";
+import { fastStream } from "#src/fastStream.ts";
+import type { Attributes } from "#src/fastStream.ts";
 import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
-} from "./utilities/htmlConstants.js";
+} from "#src/utilities/htmlConstants.ts";
 // @generated:char-codes:begin
 const EQ = 61; // =
 const SQUOTE = 39; // '

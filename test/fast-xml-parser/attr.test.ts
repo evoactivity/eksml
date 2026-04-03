@@ -11,8 +11,8 @@
  *   - XMLValidator tests — we don't have a separate validator API
  */
 import { describe, it, expect } from "vitest";
-import { lossy } from "../../src/converters/lossy.ts";
-import { parse } from "../../src/parser.ts";
+import { lossy } from "#src/converters/lossy.ts";
+import { parse } from "#src/parser.ts";
 
 describe("attribute parsing (from attr_spec)", () => {
   // ─── "should parse attributes with valid names" ──────────────────

@@ -29,7 +29,7 @@
  * ```
  */
 
-import { parse, type TNode, type ParseOptions } from "../parser.ts";
+import { parse, type TNode, type ParseOptions } from "#src/parser.ts";
 
 /** A single entry in the JSON output array. */
 export type LosslessEntry =

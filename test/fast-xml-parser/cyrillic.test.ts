@@ -4,7 +4,7 @@
  * Tests Unicode/Cyrillic character support in tag names and text content.
  */
 import { describe, it, expect } from "vitest";
-import { lossy } from "../../src/converters/lossy.ts";
+import { lossy } from "#src/converters/lossy.ts";
 
 describe("Cyrillic/Unicode support (from x_cyrillic_2j_str_spec)", () => {
   it("should parse XML with Cyrillic tag names and text content", () => {

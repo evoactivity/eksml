@@ -1,4 +1,4 @@
-import type { TNode } from "../parser.ts";
+import type { TNode } from "#src/parser.ts";
 
 /**
  * Read the text content of a node, useful for mixed content.

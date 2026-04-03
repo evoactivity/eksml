@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
-import { fastStream } from "../src/fastStream.js";
-import type { Attributes } from "../src/fastStream.js";
+import { fastStream } from "#src/fastStream.ts";
+import type { Attributes } from "#src/fastStream.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>

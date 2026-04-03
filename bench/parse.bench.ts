@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { bench, describe } from "vitest";
 
 // --- eksml ---
-import { parse } from "../src/parser.js";
+import { parse } from "#src/parser.ts";
 
 // --- competitors ---
 import { XMLParser } from "fast-xml-parser";

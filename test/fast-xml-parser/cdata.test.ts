@@ -9,7 +9,7 @@
  *   - Tests reading fixture files from fast-xml-parser's assets/
  */
 import { describe, it, expect } from "vitest";
-import { lossy } from "../../src/converters/lossy.ts";
+import { lossy } from "#src/converters/lossy.ts";
 
 describe("CDATA handling (from cdata_spec)", () => {
   // ─── "should parse multiline tag value" ────────────────────────────

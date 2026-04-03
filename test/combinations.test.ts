@@ -9,9 +9,9 @@
 import { describe, it, expect } from "vitest";
 // @ts-expect-error — no type declarations for this package
 import combinations from "combinations";
-import { parse, type ParseOptions } from "../src/parser.ts";
-import { lossy, type LossyOptions } from "../src/converters/lossy.ts";
-import { lossless, type LosslessOptions } from "../src/converters/lossless.ts";
+import { parse, type ParseOptions } from "#src/parser.ts";
+import { lossy, type LossyOptions } from "#src/converters/lossy.ts";
+import { lossless, type LosslessOptions } from "#src/converters/lossless.ts";
 
 // ---------------------------------------------------------------------------
 // Option generation

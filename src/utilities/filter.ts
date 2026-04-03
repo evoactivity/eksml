@@ -1,4 +1,4 @@
-import type { TNode } from "../parser.ts";
+import type { TNode } from "#src/parser.ts";
 
 /**
  * Filter nodes like Array.filter - returns nodes where the filter function returns true

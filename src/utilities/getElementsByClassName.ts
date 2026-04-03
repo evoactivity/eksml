@@ -1,5 +1,5 @@
-import type { TNode } from "../parser.ts";
-import { parse } from "../parser.ts";
+import type { TNode } from "#src/parser.ts";
+import { parse } from "#src/parser.ts";
 
 /**
  * Find elements by class name

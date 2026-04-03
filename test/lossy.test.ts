@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
-import { lossy } from "../src/converters/lossy.ts";
-import type { LossyValue, LossyObject } from "../src/converters/lossy.ts";
+import { lossy } from "#src/converters/lossy.ts";
+import type { LossyValue, LossyObject } from "#src/converters/lossy.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>

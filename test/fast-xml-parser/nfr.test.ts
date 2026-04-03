@@ -16,9 +16,9 @@
  *   - That deeply nested XML doesn't crash (basic resilience)
  */
 import { describe, it, expect } from "vitest";
-import { parse, type TNode } from "../../src/parser.ts";
-import { lossy } from "../../src/converters/lossy.ts";
-import { lossless } from "../../src/converters/lossless.ts";
+import { parse, type TNode } from "#src/parser.ts";
+import { lossy } from "#src/converters/lossy.ts";
+import { lossless } from "#src/converters/lossless.ts";
 
 const dangerousNames = ["__proto__", "constructor", "prototype"];
 

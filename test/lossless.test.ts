@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
-import { lossless, type LosslessEntry } from "../src/converters/lossless.ts";
+import { lossless, type LosslessEntry } from "#src/converters/lossless.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>

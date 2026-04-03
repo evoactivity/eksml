@@ -22,7 +22,7 @@
  *   - Various edge cases in tag/attribute syntax
  */
 import { describe, it, expect } from "vitest";
-import { lossy } from "../../src/converters/lossy.ts";
+import { lossy } from "#src/converters/lossy.ts";
 
 describe("malformed XML handling (from validator_spec)", () => {
   // ─── Valid XML should parse without throwing ──────────────────────

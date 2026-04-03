@@ -11,8 +11,8 @@ import { fileURLToPath } from "node:url";
 import { bench, describe } from "vitest";
 
 // --- eksml ---
-import { parse } from "../src/parser.ts";
-import { writer } from "../src/writer.ts";
+import { parse } from "#src/parser.ts";
+import { writer } from "#src/writer.ts";
 
 // --- competitors ---
 import { XMLParser, XMLBuilder } from "fast-xml-parser";

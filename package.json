@@ -3,12 +3,42 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
+  "sideEffects": false,
+  "imports": {
+    "#src/*": "./src/*"
+  },
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      }
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./parser": {
+      "types": "./dist/parser.d.mts",
+      "import": "./dist/parser.mjs"
+    },
+    "./writer": {
+      "types": "./dist/writer.d.mts",
+      "import": "./dist/writer.mjs"
+    },
+    "./stream": {
+      "types": "./dist/fastStream.d.mts",
+      "import": "./dist/fastStream.mjs"
+    },
+    "./transform-stream": {
+      "types": "./dist/transformStream.d.mts",
+      "import": "./dist/transformStream.mjs"
+    },
+    "./lossy": {
+      "types": "./dist/converters/lossy.d.mts",
+      "import": "./dist/converters/lossy.mjs"
+    },
+    "./lossless": {
+      "types": "./dist/converters/lossless.d.mts",
+      "import": "./dist/converters/lossless.mjs"
+    },
+    "./utilities": {
+      "types": "./dist/utilities/index.d.mts",
+      "import": "./dist/utilities/index.mjs"
     }
   },
   "main": "./dist/index.mjs",

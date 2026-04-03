@@ -8,8 +8,8 @@ import { fileURLToPath } from "node:url";
 import { bench, describe } from "vitest";
 
 // --- eksml ---
-import { lossless } from "../src/converters/lossless.ts";
-import { lossy } from "../src/converters/lossy.ts";
+import { lossless } from "#src/converters/lossless.ts";
+import { lossy } from "#src/converters/lossy.ts";
 
 // --- competitors ---
 import { XMLParser } from "fast-xml-parser";

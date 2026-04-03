@@ -19,7 +19,7 @@
  *   - Invalid entity name validation — requires custom entity processing
  */
 import { describe, it, expect } from "vitest";
-import { lossy } from "../../src/converters/lossy.ts";
+import { lossy } from "#src/converters/lossy.ts";
 
 describe("entity handling (from entities_spec)", () => {
   // ─── Built-in XML entities ────────────────────────────────────────

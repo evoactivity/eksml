@@ -1,4 +1,4 @@
-import type { TNode } from "../parser.ts";
+import type { TNode } from "#src/parser.ts";
 
 /**
  * Type guard to check if a node is an element node (TNode object).

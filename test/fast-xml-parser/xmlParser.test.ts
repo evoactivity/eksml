@@ -14,7 +14,7 @@
  * are either adapted or skipped.
  */
 import { describe, it, expect } from "vitest";
-import { lossy } from "../../src/converters/lossy.ts";
+import { lossy } from "#src/converters/lossy.ts";
 
 // ─── Adapted from: "should parse all values as string" ─────────────────
 // Original expected numbers/booleans — we keep everything as strings.

@@ -14,8 +14,8 @@ import { fileURLToPath } from "node:url";
 import { bench, describe } from "vitest";
 
 // --- eksml ---
-import { transformStream } from "../src/transformStream.js";
-import { fastStream } from "../src/fastStream.js";
+import { transformStream } from "#src/transformStream.ts";
+import { fastStream } from "#src/fastStream.ts";
 
 // --- competitors ---
 import { XMLParser } from "fast-xml-parser";
