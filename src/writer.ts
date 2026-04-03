@@ -1,7 +1,9 @@
 import { escapeText, escapeAttribute, encodeHTML } from "entities";
 import type { TNode } from "./parser.ts";
 import { HTML_VOID_ELEMENTS } from "./utilities/htmlConstants.ts";
-import { QUESTION } from "./utilities/charCodes.ts";
+// @generated:char-codes:begin
+const QUESTION = 63; // ?
+// @generated:char-codes:end
 
 /** Options for writer. */
 export interface WriterOptions {

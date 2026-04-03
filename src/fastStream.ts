@@ -21,11 +21,26 @@
  *   parser.close();
  */
 
-import {
-  GT, SLASH, BANG, DASH, QUESTION, SQUOTE, DQUOTE, EQ,
-  LBRACKET, RBRACKET, TAB, LF, CR, SPACE,
-  UPPER_C, UPPER_D, UPPER_A, UPPER_T,
-} from "./utilities/charCodes.ts";
+// @generated:char-codes:begin
+const GT = 62; // >
+const SLASH = 47; // /
+const BANG = 33; // !
+const QUESTION = 63; // ?
+const EQ = 61; // =
+const LBRACKET = 91; // [
+const RBRACKET = 93; // ]
+const SQUOTE = 39; // '
+const DQUOTE = 34; // "
+const TAB = 9; // \t
+const LF = 10; // \n
+const CR = 13; // \r
+const SPACE = 32; // (space)
+const DASH = 45; // -
+const UPPER_C = 67; // C
+const UPPER_D = 68; // D
+const UPPER_A = 65; // A
+const UPPER_T = 84; // T
+// @generated:char-codes:end
 
 // ---------------------------------------------------------------------------
 // Public types

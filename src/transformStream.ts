@@ -5,9 +5,15 @@ import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
 } from "./utilities/htmlConstants.js";
-import {
-  SPACE, TAB, LF, CR, EQ, DQUOTE, SQUOTE,
-} from "./utilities/charCodes.js";
+// @generated:char-codes:begin
+const EQ = 61; // =
+const SQUOTE = 39; // '
+const DQUOTE = 34; // "
+const TAB = 9; // \t
+const LF = 10; // \n
+const CR = 13; // \r
+const SPACE = 32; // (space)
+// @generated:char-codes:end
 
 /**
  * Parse a processing instruction body string into an attributes record.

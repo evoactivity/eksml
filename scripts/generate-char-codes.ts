@@ -1,6 +1,17 @@
 /**
- * Generates src/utilities/charCodes.ts from a declarative list of
- * { name, character } entries grouped into sections.
+ * Generates character code constants in two forms:
+ *
+ * 1. **Shared module** (`src/utilities/charCodes.ts`) — exported constants for
+ *    external consumers via the barrel file (`src/index.ts`).
+ *
+ * 2. **Inlined into source files** — file-local `const` declarations injected
+ *    between `// @generated:char-codes:begin` and `// @generated:char-codes:end`
+ *    markers in each source file that uses them.  This avoids cross-module ESM
+ *    import overhead that prevents V8 from inlining the numeric values as
+ *    immediates (the root cause of the performance regression).
+ *
+ * The script auto-detects which constants each target file uses by scanning
+ * the file content outside the generated region.
  *
  * Usage:
  *   npx tsx scripts/generate-char-codes.ts
@@ -8,11 +19,11 @@
  * To add a new character code constant:
  *   1. Add an entry to the appropriate section below (or create a new section).
  *   2. Run this script.
- *   3. The generated file is written to src/utilities/charCodes.ts.
+ *   3. Both the shared module and all inlined regions are updated.
  */
 
-import { writeFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
+import { resolve, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // ---------------------------------------------------------------------------
@@ -82,8 +93,11 @@ const sections: CharCodeSection[] = [
   },
 ];
 
+/** Flat list of all entries for convenience. */
+const allEntries: CharCodeEntry[] = sections.flatMap((section) => section.entries);
+
 // ---------------------------------------------------------------------------
-// Generation
+// Helpers
 // ---------------------------------------------------------------------------
 
 /** Format a character as a readable inline comment (e.g. `// <` or `// \t`). */
@@ -97,7 +111,14 @@ function formatCharacterComment(character: string): string {
   return escapeMap[character] ?? character;
 }
 
-function generate(): string {
+const BEGIN_MARKER = "// @generated:char-codes:begin";
+const END_MARKER = "// @generated:char-codes:end";
+
+// ---------------------------------------------------------------------------
+// 1. Generate the shared module (charCodes.ts)
+// ---------------------------------------------------------------------------
+
+function generateSharedModule(): string {
   const lines: string[] = [];
 
   lines.push("/**");
@@ -126,14 +147,133 @@ function generate(): string {
 }
 
 // ---------------------------------------------------------------------------
-// Write
+// 2. Inline constants into source files
+// ---------------------------------------------------------------------------
+
+/**
+ * Detect which constant names from our flat list are actually used in the
+ * given source text (excluding any existing generated region).
+ */
+function detectUsedConstants(sourceWithoutGenerated: string): CharCodeEntry[] {
+  return allEntries.filter((entry) => {
+    // Match the constant name as a whole word (not part of another identifier).
+    // We look for usage patterns like: `=== LT`, `!== GT`, `SLASH)`, `, BANG`,
+    // `case QUESTION:`, etc. A word boundary check via regex is sufficient.
+    const pattern = new RegExp(`\\b${entry.name}\\b`);
+    return pattern.test(sourceWithoutGenerated);
+  });
+}
+
+/**
+ * Generate the inlined constants block for a source file.
+ * These are NOT exported — they are file-local.
+ */
+function generateInlineBlock(entries: CharCodeEntry[]): string {
+  const lines: string[] = [BEGIN_MARKER];
+  for (const entry of entries) {
+    const code = entry.character.charCodeAt(0);
+    const comment = formatCharacterComment(entry.character);
+    lines.push(`const ${entry.name} = ${code}; // ${comment}`);
+  }
+  lines.push(END_MARKER);
+  return lines.join("\n");
+}
+
+/**
+ * Process a single source file:
+ * - If it has begin/end markers, replace the region between them.
+ * - If it has no markers, skip it (we'll add markers manually first).
+ *
+ * Returns true if the file was modified.
+ */
+function inlineIntoFile(filePath: string): boolean {
+  const original = readFileSync(filePath, "utf-8");
+
+  const beginIndex = original.indexOf(BEGIN_MARKER);
+  const endIndex = original.indexOf(END_MARKER);
+
+  if (beginIndex === -1 || endIndex === -1) {
+    // No markers — skip this file
+    return false;
+  }
+
+  // Extract content before and after the generated region
+  const before = original.substring(0, beginIndex);
+  const after = original.substring(endIndex + END_MARKER.length);
+
+  // Detect which constants are used in the non-generated parts
+  const sourceWithoutGenerated = before + after;
+  const usedEntries = detectUsedConstants(sourceWithoutGenerated);
+
+  if (usedEntries.length === 0) {
+    // No constants used — leave an empty generated region
+    const updated = before + BEGIN_MARKER + "\n" + END_MARKER + after;
+    if (updated !== original) {
+      writeFileSync(filePath, updated, "utf-8");
+      return true;
+    }
+    return false;
+  }
+
+  const inlineBlock = generateInlineBlock(usedEntries);
+  const updated = before + inlineBlock + after;
+
+  if (updated !== original) {
+    writeFileSync(filePath, updated, "utf-8");
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Recursively collect all .ts files under a directory.
+ */
+function collectTypeScriptFiles(directory: string): string[] {
+  const results: string[] = [];
+  for (const entry of readdirSync(directory)) {
+    const fullPath = resolve(directory, entry);
+    const stat = statSync(fullPath);
+    if (stat.isDirectory()) {
+      results.push(...collectTypeScriptFiles(fullPath));
+    } else if (entry.endsWith(".ts") && !entry.endsWith(".d.ts")) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// Main
 // ---------------------------------------------------------------------------
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const outputPath = resolve(scriptDirectory, "..", "src", "utilities", "charCodes.ts");
-const content = generate();
+const projectRoot = resolve(scriptDirectory, "..");
+const sourceDirectory = resolve(projectRoot, "src");
 
-writeFileSync(outputPath, content, "utf-8");
+// 1. Write the shared module
+const sharedModulePath = resolve(sourceDirectory, "utilities", "charCodes.ts");
+const sharedContent = generateSharedModule();
+writeFileSync(sharedModulePath, sharedContent, "utf-8");
 
-const totalConstants = sections.reduce((sum, section) => sum + section.entries.length, 0);
-console.log(`Wrote ${totalConstants} character code constants to ${outputPath}`);
+const totalConstants = allEntries.length;
+console.log(`Wrote ${totalConstants} character code constants to ${relative(projectRoot, sharedModulePath)}`);
+
+// 2. Inline into all source files that have markers
+const sourceFiles = collectTypeScriptFiles(sourceDirectory);
+let inlinedCount = 0;
+
+for (const filePath of sourceFiles) {
+  // Skip the shared module itself
+  if (filePath === sharedModulePath) continue;
+
+  if (inlineIntoFile(filePath)) {
+    inlinedCount++;
+    console.log(`  Inlined constants into ${relative(projectRoot, filePath)}`);
+  }
+}
+
+if (inlinedCount === 0) {
+  console.log("No source files with @generated:char-codes markers found to update.");
+} else {
+  console.log(`Updated ${inlinedCount} source file(s) with inlined constants.`);
+}

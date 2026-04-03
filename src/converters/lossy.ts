@@ -52,7 +52,9 @@
  */
 
 import { parse, type TNode, type ParseOptions } from "../parser.ts";
-import { DOLLAR } from "../utilities/charCodes.ts";
+// @generated:char-codes:begin
+const DOLLAR = 36; // $
+// @generated:char-codes:end
 
 /** Options for lossy. */
 export interface LossyOptions extends ParseOptions {}

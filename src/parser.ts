@@ -10,20 +10,20 @@ import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
 } from "./utilities/htmlConstants.ts";
-import {
-  LT,
-  GT,
-  SLASH,
-  BANG,
-  QUESTION,
-  SQUOTE,
-  DQUOTE,
-  LBRACKET,
-  RBRACKET,
-  DASH,
-  UNDERSCORE,
-  COLON,
-} from "./utilities/charCodes.ts";
+// @generated:char-codes:begin
+const LT = 60; // <
+const GT = 62; // >
+const SLASH = 47; // /
+const BANG = 33; // !
+const QUESTION = 63; // ?
+const LBRACKET = 91; // [
+const RBRACKET = 93; // ]
+const SQUOTE = 39; // '
+const DQUOTE = 34; // "
+const DASH = 45; // -
+const UNDERSCORE = 95; // _
+const COLON = 58; // :
+// @generated:char-codes:end
 
 /**
  * A parsed XML node
