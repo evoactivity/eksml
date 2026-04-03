@@ -452,24 +452,26 @@ describe("writer", () => {
   // --- html + entities combined ---
 
   describe("html: true + entities: true", () => {
-    it("uses HTML named entities for text", () => {
+    it("preserves UTF-8 text while encoding XML-critical characters", () => {
       const tree: TNode = {
         tagName: "p",
         attributes: null,
         children: ["Copyright \u00A9 2024"],
       };
       const result = writer(tree, { html: true, entities: true });
-      expect(result).toBe("<p>Copyright &copy; 2024</p>");
+      // © is preserved as UTF-8, not encoded to &copy;
+      expect(result).toBe("<p>Copyright \u00A9 2024</p>");
     });
 
-    it("uses HTML named entities for attributes", () => {
+    it("preserves UTF-8 in attributes while encoding XML-critical characters", () => {
       const tree: TNode = {
         tagName: "div",
         attributes: { title: "\u00A9 2024" },
         children: [],
       };
       const result = writer(tree, { html: true, entities: true });
-      expect(result).toContain("&copy;");
+      // © is preserved as UTF-8, not encoded to &copy;
+      expect(result).toContain("\u00A9");
     });
 
     it("encodes < and & in HTML mode text", () => {
@@ -498,8 +500,9 @@ describe("writer", () => {
       const result = writer(tree, { html: true, entities: true, pretty: true });
       expect(result).toContain("<img");
       expect(result).toContain("&amp;");
-      expect(result).toContain("&eacute;");
-      expect(result).toContain("&egrave;");
+      // é and è are preserved as UTF-8, not encoded to &eacute;/&egrave;
+      expect(result).toContain("\u00E9");
+      expect(result).toContain("\u00E8");
       // img should NOT have a closing tag
       expect(result).not.toContain("</img>");
     });
@@ -544,8 +547,8 @@ describe("writer", () => {
       expect(result).not.toContain("</meta>");
       expect(result).not.toContain("</br>");
       expect(result).not.toContain("</hr>");
-      // Entities should be encoded
-      expect(result).toContain("&copy;");
+      // Entities should be encoded (XML-critical only; UTF-8 preserved)
+      expect(result).toContain("\u00A9");
       expect(result).toContain("&amp;");
       // Structure check
       expect(result).toContain("<meta");
