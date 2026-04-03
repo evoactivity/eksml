@@ -20,7 +20,7 @@ describe("parse", () => {
 
   it("simplest parsing test", () => {
     expect(parse("<test>")).toEqual([
-      { tagName: "test", attributes: {}, children: [] },
+      { tagName: "test", attributes: null, children: [] },
     ]);
   });
 
@@ -42,13 +42,13 @@ describe("parse", () => {
 
   it("single child text", () => {
     expect(parse("<test>childTest")).toEqual([
-      { tagName: "test", attributes: {}, children: ["childTest"] },
+      { tagName: "test", attributes: null, children: ["childTest"] },
     ]);
   });
 
   it("simple closing tag", () => {
     expect(parse("<test></test>")).toEqual([
-      { tagName: "test", attributes: {}, children: [] },
+      { tagName: "test", attributes: null, children: [] },
     ]);
   });
 
@@ -56,10 +56,10 @@ describe("parse", () => {
     expect(parse("<test><cc></cc><cc></cc></test>")).toEqual([
       {
         tagName: "test",
-        attributes: {},
+        attributes: null,
         children: [
-          { tagName: "cc", attributes: {}, children: [] },
-          { tagName: "cc", attributes: {}, children: [] },
+          { tagName: "cc", attributes: null, children: [] },
+          { tagName: "cc", attributes: null, children: [] },
         ],
       },
     ]);
@@ -73,10 +73,10 @@ describe("parse", () => {
     ).toEqual([
       {
         tagName: "test",
-        attributes: {},
+        attributes: null,
         children: [
           { tagName: "cc", children: [], attributes: { c: "d" } },
-          { tagName: "cc", attributes: {}, children: ["value"] },
+          { tagName: "cc", attributes: null, children: ["value"] },
         ],
       },
     ]);
@@ -87,10 +87,10 @@ describe("parse", () => {
       "!DOCTYPE html",
       {
         tagName: "test",
-        attributes: {},
+        attributes: null,
         children: [
-          { tagName: "cc", attributes: {}, children: [] },
-          { tagName: "cc", attributes: {}, children: [] },
+          { tagName: "cc", attributes: null, children: [] },
+          { tagName: "cc", attributes: null, children: [] },
         ],
       },
     ]);
@@ -102,8 +102,8 @@ describe("parse", () => {
         filter: (element) => element.tagName.toLowerCase() === "cc",
       }),
     ).toEqual([
-      { tagName: "cc", attributes: {}, children: [] },
-      { tagName: "cc", attributes: {}, children: [] },
+      { tagName: "cc", attributes: null, children: [] },
+      { tagName: "cc", attributes: null, children: [] },
     ]);
   });
 
@@ -115,11 +115,11 @@ describe("parse", () => {
     ).toEqual([
       {
         tagName: "test",
-        attributes: {},
+        attributes: null,
         children: [
           {
             tagName: "style",
-            attributes: {},
+            attributes: null,
             children: ["*{some:10px;}/* <tag> comment */"],
           },
         ],
@@ -131,7 +131,7 @@ describe("parse", () => {
     expect(parse('<style>p { color: "red" }</style>')).toEqual([
       {
         tagName: "style",
-        attributes: {},
+        attributes: null,
         children: ['p { color: "red" }'],
       },
     ]);
@@ -143,11 +143,11 @@ describe("parse", () => {
     ).toEqual([
       {
         tagName: "test",
-        attributes: {},
+        attributes: null,
         children: [
           {
             tagName: "script",
-            attributes: {},
+            attributes: null,
             children: ['$("<div>")'],
           },
         ],
@@ -162,7 +162,7 @@ describe("parse", () => {
 
   it("CDATA", () => {
     expect(parse("<xml><![CDATA[some data]]></xml>")).toEqual([
-      { tagName: "xml", attributes: {}, children: ["some data"] },
+      { tagName: "xml", attributes: null, children: ["some data"] },
     ]);
   });
 
@@ -176,7 +176,7 @@ describe("parse", () => {
 
   it("keepComments option", () => {
     expect(parse("<test><!-- test --></test>", { keepComments: true })).toEqual(
-      [{ tagName: "test", attributes: {}, children: ["<!-- test -->"] }],
+      [{ tagName: "test", attributes: null, children: ["<!-- test -->"] }],
     );
   });
 
@@ -188,7 +188,7 @@ describe("parse", () => {
     ).toEqual([
       {
         tagName: "test",
-        attributes: {},
+        attributes: null,
         children: ["<!-- test -->", "<!-- test2 -->"],
       },
     ]);
@@ -257,7 +257,7 @@ describe("parse", () => {
 
   it("duplicate attributes (last wins)", () => {
     const result = parse('<test att="first" att="second" att="third">');
-    expect((result[0] as TNode).attributes.att).toBe("third");
+    expect((result[0] as TNode).attributes!.att).toBe("third");
   });
 
   it("many attributes", () => {
@@ -265,13 +265,13 @@ describe("parse", () => {
       '<element id="test-id" class="cls" data-value="123" disabled aria-label="lbl" tabindex="0" role="button">',
     );
     const el = result[0] as TNode;
-    expect(el.attributes.id).toBe("test-id");
-    expect(el.attributes.class).toBe("cls");
-    expect(el.attributes["data-value"]).toBe("123");
-    expect(el.attributes.disabled).toBeNull();
-    expect(el.attributes["aria-label"]).toBe("lbl");
-    expect(el.attributes.tabindex).toBe("0");
-    expect(el.attributes.role).toBe("button");
+    expect(el.attributes!.id).toBe("test-id");
+    expect(el.attributes!.class).toBe("cls");
+    expect(el.attributes!["data-value"]).toBe("123");
+    expect(el.attributes!.disabled).toBeNull();
+    expect(el.attributes!["aria-label"]).toBe("lbl");
+    expect(el.attributes!.tabindex).toBe("0");
+    expect(el.attributes!.role).toBe("button");
   });
 
   it("XML with namespaces", () => {
@@ -279,12 +279,12 @@ describe("parse", () => {
       '<root xmlns:custom="http://example.com/custom"><custom:element custom:attr="value">Content</custom:element></root>';
     const result = parse(xml);
     const root = result[0] as TNode;
-    expect(root.attributes["xmlns:custom"]).toBe("http://example.com/custom");
+    expect(root.attributes!["xmlns:custom"]).toBe("http://example.com/custom");
     const child = root.children.find(
       (el) => typeof el === "object" && el.tagName === "custom:element",
     ) as TNode;
     expect(child).toBeDefined();
-    expect(child.attributes["custom:attr"]).toBe("value");
+    expect(child.attributes!["custom:attr"]).toBe("value");
   });
 
   it("deeply nested structure", () => {
@@ -321,16 +321,16 @@ describe("parse", () => {
       `<e single='v1' double="v2" mixed='has "q"' other="has 'q'"/>`,
     );
     const el = result[0] as TNode;
-    expect(el.attributes.single).toBe("v1");
-    expect(el.attributes.double).toBe("v2");
-    expect(el.attributes.mixed).toBe('has "q"');
-    expect(el.attributes.other).toBe("has 'q'");
+    expect(el.attributes!.single).toBe("v1");
+    expect(el.attributes!.double).toBe("v2");
+    expect(el.attributes!.mixed).toBe('has "q"');
+    expect(el.attributes!.other).toBe("has 'q'");
   });
 
   it("unicode and emoji", () => {
     const result = parse('<msg lang="多语言">Hello 世界 🌍</msg>');
     const el = result[0] as TNode;
-    expect(el.attributes.lang).toBe("多语言");
+    expect(el.attributes!.lang).toBe("多语言");
     expect(el.children[0]).toBe("Hello 世界 🌍");
   });
 
@@ -369,9 +369,9 @@ describe("parse", () => {
   it("null vs empty string vs value in attributes", () => {
     const result = parse('<input disabled required="" value="test" checked>');
     const el = result[0] as TNode;
-    expect(el.attributes.disabled).toBeNull();
-    expect(el.attributes.checked).toBeNull();
-    expect(el.attributes.required).toBe("");
-    expect(el.attributes.value).toBe("test");
+    expect(el.attributes!.disabled).toBeNull();
+    expect(el.attributes!.checked).toBeNull();
+    expect(el.attributes!.required).toBe("");
+    expect(el.attributes!.value).toBe("test");
   });
 });

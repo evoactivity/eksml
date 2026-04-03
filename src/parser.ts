@@ -10,12 +10,13 @@
 export interface TNode {
   tagName: string;
   /**
-   * Element attributes. Values can be:
+   * Element attributes, or `null` if the element has no attributes.
+   * Values can be:
    * - string: attribute with a value (e.g., `<div id="test">` -> `{id: "test"}`)
    * - null: attribute without a value (e.g., `<input disabled>` -> `{disabled: null}`)
    * - empty string: attribute with empty value (e.g., `<input value="">` -> `{value: ""}`)
    */
-  attributes: Record<string, string | null>;
+  attributes: Record<string, string | null> | null;
   children: (TNode | string)[];
 }
 
@@ -188,13 +189,14 @@ export function parse(
       if (hasElement && hasWhitespaceOnlyText) break;
     }
     if (hasElement && hasWhitespaceOnlyText) {
-      // Remove whitespace-only strings in reverse to avoid index shifting
-      for (let i = children.length - 1; i >= 0; i--) {
+      // Compact in-place with a write pointer (avoids O(n) splice per removal)
+      let w = 0;
+      for (let i = 0; i < children.length; i++) {
         const c = children[i]!;
-        if (typeof c === "string" && c.trim().length === 0) {
-          children.splice(i, 1);
-        }
+        if (typeof c === "string" && c.trim().length === 0) continue;
+        children[w++] = c;
       }
+      children.length = w;
     }
   }
 
@@ -352,8 +354,8 @@ export function parse(
   function parseNode(): TNode {
     pos++;
     const tagName = parseName();
-    // Use null-prototype object to prevent __proto__ / constructor pollution
-    const attributes: Record<string, string | null> = Object.create(null);
+    // Defer attributes allocation until first attribute is found
+    let attributes: Record<string, string | null> | null = null;
     let children: (TNode | string)[] = [];
 
     // parsing attributes
@@ -396,7 +398,9 @@ export function parse(
           value = null;
           pos--;
         }
-        attributes[name] = value;
+        // Allocate attributes object lazily on first attribute
+        if (attributes === null) attributes = Object.create(null);
+        attributes![name] = value;
       }
       pos++;
     }

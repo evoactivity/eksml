@@ -125,9 +125,9 @@ describe("transformStream", () => {
       (r): r is TNode => typeof r === "object" && r.tagName === "item",
     );
     expect(items).toHaveLength(2);
-    expect(items[0]!.attributes.id).toBe("1");
+    expect(items[0]!.attributes!.id).toBe("1");
     expect(items[0]!.children).toEqual(["first"]);
-    expect(items[1]!.attributes.id).toBe("2");
+    expect(items[1]!.attributes!.id).toBe("2");
     expect(items[1]!.children).toEqual(["second"]);
   });
 
@@ -140,8 +140,8 @@ describe("transformStream", () => {
       (r) => typeof r === "object" && r.tagName === "item",
     ) as TNode;
     expect(item).toBeDefined();
-    expect(item.attributes.id).toBe("test");
-    expect(item.attributes.class).toBe("foo");
+    expect(item.attributes!.id).toBe("test");
+    expect(item.attributes!.class).toBe("foo");
     expect(item.children).toEqual(["content"]);
   });
 
@@ -257,7 +257,7 @@ describe("transformStream with large fixtures", () => {
       // Should emit the rss root (possibly preceded by a processing instruction)
       const rss = nodes.find((n) => n.tagName === "rss");
       expect(rss).toBeDefined();
-      expect(rss!.attributes.version).toBe("2.0");
+      expect(rss!.attributes!.version).toBe("2.0");
     });
 
     it("streams in small chunks (64 bytes) and still produces valid nodes", async () => {
@@ -302,7 +302,7 @@ describe("transformStream with large fixtures", () => {
       const nodes = results.filter((r): r is TNode => typeof r === "object");
       const envelope = nodes.find((n) => n.tagName === "soap:Envelope");
       expect(envelope).toBeDefined();
-      expect(envelope!.attributes["xmlns:soap"]).toBe(
+      expect(envelope!.attributes!["xmlns:soap"]).toBe(
         "http://schemas.xmlsoap.org/soap/envelope/",
       );
     });
@@ -337,7 +337,7 @@ describe("transformStream with large fixtures", () => {
         (c) => typeof c === "object" && c.tagName === "wsu:Timestamp",
       ) as TNode;
       expect(timestamp).toBeDefined();
-      expect(timestamp.attributes["wsu:Id"]).toBe("TS-1");
+      expect(timestamp.attributes!["wsu:Id"]).toBe("TS-1");
     });
 
     it("produces consistent results across different chunk sizes", async () => {
@@ -364,7 +364,7 @@ describe("transformStream with large fixtures", () => {
       const nodes = results.filter((r): r is TNode => typeof r === "object");
       const feed = nodes.find((n) => n.tagName === "feed");
       expect(feed).toBeDefined();
-      expect(feed!.attributes.xmlns).toBe("http://www.w3.org/2005/Atom");
+      expect(feed!.attributes!.xmlns).toBe("http://www.w3.org/2005/Atom");
     });
 
     it("streams in small chunks (80 bytes)", async () => {
@@ -560,7 +560,7 @@ describe("transformStream with large fixtures", () => {
 
       function processNode(node: TNode) {
         if (node.tagName === "channel") {
-          const id = node.attributes.id as string;
+          const id = node.attributes!.id as string;
           const displayName = node.children.find(
             (c) => typeof c !== "string" && c.tagName === "display-name",
           ) as TNode | undefined;
@@ -571,9 +571,9 @@ describe("transformStream with large fixtures", () => {
         }
 
         if (node.tagName === "programme") {
-          const channelId = node.attributes.channel as string;
-          const start = node.attributes.start as string;
-          const end = node.attributes.stop as string;
+          const channelId = node.attributes!.channel as string;
+          const start = node.attributes!.start as string;
+          const end = node.attributes!.stop as string;
 
           const titleNode = node.children.find(
             (c) => typeof c !== "string" && c.tagName === "title",
@@ -720,10 +720,10 @@ describe("transformStream with large fixtures", () => {
             for (const child of node.children) {
               if (typeof child === "string") continue;
               if (child.tagName === "channel") {
-                arrivedChannels.push(child.attributes.id as string);
+                arrivedChannels.push(child.attributes!.id as string);
               }
               if (child.tagName === "programme") {
-                arrivedProgrammes.push(child.attributes.channel as string);
+                arrivedProgrammes.push(child.attributes!.channel as string);
               }
             }
           }
@@ -757,7 +757,7 @@ describe("transformStream with large fixtures", () => {
       const nodes = results.filter((r): r is TNode => typeof r === "object");
       const html = nodes.find((n) => n.tagName === "html");
       expect(html).toBeDefined();
-      expect(html!.attributes.lang).toBe("en");
+      expect(html!.attributes!.lang).toBe("en");
     });
 
     it("streams in small chunks (100 bytes) with html mode", async () => {
@@ -789,14 +789,14 @@ describe("transformStream with large fixtures", () => {
 
       // JSON-LD should be valid JSON
       const jsonLd = scripts.find(
-        (s) => s.attributes.type === "application/ld+json",
+        (s) => s.attributes!.type === "application/ld+json",
       );
       expect(jsonLd).toBeDefined();
       const jsonContent = (jsonLd!.children[0] as string).trim();
       expect(() => JSON.parse(jsonContent)).not.toThrow();
 
       // Inline JS should contain angle brackets
-      const inlineJs = scripts.find((s) => !s.attributes.type);
+      const inlineJs = scripts.find((s) => !s.attributes!.type);
       expect(inlineJs).toBeDefined();
       const jsContent = inlineJs!.children[0] as string;
       expect(jsContent).toContain("createElement('script')");

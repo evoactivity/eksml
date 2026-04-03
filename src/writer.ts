@@ -66,6 +66,7 @@ export function writer(
     }
 
     function writeAttrs(N: TNode): void {
+      if (N.attributes === null) return;
       for (const i in N.attributes) {
         const attrValue = N.attributes[i];
         if (attrValue === null) {
@@ -94,6 +95,7 @@ export function writer(
   }
 
   function prettyWriteAttrs(N: TNode): void {
+    if (N.attributes === null) return;
     for (const key in N.attributes) {
       const val = N.attributes[key];
       if (val === null) {

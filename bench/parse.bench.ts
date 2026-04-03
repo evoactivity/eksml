@@ -92,9 +92,7 @@ describe("RSS feed (~3 KB)", () => {
     parseDocument(rssFeed);
   });
 
-  bench("txml", () => {
-    txmlParse(rssFeed);
-  });
+  // txml crashes on this fixture — omitted
 });
 
 // ---------------------------------------------------------------------------
@@ -179,9 +177,7 @@ describe("XHTML page (~6 KB)", () => {
     parseDocument(xhtmlPage);
   });
 
-  bench("txml", () => {
-    txmlParse(xhtmlPage);
-  });
+  // txml crashes on this fixture — omitted
 });
 
 // ---------------------------------------------------------------------------

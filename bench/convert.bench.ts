@@ -103,13 +103,7 @@ describe("convert: RSS feed (~3 KB)", () => {
     await parseStringPromise(rssFeed);
   });
 
-  bench("txml (simplify)", () => {
-    txmlSimplify(txmlParse(rssFeed));
-  });
-
-  bench("txml (simplifyLostLess)", () => {
-    simplifyLostLess(txmlParse(rssFeed));
-  });
+  // txml crashes on this fixture — omitted
 });
 
 // ---------------------------------------------------------------------------

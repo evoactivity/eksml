@@ -29,9 +29,9 @@ describe("fixture: rss-feed.xml", () => {
       (n) => typeof n === "object" && n.tagName === "rss",
     ) as TNode;
     expect(rss).toBeDefined();
-    expect(rss.attributes.version).toBe("2.0");
-    expect(rss.attributes["xmlns:atom"]).toBe("http://www.w3.org/2005/Atom");
-    expect(rss.attributes["xmlns:dc"]).toBe("http://purl.org/dc/elements/1.1/");
+    expect(rss.attributes!.version).toBe("2.0");
+    expect(rss.attributes!["xmlns:atom"]).toBe("http://www.w3.org/2005/Atom");
+    expect(rss.attributes!["xmlns:dc"]).toBe("http://purl.org/dc/elements/1.1/");
   });
 
   it("extracts all three items", () => {
@@ -102,8 +102,8 @@ describe("fixture: rss-feed.xml", () => {
     const result = parse(rssFeed);
     const atomLinks = filter(result, (n) => n.tagName === "atom:link");
     expect(atomLinks.length).toBeGreaterThanOrEqual(1);
-    expect(atomLinks[0]!.attributes.rel).toBe("self");
-    expect(atomLinks[0]!.attributes.type).toBe("application/rss+xml");
+    expect(atomLinks[0]!.attributes!.rel).toBe("self");
+    expect(atomLinks[0]!.attributes!.type).toBe("application/rss+xml");
   });
 });
 
@@ -122,11 +122,11 @@ describe("fixture: soap-envelope.xml", () => {
       (n) => typeof n === "object" && n.tagName === "soap:Envelope",
     ) as TNode;
     expect(envelope).toBeDefined();
-    expect(envelope.attributes["xmlns:soap"]).toBe(
+    expect(envelope.attributes!["xmlns:soap"]).toBe(
       "http://schemas.xmlsoap.org/soap/envelope/",
     );
-    expect(envelope.attributes["xmlns:wsse"]).toContain("wss-wssecurity");
-    expect(envelope.attributes["xmlns:ds"]).toBe(
+    expect(envelope.attributes!["xmlns:wsse"]).toContain("wss-wssecurity");
+    expect(envelope.attributes!["xmlns:ds"]).toBe(
       "http://www.w3.org/2000/09/xmldsig#",
     );
   });
@@ -144,25 +144,25 @@ describe("fixture: soap-envelope.xml", () => {
     ) as TNode;
     expect(header).toBeDefined();
     expect(body).toBeDefined();
-    expect(body.attributes["wsu:Id"]).toBe("Body-1");
+    expect(body.attributes!["wsu:Id"]).toBe("Body-1");
   });
 
   it("drills into deeply nested WS-Security elements", () => {
     const result = parse(soapEnvelope);
     const security = filter(result, (n) => n.tagName === "wsse:Security");
     expect(security).toHaveLength(1);
-    expect(security[0]!.attributes["soap:mustUnderstand"]).toBe("1");
+    expect(security[0]!.attributes!["soap:mustUnderstand"]).toBe("1");
 
     const timestamps = filter(result, (n) => n.tagName === "wsu:Timestamp");
     expect(timestamps).toHaveLength(1);
-    expect(timestamps[0]!.attributes["wsu:Id"]).toBe("TS-1");
+    expect(timestamps[0]!.attributes!["wsu:Id"]).toBe("TS-1");
   });
 
   it("finds ds:Reference elements with URI attributes", () => {
     const result = parse(soapEnvelope);
     const refs = filter(result, (n) => n.tagName === "ds:Reference");
     expect(refs).toHaveLength(2);
-    const uris = refs.map((r) => r.attributes.URI);
+    const uris = refs.map((r) => r.attributes!.URI);
     expect(uris).toContain("#TS-1");
     expect(uris).toContain("#Body-1");
   });
@@ -179,7 +179,7 @@ describe("fixture: soap-envelope.xml", () => {
     );
     expect(methods.length).toBeGreaterThanOrEqual(5);
     for (const m of methods) {
-      expect(m.attributes.Algorithm).toBeDefined();
+      expect(m.attributes!.Algorithm).toBeDefined();
       expect(m.children).toEqual([]);
     }
   });
@@ -235,14 +235,14 @@ describe("fixture: atom-feed.xml", () => {
       (n) => typeof n === "object" && n.tagName === "feed",
     ) as TNode;
     expect(feed).toBeDefined();
-    expect(feed.attributes.xmlns).toBe("http://www.w3.org/2005/Atom");
-    expect(feed.attributes["xmlns:media"]).toBe(
+    expect(feed.attributes!.xmlns).toBe("http://www.w3.org/2005/Atom");
+    expect(feed.attributes!["xmlns:media"]).toBe(
       "http://search.yahoo.com/mrss/",
     );
-    expect(feed.attributes["xmlns:georss"]).toBe(
+    expect(feed.attributes!["xmlns:georss"]).toBe(
       "http://www.georss.org/georss",
     );
-    expect(feed.attributes["xml:lang"]).toBe("en");
+    expect(feed.attributes!["xml:lang"]).toBe("en");
   });
 
   it("extracts all three entries", () => {
@@ -260,7 +260,7 @@ describe("fixture: atom-feed.xml", () => {
       (c) => typeof c === "object" && c.tagName === "link",
     ) as TNode[];
     expect(links.length).toBeGreaterThanOrEqual(4);
-    const rels = links.map((l) => l.attributes.rel);
+    const rels = links.map((l) => l.attributes!.rel);
     expect(rels).toContain("alternate");
     expect(rels).toContain("self");
     expect(rels).toContain("next");
@@ -275,13 +275,13 @@ describe("fixture: atom-feed.xml", () => {
       (c) => typeof c === "object" && c.tagName === "content",
     ) as TNode;
     expect(contentEl).toBeDefined();
-    expect(contentEl.attributes.type).toBe("xhtml");
+    expect(contentEl.attributes!.type).toBe("xhtml");
     // Should contain a div child with XHTML namespace
     const div = contentEl.children.find(
       (c) => typeof c === "object" && c.tagName === "div",
     ) as TNode;
     expect(div).toBeDefined();
-    expect(div.attributes.xmlns).toBe("http://www.w3.org/1999/xhtml");
+    expect(div.attributes!.xmlns).toBe("http://www.w3.org/1999/xhtml");
   });
 
   it("finds media:group and georss elements", () => {
@@ -290,7 +290,7 @@ describe("fixture: atom-feed.xml", () => {
     expect(mediaGroups).toHaveLength(1);
     const mediaContent = filter(result, (n) => n.tagName === "media:content");
     expect(mediaContent).toHaveLength(1);
-    expect(mediaContent[0]!.attributes.type).toBe("image/png");
+    expect(mediaContent[0]!.attributes!.type).toBe("image/png");
 
     const georssPoints = filter(result, (n) => n.tagName === "georss:point");
     expect(georssPoints.length).toBeGreaterThanOrEqual(1);
@@ -303,7 +303,7 @@ describe("fixture: atom-feed.xml", () => {
     const result = parse(atomFeed);
     const subtitles = filter(result, (n) => n.tagName === "subtitle");
     expect(subtitles).toHaveLength(1);
-    expect(subtitles[0]!.attributes.type).toBe("html");
+    expect(subtitles[0]!.attributes!.type).toBe("html");
   });
 
   it("parses entry with HTML-encoded content (Node.js 24 entry)", () => {
@@ -314,7 +314,7 @@ describe("fixture: atom-feed.xml", () => {
       (c) => typeof c === "object" && c.tagName === "content",
     ) as TNode;
     expect(contentEl).toBeDefined();
-    expect(contentEl.attributes.type).toBe("html");
+    expect(contentEl.attributes!.type).toBe("html");
     // HTML-encoded content should be a text child
     const text = contentEl.children[0] as string;
     expect(text).toContain("Node.js 24 LTS");
@@ -336,8 +336,8 @@ describe("fixture: pom.xml", () => {
       (n) => typeof n === "object" && n.tagName === "project",
     ) as TNode;
     expect(project).toBeDefined();
-    expect(project.attributes.xmlns).toBe("http://maven.apache.org/POM/4.0.0");
-    expect(project.attributes["xmlns:xsi"]).toBe(
+    expect(project.attributes!.xmlns).toBe("http://maven.apache.org/POM/4.0.0");
+    expect(project.attributes!["xmlns:xsi"]).toBe(
       "http://www.w3.org/2001/XMLSchema-instance",
     );
   });

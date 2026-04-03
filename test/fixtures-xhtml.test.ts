@@ -37,8 +37,8 @@ describe("fixture: xhtml-page.xml", () => {
       (n) => typeof n === "object" && n.tagName === "html",
     ) as TNode;
     expect(html).toBeDefined();
-    expect(html.attributes.xmlns).toBe("http://www.w3.org/1999/xhtml");
-    expect(html.attributes["xml:lang"]).toBe("en");
+    expect(html.attributes!.xmlns).toBe("http://www.w3.org/1999/xhtml");
+    expect(html.attributes!["xml:lang"]).toBe("en");
   });
 
   it("finds head with meta, title, link, and style elements", () => {
@@ -112,7 +112,7 @@ describe("fixture: xhtml-page.xml", () => {
     const result = parse(xhtmlPage);
     const tables = filter(result, (n) => n.tagName === "table");
     const featureTable = tables.find(
-      (t) => t.attributes.class === "feature-table",
+      (t) => t.attributes!.class === "feature-table",
     );
     expect(featureTable).toBeDefined();
 
@@ -126,7 +126,7 @@ describe("fixture: xhtml-page.xml", () => {
     // Check data-supported attributes
     const dataCells = filter(featureTable!.children, (n) => n.tagName === "td");
     const supportedCells = dataCells.filter(
-      (c) => c.attributes["data-supported"] !== undefined,
+      (c) => c.attributes?.["data-supported"] !== undefined,
     );
     expect(supportedCells.length).toBeGreaterThan(0);
   });
@@ -135,10 +135,10 @@ describe("fixture: xhtml-page.xml", () => {
     const result = parse(xhtmlPage);
     const articles = filter(result, (n) => n.tagName === "article");
     expect(articles.length).toBeGreaterThanOrEqual(1);
-    const post = articles.find((a) => a.attributes.class === "blog-post");
+    const post = articles.find((a) => a.attributes!.class === "blog-post");
     expect(post).toBeDefined();
-    expect(post!.attributes.itemscope).toBe(""); // XHTML boolean attribute (itemscope="")
-    expect(post!.attributes.itemtype).toBe("https://schema.org/BlogPosting");
+    expect(post!.attributes!.itemscope).toBe(""); // XHTML boolean attribute (itemscope="")
+    expect(post!.attributes!.itemtype).toBe("https://schema.org/BlogPosting");
   });
 
   it("parses definition list (dl/dt/dd)", () => {
@@ -157,7 +157,7 @@ describe("fixture: xhtml-page.xml", () => {
     expect(scripts.length).toBeGreaterThanOrEqual(2);
     // JSON-LD script
     const jsonLd = scripts.find(
-      (s) => s.attributes.type === "application/ld+json",
+      (s) => s.attributes!.type === "application/ld+json",
     );
     expect(jsonLd).toBeDefined();
     const jsonContent = (jsonLd!.children[0] as string).trim();
@@ -165,7 +165,7 @@ describe("fixture: xhtml-page.xml", () => {
 
     // JavaScript script
     const jsScript = scripts.find(
-      (s) => s.attributes.type === "text/javascript",
+      (s) => s.attributes!.type === "text/javascript",
     );
     expect(jsScript).toBeDefined();
     const jsText = jsScript!.children
@@ -178,10 +178,10 @@ describe("fixture: xhtml-page.xml", () => {
     const result = parse(xhtmlPage);
     const stages = filter(
       result,
-      (n) => n.tagName === "div" && n.attributes.class === "stage",
+      (n) => n.tagName === "div" && n.attributes!.class === "stage",
     );
     expect(stages).toHaveLength(5);
-    expect(stages.map((s) => s.attributes["data-step"])).toEqual([
+    expect(stages.map((s) => s.attributes!["data-step"])).toEqual([
       "1",
       "2",
       "3",
@@ -204,7 +204,7 @@ describe("fixture: xhtml-page.xml", () => {
     const hero = getElementById(xhtmlPage, "hero") as TNode;
     expect(hero).toBeDefined();
     expect(hero.tagName).toBe("header");
-    expect(hero.attributes.class).toBe("hero-section");
+    expect(hero.attributes!.class).toBe("hero-section");
 
     const content = getElementById(xhtmlPage, "content") as TNode;
     expect(content).toBeDefined();
@@ -214,7 +214,7 @@ describe("fixture: xhtml-page.xml", () => {
   it("getElementsByClassName finds cards", () => {
     const cards = getElementsByClassName(xhtmlPage, "card") as TNode[];
     expect(cards).toHaveLength(3);
-    const ids = cards.map((c) => c.attributes.id);
+    const ids = cards.map((c) => c.attributes!.id);
     expect(ids).toContain("card-install");
     expect(ids).toContain("card-usage");
     expect(ids).toContain("card-streaming");

@@ -145,7 +145,7 @@ describe("security / prototype pollution — parse (from nfr_spec)", () => {
       expect(Object.prototype.hasOwnProperty.call(root.attributes, name)).toBe(
         true,
       );
-      expect(root.attributes[name]).toBe("malicious");
+      expect(root.attributes![name]).toBe("malicious");
     }
   });
 

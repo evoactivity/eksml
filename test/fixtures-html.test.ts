@@ -41,8 +41,8 @@ describe("fixture: html-page.html", () => {
       (n) => typeof n === "object" && n.tagName === "html",
     ) as TNode;
     expect(html).toBeDefined();
-    expect(html.attributes.lang).toBe("en");
-    expect(html.attributes["data-theme"]).toBe("light");
+    expect(html.attributes!.lang).toBe("en");
+    expect(html.attributes!["data-theme"]).toBe("light");
   });
 
   it("finds head and body as children of html", () => {
@@ -69,8 +69,8 @@ describe("fixture: html-page.html", () => {
     for (const m of metas) {
       expect(m.children).toEqual([]);
     }
-    expect(metas[0]!.attributes.charset).toBe("utf-8");
-    expect(metas[1]!.attributes.name).toBe("viewport");
+    expect(metas[0]!.attributes!.charset).toBe("utf-8");
+    expect(metas[1]!.attributes!.name).toBe("viewport");
   });
 
   it("parses all link elements as self-closing", () => {
@@ -80,9 +80,9 @@ describe("fixture: html-page.html", () => {
     for (const l of links) {
       expect(l.children).toEqual([]);
     }
-    const canonical = links.find((l) => l.attributes.rel === "canonical");
+    const canonical = links.find((l) => l.attributes!.rel === "canonical");
     expect(canonical).toBeDefined();
-    expect(canonical!.attributes.href).toBe("https://example.com/dashboard");
+    expect(canonical!.attributes!.href).toBe("https://example.com/dashboard");
   });
 
   it("parses img elements as self-closing", () => {
@@ -91,8 +91,8 @@ describe("fixture: html-page.html", () => {
     expect(imgs.length).toBe(3);
     for (const img of imgs) {
       expect(img.children).toEqual([]);
-      expect(img.attributes.src).toBeDefined();
-      expect(img.attributes.alt).toBeDefined();
+      expect(img.attributes!.src).toBeDefined();
+      expect(img.attributes!.alt).toBeDefined();
     }
   });
 
@@ -105,7 +105,7 @@ describe("fixture: html-page.html", () => {
     }
     // Various input types
     const types = inputs
-      .map((i) => i.attributes.type)
+      .map((i) => i.attributes!.type)
       .filter((t) => t !== null);
     expect(types).toContain("search");
     expect(types).toContain("date");
@@ -137,9 +137,9 @@ describe("fixture: html-page.html", () => {
       expect(t.children).toEqual([]);
     }
     // Verify track attributes
-    const englishTrack = tracks.find((t) => t.attributes.srclang === "en");
+    const englishTrack = tracks.find((t) => t.attributes!.srclang === "en");
     expect(englishTrack).toBeDefined();
-    expect(englishTrack!.attributes.default).toBeNull(); // boolean attr
+    expect(englishTrack!.attributes!.default).toBeNull(); // boolean attr
   });
 
   it("parses col and embed elements as self-closing", () => {
@@ -149,7 +149,7 @@ describe("fixture: html-page.html", () => {
     const embed = filter(result, (n) => n.tagName === "embed");
     expect(embed.length).toBe(1);
     expect(embed[0]!.children).toEqual([]);
-    expect(embed[0]!.attributes.type).toBe("application/pdf");
+    expect(embed[0]!.attributes!.type).toBe("application/pdf");
   });
 
   it("parses wbr elements as self-closing", () => {
@@ -184,7 +184,7 @@ describe("fixture: html-page.html", () => {
     const result = parse(htmlPage, { html: true });
     const scripts = filter(result, (n) => n.tagName === "script");
     const jsonLd = scripts.find(
-      (s) => s.attributes.type === "application/ld+json",
+      (s) => s.attributes!.type === "application/ld+json",
     );
     expect(jsonLd).toBeDefined();
     const content = (jsonLd!.children[0] as string).trim();
@@ -198,7 +198,7 @@ describe("fixture: html-page.html", () => {
     const result = parse(htmlPage, { html: true });
     const scripts = filter(result, (n) => n.tagName === "script");
     const inlineScript = scripts.find(
-      (s) => !s.attributes.type && s.children.length > 0,
+      (s) => !s.attributes?.type && s.children.length > 0,
     );
     expect(inlineScript).toBeDefined();
     const js = inlineScript!.children[0] as string;
@@ -219,7 +219,7 @@ describe("fixture: html-page.html", () => {
   it("preserves module script content", () => {
     const result = parse(htmlPage, { html: true });
     const scripts = filter(result, (n) => n.tagName === "script");
-    const moduleScript = scripts.find((s) => s.attributes.type === "module");
+    const moduleScript = scripts.find((s) => s.attributes?.type === "module");
     expect(moduleScript).toBeDefined();
     const js = moduleScript!.children[0] as string;
     expect(js).toContain("import { Chart }");
@@ -233,28 +233,28 @@ describe("fixture: html-page.html", () => {
     // disabled button
     const buttons = filter(result, (n) => n.tagName === "button");
     const disabledBtn = buttons.find(
-      (b) => b.attributes.disabled !== undefined,
+      (b) => b.attributes!.disabled !== undefined,
     );
     expect(disabledBtn).toBeDefined();
-    expect(disabledBtn!.attributes.disabled).toBeNull();
+    expect(disabledBtn!.attributes!.disabled).toBeNull();
 
     // checked checkbox
     const inputs = filter(result, (n) => n.tagName === "input");
     const checkedInputs = inputs.filter(
-      (i) => i.attributes.checked !== undefined,
+      (i) => i.attributes!.checked !== undefined,
     );
     expect(checkedInputs.length).toBeGreaterThanOrEqual(2);
     for (const ci of checkedInputs) {
-      expect(ci.attributes.checked).toBeNull();
+      expect(ci.attributes!.checked).toBeNull();
     }
 
     // hidden div
     const hiddenDiv = filter(
       result,
-      (n) => n.tagName === "div" && n.attributes.hidden !== undefined,
+      (n) => n.tagName === "div" && n.attributes!.hidden !== undefined,
     );
     expect(hiddenDiv.length).toBe(1);
-    expect(hiddenDiv[0]!.attributes.hidden).toBeNull();
+    expect(hiddenDiv[0]!.attributes!.hidden).toBeNull();
   });
 
   // --- Complex structure ---
@@ -265,24 +265,24 @@ describe("fixture: html-page.html", () => {
       result,
       (n) =>
         n.tagName === "nav" &&
-        n.attributes["aria-label"] === "Primary navigation",
+        n.attributes?.["aria-label"] === "Primary navigation",
     );
     expect(navs.length).toBe(1);
     const nav = navs[0]!;
     // Top-level menu items
     const menuItems = filter(
       nav.children.filter((c) => typeof c === "object") as TNode[],
-      (n) => n.tagName === "a" && n.attributes.role === "menuitem",
+      (n) => n.tagName === "a" && n.attributes!.role === "menuitem",
     );
     expect(menuItems.length).toBeGreaterThanOrEqual(4);
     // Dashboard has aria-current
     const dashLink = menuItems.find(
-      (m) => m.attributes["aria-current"] === "page",
+      (m) => m.attributes!["aria-current"] === "page",
     );
     expect(dashLink).toBeDefined();
     // Settings has submenu
     const settingsLink = menuItems.find(
-      (m) => m.attributes["aria-haspopup"] === "true",
+      (m) => m.attributes!["aria-haspopup"] === "true",
     );
     expect(settingsLink).toBeDefined();
   });
@@ -319,7 +319,7 @@ describe("fixture: html-page.html", () => {
     const result = parse(htmlPage, { html: true });
     const forms = filter(result, (n) => n.tagName === "form");
     expect(forms.length).toBe(2);
-    const filterForm = forms.find((f) => f.attributes.id === "filter-form");
+    const filterForm = forms.find((f) => f.attributes!.id === "filter-form");
     expect(filterForm).toBeDefined();
     const fieldsets = filter([filterForm!], (n) => n.tagName === "fieldset");
     expect(fieldsets.length).toBe(3);
@@ -337,15 +337,15 @@ describe("fixture: html-page.html", () => {
     const videos = filter(result, (n) => n.tagName === "video");
     expect(videos.length).toBe(1);
     const video = videos[0]!;
-    expect(video.attributes.controls).toBeNull(); // boolean
-    expect(video.attributes.preload).toBe("metadata");
+    expect(video.attributes!.controls).toBeNull(); // boolean
+    expect(video.attributes!.preload).toBe("metadata");
     // source elements inside video
     const sources = video.children.filter(
       (c) => typeof c === "object" && c.tagName === "source",
     ) as TNode[];
     expect(sources.length).toBe(2);
-    expect(sources[0]!.attributes.type).toBe("video/mp4");
-    expect(sources[1]!.attributes.type).toBe("video/webm");
+    expect(sources[0]!.attributes!.type).toBe("video/mp4");
+    expect(sources[1]!.attributes!.type).toBe("video/webm");
     // track elements inside video
     const tracks = video.children.filter(
       (c) => typeof c === "object" && c.tagName === "track",
@@ -357,10 +357,10 @@ describe("fixture: html-page.html", () => {
     const result = parse(htmlPage, { html: true });
     const cards = filter(
       result,
-      (n) => n.tagName === "div" && n.attributes["data-metric"] !== undefined,
+      (n) => n.tagName === "div" && n.attributes!["data-metric"] !== undefined,
     );
     expect(cards.length).toBe(4);
-    expect(cards.map((c) => c.attributes["data-metric"])).toEqual([
+    expect(cards.map((c) => c.attributes!["data-metric"])).toEqual([
       "revenue",
       "users",
       "orders",

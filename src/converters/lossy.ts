@@ -90,17 +90,16 @@ export type LossyMixedEntry = string | { [tagName: string]: LossyValue };
 
 /**
  * Convert a single TNode into its simplified lossy value.
+ *
+ * Single-pass algorithm: starts optimistically building an element-only object,
+ * and upgrades to mixed-content ($$ array) if text nodes are encountered
+ * alongside element nodes (or attributes exist with text).
  */
 function convertNode(node: TNode): LossyValue {
   const children = node.children;
-  const len = children.length;
-
-  // Check for attributes without allocating Object.keys()
-  let hasAttrs = false;
-  for (const _ in node.attributes) {
-    hasAttrs = true;
-    break;
-  }
+  const len = children ? children.length : 0;
+  const attrs = node.attributes;
+  const hasAttrs = attrs !== null;
 
   // --- Empty element ---
   if (len === 0 && !hasAttrs) {
@@ -112,81 +111,99 @@ function convertNode(node: TNode): LossyValue {
     return children[0];
   }
 
-  // --- Has attributes or multiple/complex children: build an object ---
+  // --- Build object with attributes ---
   // Use null-prototype object to prevent __proto__ / constructor pollution
   const obj: LossyObject = Object.create(null);
 
-  // Attributes go first, prefixed with $
   if (hasAttrs) {
-    for (const key in node.attributes) {
-      obj["$" + key] = node.attributes[key]!;
+    for (const key in attrs) {
+      obj["$" + key] = attrs[key]!;
     }
   }
-
-  // Single-pass: detect content type and handle accordingly.
-  // We check the first child to determine the path, then branch.
-  // Most XML elements are either all-text, all-elements, or mixed.
 
   if (len === 0) {
     // Empty element with attributes only
     return obj;
   }
 
-  // Check content type in a single scan
-  let hasText = false;
+  // --- Single-pass: build element-only object, upgrade to mixed if needed ---
+  // Track whether we've seen elements and/or text so far.
+  // When text appears alongside elements (or attrs), switch to $$ mode,
+  // retroactively converting already-processed children.
   let hasElements = false;
-  for (let i = 0; i < len; i++) {
-    if (typeof children[i] === "string") {
-      hasText = true;
-    } else {
-      hasElements = true;
-    }
-    if (hasText && hasElements) break;
-  }
+  let hasText = false;
+  let mixed: LossyMixedEntry[] | null = null;
 
-  // --- Mixed content or text-with-attributes → use $$ array ---
-  if (hasText && (hasElements || hasAttrs)) {
-    const mixed: LossyMixedEntry[] = [];
-    for (let i = 0; i < len; i++) {
-      const child = children[i]!;
-      if (typeof child === "string") {
+  for (let i = 0; i < len; i++) {
+    const child = children[i]!;
+    if (typeof child === "string") {
+      hasText = true;
+      if (mixed !== null) {
+        // Already in mixed mode
         mixed.push(child);
-      } else {
+      } else if (hasElements || hasAttrs) {
+        // Upgrade to mixed mode — retroactively convert prior children.
+        // Remove element keys that were speculatively added to obj.
+        for (const k in obj) {
+          if (k.charCodeAt(0) !== 36) delete obj[k]; // keep $-prefixed attrs
+        }
+        mixed = [];
+        for (let j = 0; j < i; j++) {
+          const prev = children[j]!;
+          if (typeof prev === "string") {
+            mixed.push(prev);
+          } else {
+            mixed.push({ [prev.tagName]: convertNode(prev) });
+          }
+        }
+        mixed.push(child);
+      }
+      // If !hasElements && !hasAttrs, we're still in potential text-only mode
+    } else {
+      if (!hasElements && hasText && !hasAttrs) {
+        // First element after text-only so far — upgrade to mixed mode
+        hasElements = true;
+        mixed = [];
+        for (let j = 0; j < i; j++) {
+          mixed.push(children[j] as string);
+        }
         mixed.push({ [child.tagName]: convertNode(child) });
+        continue;
+      }
+      hasElements = true;
+      const tag = child.tagName;
+      const val = convertNode(child);
+      if (mixed !== null) {
+        mixed.push({ [tag]: val });
+      } else {
+        if (!(tag in obj)) {
+          obj[tag] = val;
+        } else if (!Array.isArray(obj[tag])) {
+          obj[tag] = [obj[tag] as LossyValue, val];
+        } else {
+          (obj[tag] as LossyValue[]).push(val);
+        }
       }
     }
+  }
+
+  // If we switched to mixed mode, attach and return
+  if (mixed !== null) {
     obj.$$ = mixed;
     return obj;
   }
 
+  // If we had elements, obj is already populated — return it
+  if (hasElements) {
+    return obj;
+  }
+
   // --- Text-only, no attributes, multiple text nodes (edge case) ---
-  if (hasText) {
-    let text = "";
-    for (let i = 0; i < len; i++) {
-      text += children[i] as string;
-    }
-    return text;
-  }
-
-  // --- Element-only children ---
-  // Single pass: build keys, promote to array on second occurrence
+  let text = "";
   for (let i = 0; i < len; i++) {
-    const child = children[i] as TNode;
-    const tag = child.tagName;
-    const val = convertNode(child);
-    if (!(tag in obj)) {
-      // First occurrence — store as single value
-      obj[tag] = val;
-    } else if (!Array.isArray(obj[tag])) {
-      // Second occurrence — promote to array
-      obj[tag] = [obj[tag] as LossyValue, val];
-    } else {
-      // Third+ occurrence — push to existing array
-      (obj[tag] as LossyValue[]).push(val);
-    }
+    text += children[i] as string;
   }
-
-  return obj;
+  return text;
 }
 
 /**
