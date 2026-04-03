@@ -76,6 +76,12 @@ const inputEditor = monaco.editor.create(inputEditorContainer, {
 const inputModel = monaco.editor.createModel(DEFAULT_XML, "xml");
 inputEditor.setModel(inputModel);
 
+// Trigger JSON grammar loading so monaco.editor.colorize("...", "json") works.
+// modern-monaco loads grammars lazily via onLanguage; creating a model forces the load.
+const jsonWarmupModel = monaco.editor.createModel("{}", "json");
+await monaco.editor.colorize("{}", "json", { tabSize: 2 });
+jsonWarmupModel.dispose();
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -117,11 +123,18 @@ function appendNode(node: TNode | string): void {
     ? `<span class="node-text-val">text</span> "${escapeHtml(node.length > 80 ? node.slice(0, 80) + "..." : node)}"`
     : formatNode(node);
 
-  const jsonStr = escapeHtml(JSON.stringify(node, null, 2));
+  const jsonRaw = JSON.stringify(node, null, 2);
 
   entry.innerHTML =
     `<div class="node-summary">${summary} <span class="expand-hint">click to expand</span></div>` +
-    `<div class="json-body">${jsonStr}</div>`;
+    `<div class="json-body">${escapeHtml(jsonRaw)}</div>`;
+
+  const jsonBody = entry.querySelector(".json-body") as HTMLDivElement;
+
+  // Colorize the JSON asynchronously using Monaco's built-in tokenizer
+  monaco.editor.colorize(jsonRaw, "json", { tabSize: 2 }).then((colorizedHtml) => {
+    jsonBody.innerHTML = colorizedHtml;
+  });
 
   entry.addEventListener("click", () => {
     entry.classList.toggle("expanded");
