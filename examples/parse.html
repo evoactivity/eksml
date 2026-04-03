@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eksml - Parse Example</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #0e0e10;
+    color: #e0e0e0;
+    padding: 24px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #fff;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 20px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .controls label {
+    font-size: 0.8rem;
+    color: #aaa;
+  }
+
+  select, button {
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #1a1a1e;
+    color: #e0e0e0;
+    cursor: pointer;
+  }
+
+  select:hover, button:hover {
+    border-color: #555;
+  }
+
+  button.primary {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  button.primary:hover {
+    background: #1d4ed8;
+  }
+
+  .panes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    height: calc(100vh - 160px);
+    min-height: 400px;
+  }
+
+  .pane {
+    display: flex;
+    flex-direction: column;
+    background: #16161a;
+    border: 1px solid #2a2a2e;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .pane-header {
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    background: #1a1a1e;
+    border-bottom: 1px solid #2a2a2e;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pane-header .timing {
+    font-weight: 400;
+    color: #6b7280;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  textarea {
+    flex: 1;
+    width: 100%;
+    padding: 14px;
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    background: transparent;
+    color: #e0e0e0;
+    border: none;
+    outline: none;
+    resize: none;
+    tab-size: 2;
+  }
+
+  textarea:focus {
+    background: #18181c;
+  }
+
+  .output-area {
+    flex: 1;
+    overflow: auto;
+    padding: 14px;
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .error {
+    color: #ef4444;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .timing.benching {
+    animation: pulse 0.8s ease-in-out infinite;
+  }
+</style>
+</head>
+<body>
+
+<h1>eksml &mdash; Parse</h1>
+<p class="subtitle">Enter XML on the left, see parsed output on the right.</p>
+
+<div class="controls">
+  <label for="mode">Output mode</label>
+  <select id="mode">
+    <option value="dom" selected>DOM (TNode[])</option>
+    <option value="lossy">Lossy</option>
+    <option value="lossless">Lossless</option>
+  </select>
+
+  <label for="entities">
+    <input type="checkbox" id="entities"> Decode entities
+  </label>
+
+  <label for="html">
+    <input type="checkbox" id="html"> HTML mode
+  </label>
+
+  <label for="bench">
+    <input type="checkbox" id="bench"> Bench
+  </label>
+
+  <button class="primary" id="parse-btn">Parse</button>
+</div>
+
+<div class="panes">
+  <div class="pane">
+    <div class="pane-header">Input XML</div>
+    <textarea id="input" spellcheck="false"><?xml version="1.0" encoding="UTF-8"?>
+<bookstore>
+  <book category="fiction">
+    <title lang="en">The Great Gatsby</title>
+    <author>F. Scott Fitzgerald</author>
+    <year>1925</year>
+    <price>10.99</price>
+  </book>
+  <book category="non-fiction">
+    <title lang="en">Sapiens</title>
+    <author>Yuval Noah Harari</author>
+    <year>2011</year>
+    <price>14.99</price>
+  </book>
+  <book category="fiction">
+    <title lang="es">Cien a&ntilde;os de soledad</title>
+    <author>Gabriel Garc&iacute;a M&aacute;rquez</author>
+    <year>1967</year>
+    <price>12.50</price>
+  </book>
+</bookstore></textarea>
+  </div>
+
+  <div class="pane">
+    <div class="pane-header">
+      <span>Output</span>
+      <span class="timing" id="timing"></span>
+    </div>
+    <div class="output-area" id="output"></div>
+  </div>
+</div>
+
+<script type="module" src="./parse.ts"></script>
+
+</body>
+</html>

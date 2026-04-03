@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eksml - Transform Stream Example</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #0e0e10;
+    color: #e0e0e0;
+    padding: 24px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #fff;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 20px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .controls label {
+    font-size: 0.8rem;
+    color: #aaa;
+  }
+
+  select, button, input[type="number"] {
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #1a1a1e;
+    color: #e0e0e0;
+    cursor: pointer;
+  }
+
+  input[type="number"] {
+    width: 80px;
+    cursor: text;
+  }
+
+  select:hover, button:hover {
+    border-color: #555;
+  }
+
+  button.primary {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  button.primary:hover { background: #1d4ed8; }
+
+  button.danger {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  button.danger:hover { background: #b91c1c; }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .panes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    height: calc(100vh - 160px);
+    min-height: 400px;
+  }
+
+  .pane {
+    display: flex;
+    flex-direction: column;
+    background: #16161a;
+    border: 1px solid #2a2a2e;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .pane-header {
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    background: #1a1a1e;
+    border-bottom: 1px solid #2a2a2e;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pane-header .stats {
+    font-weight: 400;
+    color: #6b7280;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  textarea {
+    flex: 1;
+    width: 100%;
+    padding: 14px;
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    background: transparent;
+    color: #e0e0e0;
+    border: none;
+    outline: none;
+    resize: none;
+    tab-size: 2;
+  }
+
+  textarea:focus { background: #18181c; }
+
+  .log-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 0.78rem;
+    line-height: 1.6;
+  }
+
+  .log-entry {
+    padding: 4px 14px;
+    border-bottom: 1px solid #1e1e22;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .log-entry:hover { background: #1c1c20; }
+
+  .log-entry.chunk-marker {
+    background: #1a1a2e;
+    color: #6366f1;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 4px 14px;
+  }
+
+  .log-entry.node-element {
+    border-left: 3px solid #34d399;
+  }
+
+  .log-entry.node-text {
+    border-left: 3px solid #fbbf24;
+  }
+
+  .log-entry.node-done {
+    border-left: 3px solid #6366f1;
+  }
+
+  .node-tag { color: #34d399; font-weight: 600; }
+  .node-attr-key { color: #a78bfa; }
+  .node-attr-val { color: #fbbf24; }
+  .node-text-val { color: #fbbf24; }
+  .node-children { color: #6b7280; font-size: 0.72rem; }
+  .node-json { color: #9ca3af; }
+
+  .progress-bar {
+    height: 3px;
+    background: #2a2a2e;
+    overflow: hidden;
+  }
+
+  .progress-bar .fill {
+    height: 100%;
+    width: 0%;
+    background: #2563eb;
+    transition: width 0.1s ease;
+  }
+
+  .collapsible {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .collapsible .json-body {
+    display: none;
+    margin-top: 4px;
+    padding-left: 12px;
+    border-left: 1px solid #2a2a2e;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .collapsible.expanded .json-body {
+    display: block;
+  }
+
+  .expand-hint {
+    color: #555;
+    font-size: 0.7rem;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<h1>eksml &mdash; Transform Stream</h1>
+<p class="subtitle">Feeds XML chunks through a Web TransformStream, emitting complete TNode subtrees as they close.</p>
+
+<div class="controls">
+  <label for="throttle">Throttle</label>
+  <select id="throttle">
+    <option value="0">No delay</option>
+    <option value="16">16 ms (60 fps)</option>
+    <option value="50">50 ms</option>
+    <option value="100" selected>100 ms</option>
+    <option value="250">250 ms</option>
+    <option value="500">500 ms</option>
+    <option value="1000">1000 ms</option>
+  </select>
+
+  <label for="chunk-size">Chunk size (bytes)</label>
+  <input type="number" id="chunk-size" value="64" min="1" max="100000">
+
+  <button class="primary" id="start-btn">Stream</button>
+  <button class="danger" id="stop-btn" disabled>Stop</button>
+</div>
+
+<div class="panes">
+  <div class="pane">
+    <div class="pane-header">Input XML</div>
+    <textarea id="input" spellcheck="false"><?xml version="1.0" encoding="UTF-8"?>
+<library>
+  <section name="Fiction">
+    <book isbn="978-0-13-468599-1">
+      <title>The Pragmatic Programmer</title>
+      <authors>
+        <author>David Thomas</author>
+        <author>Andrew Hunt</author>
+      </authors>
+      <year>2019</year>
+    </book>
+    <book isbn="978-0-596-51774-8">
+      <title>JavaScript: The Good Parts</title>
+      <authors>
+        <author>Douglas Crockford</author>
+      </authors>
+      <year>2008</year>
+    </book>
+  </section>
+  <section name="Science">
+    <book isbn="978-0-553-38016-2">
+      <title>A Brief History of Time</title>
+      <authors>
+        <author>Stephen Hawking</author>
+      </authors>
+      <year>1988</year>
+      <notes><![CDATA[Classic physics & cosmology text]]></notes>
+    </book>
+  </section>
+  <!-- More sections to come -->
+</library></textarea>
+  </div>
+
+  <div class="pane">
+    <div class="pane-header">
+      <span>Emitted Nodes</span>
+      <span class="stats" id="stats"></span>
+    </div>
+    <div class="progress-bar"><div class="fill" id="progress"></div></div>
+    <div class="log-area" id="log"></div>
+  </div>
+</div>
+
+<script type="module" src="./transform-stream.ts"></script>
+
+</body>
+</html>

@@ -51,7 +51,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "bench": "vitest bench",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "examples": "vite",
+    "examples:build": "vite build"
   },
   "keywords": [],
   "author": "Liam Potter",
@@ -70,6 +72,7 @@
     "tsdown": "^0.21.7",
     "txml": "^5.2.1",
     "typescript": "^6.0.2",
+    "vite": "^8.0.3",
     "vitest": "^4.1.2",
     "xml2js": "^0.6.2"
   },
