@@ -54,34 +54,7 @@
 import { parse, type TNode, type ParseOptions } from "../parser.ts";
 
 /** Options for lossy. */
-export interface LossyOptions {
-  /**
-   * Array of tag names that are self-closing (void elements).
-   * Defaults to `[]` in XML mode, HTML void elements in HTML mode.
-   */
-  selfClosingTags?: string[];
-  /**
-   * Array of tag names whose content is raw text.
-   * Defaults to `[]` in XML mode, `["script", "style"]` in HTML mode.
-   */
-  rawContentTags?: string[];
-  /** Enable HTML parsing mode. */
-  html?: boolean;
-  /** Keep XML comments in the output. Comments appear as strings in `$$` arrays. */
-  keepComments?: boolean;
-  /** Trim whitespace from text nodes and discard whitespace-only text nodes. */
-  trimWhitespace?: boolean;
-  /**
-   * Strict mode: throw on malformed XML instead of recovering silently.
-   */
-  strict?: boolean;
-  /**
-   * Decode XML/HTML entities in text content and attribute values.
-   * Uses HTML entity set when `html: true`, XML entity set otherwise.
-   * Defaults to `false`.
-   */
-  entities?: boolean;
-}
+export interface LossyOptions extends ParseOptions {}
 
 /** The value of a converted element — null (empty), string, or an object with keys. */
 export type LossyValue = null | string | LossyObject;
@@ -225,22 +198,7 @@ export function lossy(
   xml: string,
   options?: LossyOptions,
 ): LossyValue | LossyValue[] {
-  const parseOpts: ParseOptions = {};
-  if (options) {
-    if (options.selfClosingTags !== undefined)
-      parseOpts.selfClosingTags = options.selfClosingTags;
-    if (options.rawContentTags !== undefined)
-      parseOpts.rawContentTags = options.rawContentTags;
-    if (options.html !== undefined) parseOpts.html = options.html;
-    if (options.keepComments !== undefined)
-      parseOpts.keepComments = options.keepComments;
-    if (options.trimWhitespace !== undefined)
-      parseOpts.trimWhitespace = options.trimWhitespace;
-    if (options.strict !== undefined) parseOpts.strict = options.strict;
-    if (options.entities !== undefined) parseOpts.entities = options.entities;
-  }
-
-  const dom = parse(xml, parseOpts);
+  const dom = parse(xml, { ...options });
 
   // Filter out whitespace-only top-level text and processing instructions
   // (e.g. <?xml version="1.0"?>) which are metadata, not content.

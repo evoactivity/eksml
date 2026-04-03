@@ -39,34 +39,7 @@ export type LosslessEntry =
   | { $comment: string };
 
 /** Options for lossless. */
-export interface LosslessOptions {
-  /**
-   * Array of tag names that are self-closing (void elements).
-   * Defaults to `[]` in XML mode, HTML void elements in HTML mode.
-   */
-  selfClosingTags?: string[];
-  /**
-   * Array of tag names whose content is raw text.
-   * Defaults to `[]` in XML mode, `["script", "style"]` in HTML mode.
-   */
-  rawContentTags?: string[];
-  /** Enable HTML parsing mode. */
-  html?: boolean;
-  /** Keep XML comments in the output as `{ $comment: "..." }` entries. */
-  keepComments?: boolean;
-  /** Trim whitespace from text nodes and discard whitespace-only text nodes. */
-  trimWhitespace?: boolean;
-  /**
-   * Strict mode: throw on malformed XML instead of recovering silently.
-   */
-  strict?: boolean;
-  /**
-   * Decode XML/HTML entities in text content and attribute values.
-   * Uses HTML entity set when `html: true`, XML entity set otherwise.
-   * Defaults to `false`.
-   */
-  entities?: boolean;
-}
+export interface LosslessOptions extends ParseOptions {}
 
 function convertNode(node: TNode): LosslessEntry {
   const children: LosslessEntry[] = [];
@@ -108,22 +81,7 @@ export function lossless(
   xml: string,
   options?: LosslessOptions,
 ): LosslessEntry[] {
-  const parseOpts: ParseOptions = {};
-  if (options) {
-    if (options.selfClosingTags !== undefined)
-      parseOpts.selfClosingTags = options.selfClosingTags;
-    if (options.rawContentTags !== undefined)
-      parseOpts.rawContentTags = options.rawContentTags;
-    if (options.html !== undefined) parseOpts.html = options.html;
-    if (options.keepComments !== undefined)
-      parseOpts.keepComments = options.keepComments;
-    if (options.trimWhitespace !== undefined)
-      parseOpts.trimWhitespace = options.trimWhitespace;
-    if (options.strict !== undefined) parseOpts.strict = options.strict;
-    if (options.entities !== undefined) parseOpts.entities = options.entities;
-  }
-
-  const dom = parse(xml, parseOpts);
+  const dom = parse(xml, { ...options });
   const result: LosslessEntry[] = [];
   for (let i = 0; i < dom.length; i++) {
     const node = dom[i]!;
