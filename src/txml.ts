@@ -81,17 +81,26 @@ export interface ParseOptions {
 }
 
 const openBracket = "<";
-const openBracketCC = "<".charCodeAt(0);
-const closeBracketCC = ">".charCodeAt(0);
-const minusCC = "-".charCodeAt(0);
-const slashCC = "/".charCodeAt(0);
-const exclamationCC = "!".charCodeAt(0);
-const singleQuoteCC = "'".charCodeAt(0);
-const doubleQuoteCC = '"'.charCodeAt(0);
-const openCornerBracketCC = "[".charCodeAt(0);
-const closeCornerBracketCC = "]".charCodeAt(0);
-const questionCC = "?".charCodeAt(0);
-const nameSpacer = "\r\n\t>/= ";
+const openBracketCC = 60; // <
+const closeBracketCC = 62; // >
+const slashCC = 47; // /
+const exclamationCC = 33; // !
+const singleQuoteCC = 39; // '
+const doubleQuoteCC = 34; // "
+const openCornerBracketCC = 91; // [
+const closeCornerBracketCC = 93; // ]
+const questionCC = 63; // ?
+
+// Pre-computed lookup table: 1 for characters that terminate a name token
+// Name-ending chars: \t(9) \n(10) \r(13) space(32) /(47) =(61) >(62)
+const NAME_END = new Uint8Array(128);
+NAME_END[9] = 1;   // \t
+NAME_END[10] = 1;  // \n
+NAME_END[13] = 1;  // \r
+NAME_END[32] = 1;  // space
+NAME_END[47] = 1;  // /
+NAME_END[61] = 1;  // =
+NAME_END[62] = 1;  // >
 
 /**
  * Standard HTML void elements that are self-closing and never have children.
@@ -137,10 +146,16 @@ export function parse(
   const keepWhitespace = !!opts.keepWhitespace;
   const htmlMode = !!opts.html;
 
-  const selfClosingTags: string[] =
+  const selfClosingArr: string[] =
     opts.selfClosingTags ?? (htmlMode ? HTML_VOID_ELEMENTS : []);
-  const rawContentTags: string[] =
+  const rawContentArr: string[] =
     opts.rawContentTags ?? (htmlMode ? HTML_RAW_CONTENT_TAGS : []);
+
+  // Convert to Sets for O(1) lookup when non-empty
+  const selfClosingSet: Set<string> | null =
+    selfClosingArr.length > 0 ? new Set(selfClosingArr) : null;
+  const rawContentSet: Set<string> | null =
+    rawContentArr.length > 0 ? new Set(rawContentArr) : null;
 
   function parseChildren(tagName: string): (TNode | string)[] {
     const children: (TNode | string)[] = [];
@@ -167,35 +182,30 @@ export function parse(
 
           return children;
         } else if (S.charCodeAt(pos + 1) === exclamationCC) {
-          if (S.charCodeAt(pos + 2) === minusCC) {
-            // comment support
+          if (S.charCodeAt(pos + 2) === 45 /* - */) {
+            // comment: use indexOf("-->") for fast scanning
             const startCommentPos = pos;
-            while (
-              pos !== -1 &&
-              !(
-                S.charCodeAt(pos) === closeBracketCC &&
-                S.charCodeAt(pos - 1) === minusCC &&
-                S.charCodeAt(pos - 2) === minusCC &&
-                pos !== -1
-              )
-            ) {
-              pos = S.indexOf(">", pos + 1);
-            }
+            pos = S.indexOf("-->", pos + 3);
             if (pos === -1) {
               pos = S.length;
-            }
-            if (keepComments) {
-              children.push(S.substring(startCommentPos, pos + 1));
+              if (keepComments) {
+                children.push(S.substring(startCommentPos));
+              }
+            } else {
+              pos += 2; // point to the '>'
+              if (keepComments) {
+                children.push(S.substring(startCommentPos, pos + 1));
+              }
             }
           } else if (
             S.charCodeAt(pos + 2) === openCornerBracketCC &&
             S.charCodeAt(pos + 8) === openCornerBracketCC &&
-            S.substr(pos + 3, 5).toLowerCase() === "cdata"
+            S.substring(pos + 3, pos + 8).toLowerCase() === "cdata"
           ) {
             // cdata
             const cdataEndIndex = S.indexOf("]]>", pos);
             if (cdataEndIndex === -1) {
-              children.push(S.substr(pos + 9));
+              children.push(S.substring(pos + 9));
               pos = S.length;
             } else {
               children.push(S.substring(pos + 9, cdataEndIndex));
@@ -228,7 +238,7 @@ export function parse(
         }
         const node = parseNode();
         children.push(node);
-        if (node.tagName[0] === "?") {
+        if (node.tagName.charCodeAt(0) === questionCC) {
           children.push(...node.children);
           node.children = [];
         }
@@ -254,15 +264,16 @@ export function parse(
     const start = pos;
     pos = S.indexOf(openBracket, pos) - 1;
     if (pos === -2) pos = S.length;
-    return S.slice(start, pos + 1);
+    return S.substring(start, pos + 1);
   }
 
   function parseName(): string {
     const start = pos;
-    while (nameSpacer.indexOf(S[pos]!) === -1 && S[pos]) {
-      pos++;
+    let cc = S.charCodeAt(pos);
+    while (cc < 128 ? NAME_END[cc] === 0 : cc === cc /* not NaN = not past end */) {
+      cc = S.charCodeAt(++pos);
     }
-    return S.slice(start, pos);
+    return S.substring(start, pos);
   }
 
   function parseNode(): TNode {
@@ -309,20 +320,20 @@ export function parse(
       S.charCodeAt(pos - 1) !== questionCC &&
       tagName.charCodeAt(0) !== exclamationCC
     ) {
-      if (rawContentTags.indexOf(tagName) !== -1) {
+      if (rawContentSet !== null && rawContentSet.has(tagName)) {
         // Raw content tag: scan for the matching close tag and emit content as raw text
         const closeTag = "</" + tagName + ">";
         const start = pos + 1;
         pos = S.indexOf(closeTag, start);
         if (pos === -1) {
           // Unclosed raw content tag: consume the rest of the string
-          children = [S.slice(start)];
+          children = [S.substring(start)];
           pos = S.length;
         } else {
-          children = [S.slice(start, pos)];
+          children = [S.substring(start, pos)];
           pos += closeTag.length;
         }
-      } else if (selfClosingTags.indexOf(tagName) === -1) {
+      } else if (selfClosingSet === null || !selfClosingSet.has(tagName)) {
         pos++;
         children = parseChildren(tagName);
       } else {
@@ -335,10 +346,10 @@ export function parse(
   }
 
   function parseString(): string {
-    const startChar = S[pos];
+    const quoteCC = S.charCodeAt(pos);
     const startpos = pos + 1;
-    pos = S.indexOf(startChar!, startpos);
-    return S.slice(startpos, pos);
+    pos = S.indexOf(quoteCC === singleQuoteCC ? "'" : '"', startpos);
+    return S.substring(startpos, pos);
   }
 
   function findElements(): number {
