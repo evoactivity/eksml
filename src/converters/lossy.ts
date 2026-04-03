@@ -51,7 +51,7 @@
  * ```
  */
 
-import { parse, type TNode, type ParseOptions } from "../txml.ts";
+import { parse, type TNode, type ParseOptions } from "../parser.ts";
 
 /** Options for lossy. */
 export interface LossyOptions {
@@ -69,8 +69,8 @@ export interface LossyOptions {
   html?: boolean;
   /** Keep XML comments in the output. Comments appear as strings in `$$` arrays. */
   keepComments?: boolean;
-  /** Keep whitespace-only text nodes. */
-  keepWhitespace?: boolean;
+  /** Trim whitespace from text nodes and discard whitespace-only text nodes. */
+  trimWhitespace?: boolean;
 }
 
 /** The value of a converted element — null (empty), string, or an object with keys. */
@@ -194,11 +194,7 @@ export function lossy(
   xml: string,
   options?: LossyOptions,
 ): LossyValue | LossyValue[] {
-  const parseOpts: ParseOptions = {
-    // Default to preserving whitespace for output.
-    // Can be overridden by the caller.
-    keepWhitespace: true,
-  };
+  const parseOpts: ParseOptions = {};
   if (options) {
     if (options.selfClosingTags !== undefined)
       parseOpts.selfClosingTags = options.selfClosingTags;
@@ -207,11 +203,11 @@ export function lossy(
     if (options.html !== undefined) parseOpts.html = options.html;
     if (options.keepComments !== undefined)
       parseOpts.keepComments = options.keepComments;
-    if (options.keepWhitespace !== undefined)
-      parseOpts.keepWhitespace = options.keepWhitespace;
+    if (options.trimWhitespace !== undefined)
+      parseOpts.trimWhitespace = options.trimWhitespace;
   }
 
-  const dom = parse(xml, parseOpts) as (TNode | string)[];
+  const dom = parse(xml, parseOpts);
 
   // Filter out whitespace-only top-level text and processing instructions
   // (e.g. <?xml version="1.0"?>) which are metadata, not content.

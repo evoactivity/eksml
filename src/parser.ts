@@ -57,25 +57,24 @@ export interface ParseOptions {
    * These defaults can be overridden by explicitly passing `selfClosingTags` or `rawContentTags`.
    */
   html?: boolean;
-  /** If true, the returned object will have a pos property indicating where parsing stopped */
-  setPos?: boolean;
   /** Keep XML comments in the output */
   keepComments?: boolean;
-  /** Keep whitespace text nodes */
-  keepWhitespace?: boolean;
-  /** Parse a single node instead of a list of nodes */
-  parseNode?: boolean;
+  /** Trim whitespace from text nodes and discard whitespace-only text nodes */
+  trimWhitespace?: boolean;
   /** Attribute name to search for (used with attrValue) */
   attrName?: string;
   /** Attribute value to search for (regex pattern) */
   attrValue?: string;
   /** Filter function to apply to nodes */
-  filter?: (
-    node: TNode,
-    index: number,
-    depth: number,
-    path: string,
-  ) => boolean;
+  filter?: (node: TNode, index: number, depth: number, path: string) => boolean;
+}
+
+/** Internal options extending ParseOptions — not part of the public API. */
+interface InternalParseOptions extends ParseOptions {
+  /** If true, the returned object will have a pos property indicating where parsing stopped */
+  setPos?: boolean;
+  /** Parse a single node instead of a list of nodes */
+  parseNode?: boolean;
 }
 
 const openBracket = "<";
@@ -92,13 +91,13 @@ const questionCC = 63; // ?
 // Pre-computed lookup table: 1 for characters that terminate a name token
 // Name-ending chars: \t(9) \n(10) \r(13) space(32) /(47) =(61) >(62)
 const NAME_END = new Uint8Array(128);
-NAME_END[9] = 1;   // \t
-NAME_END[10] = 1;  // \n
-NAME_END[13] = 1;  // \r
-NAME_END[32] = 1;  // space
-NAME_END[47] = 1;  // /
-NAME_END[61] = 1;  // =
-NAME_END[62] = 1;  // >
+NAME_END[9] = 1; // \t
+NAME_END[10] = 1; // \n
+NAME_END[13] = 1; // \r
+NAME_END[32] = 1; // space
+NAME_END[47] = 1; // /
+NAME_END[61] = 1; // =
+NAME_END[62] = 1; // >
 
 /**
  * Standard HTML void elements that are self-closing and never have children.
@@ -135,13 +134,13 @@ export const HTML_RAW_CONTENT_TAGS = ["script", "style"];
  */
 export function parse(
   S: string,
-  options?: ParseOptions,
-): (TNode | string)[] | TNodeWithPos | Record<string, any> | string {
-  const opts = options || {};
+  options?: ParseOptions | InternalParseOptions,
+): (TNode | string)[] {
+  const opts = (options || {}) as InternalParseOptions;
 
   let pos = opts.pos || 0;
   const keepComments = !!opts.keepComments;
-  const keepWhitespace = !!opts.keepWhitespace;
+  const trimWhitespace = !!opts.trimWhitespace;
   const htmlMode = !!opts.html;
 
   const selfClosingArr: string[] =
@@ -242,14 +241,14 @@ export function parse(
         }
       } else {
         const text = parseText();
-        if (keepWhitespace) {
-          if (text.length > 0) {
-            children.push(text);
-          }
-        } else {
+        if (trimWhitespace) {
           const trimmed = text.trim();
           if (trimmed.length > 0) {
             children.push(trimmed);
+          }
+        } else {
+          if (text.length > 0) {
+            children.push(text);
           }
         }
         pos++;
@@ -268,7 +267,9 @@ export function parse(
   function parseName(): string {
     const start = pos;
     let cc = S.charCodeAt(pos);
-    while (cc < 128 ? NAME_END[cc] === 0 : cc === cc /* not NaN = not past end */) {
+    while (
+      cc < 128 ? NAME_END[cc] === 0 : cc === cc /* not NaN = not past end */
+    ) {
       cc = S.charCodeAt(++pos);
     }
     return S.substring(start, pos);
@@ -391,7 +392,7 @@ export function parse(
     (out as TNodeWithPos).pos = pos;
   }
 
-  return out;
+  return out as (TNode | string)[];
 }
 
 /**
@@ -428,56 +429,6 @@ export function filter(
 }
 
 /**
- * Stringify a parsed object back to XML.
- * Useful for removing whitespace or recreating XML with modified data.
- * @param O - The node(s) to stringify
- * @returns XML string
- */
-export function stringify(O: TNode | (TNode | string)[]): string {
-  if (!O) return "";
-
-  let out = "";
-
-  function writeChildren(nodes: (TNode | string)[]): void {
-    if (nodes) {
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i]!;
-        if (typeof node === "string") {
-          out += node.trim();
-        } else if (node) {
-          writeNode(node);
-        }
-      }
-    }
-  }
-
-  function writeNode(N: TNode): void {
-    if (!N) return;
-    out += "<" + N.tagName;
-    for (const i in N.attributes) {
-      const attrValue = N.attributes[i];
-      if (attrValue === null) {
-        out += " " + i;
-      } else if (attrValue.indexOf('"') === -1) {
-        out += " " + i + '="' + attrValue.trim() + '"';
-      } else {
-        out += " " + i + "='" + attrValue.trim() + "'";
-      }
-    }
-    if (N.tagName[0] === "?") {
-      out += "?>";
-      return;
-    }
-    out += ">";
-    writeChildren(N.children);
-    out += "</" + N.tagName + ">";
-  }
-  writeChildren(Array.isArray(O) ? O : [O]);
-
-  return out;
-}
-
-/**
  * Read the text content of a node, useful for mixed content.
  * Example: "this text has some <b>big</b> text and a <a href=''>link</a>"
  * @param tDom - The node(s) to extract text from
@@ -506,11 +457,8 @@ export function toContentString(
  * @param id - ID value to find
  * @returns Found node, or undefined if not found
  */
-export function getElementById(
-  S: string,
-  id: string,
-): TNode | undefined {
-  const out = parse(S, { attrValue: id }) as (TNode | string)[];
+export function getElementById(S: string, id: string): TNode | undefined {
+  const out = parse(S, { attrValue: id });
   return out[0] as TNode | undefined;
 }
 
@@ -527,7 +475,7 @@ export function getElementsByClassName(
   const out = parse(S, {
     attrName: "class",
     attrValue: "[a-zA-Z0-9- ]*" + classname + "[a-zA-Z0-9- ]*",
-  }) as (TNode | string)[];
+  });
   return out;
 }
 

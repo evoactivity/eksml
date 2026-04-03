@@ -1,4 +1,5 @@
-export * from "./txml.ts";
+export * from "./parser.ts";
+export * from "./writer.ts";
 export * from "./transformStream.ts";
 export * from "./fastStream.ts";
 export * from "./converters/lossless.ts";

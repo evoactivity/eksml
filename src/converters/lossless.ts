@@ -29,7 +29,7 @@
  * ```
  */
 
-import { parse, type TNode, type ParseOptions } from "../txml.ts";
+import { parse, type TNode, type ParseOptions } from "../parser.ts";
 
 /** A single entry in the JSON output array. */
 export type LosslessEntry =
@@ -54,8 +54,8 @@ export interface LosslessOptions {
   html?: boolean;
   /** Keep XML comments in the output as `{ $comment: "..." }` entries. */
   keepComments?: boolean;
-  /** Keep whitespace-only text nodes. */
-  keepWhitespace?: boolean;
+  /** Trim whitespace from text nodes and discard whitespace-only text nodes. */
+  trimWhitespace?: boolean;
 }
 
 function convertNode(node: TNode): LosslessEntry {
@@ -99,11 +99,7 @@ export function lossless(
   xml: string,
   options?: LosslessOptions,
 ): LosslessEntry[] {
-  const parseOpts: ParseOptions = {
-    // Default to preserving whitespace for output.
-    // Can be overridden by the caller.
-    keepWhitespace: true,
-  };
+  const parseOpts: ParseOptions = {};
   if (options) {
     if (options.selfClosingTags !== undefined)
       parseOpts.selfClosingTags = options.selfClosingTags;
@@ -112,11 +108,11 @@ export function lossless(
     if (options.html !== undefined) parseOpts.html = options.html;
     if (options.keepComments !== undefined)
       parseOpts.keepComments = options.keepComments;
-    if (options.keepWhitespace !== undefined)
-      parseOpts.keepWhitespace = options.keepWhitespace;
+    if (options.trimWhitespace !== undefined)
+      parseOpts.trimWhitespace = options.trimWhitespace;
   }
 
-  const dom = parse(xml, parseOpts) as (TNode | string)[];
+  const dom = parse(xml, parseOpts);
   const result: LosslessEntry[] = [];
   for (let i = 0; i < dom.length; i++) {
     const node = dom[i]!;

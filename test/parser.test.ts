@@ -5,7 +5,6 @@ import { describe, it, expect } from "vitest";
 import {
   parse,
   filter,
-  stringify,
   toContentString,
   getElementById,
   getElementsByClassName,
@@ -14,7 +13,9 @@ import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
   type TNode,
-} from "../src/txml.js";
+} from "../src/parser.js";
+import { writer } from "../src/writer.js";
+import assert from "node:assert";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
@@ -28,11 +29,6 @@ const atomFeed = fixture("atom-feed.xml");
 const xhtmlPage = fixture("xhtml-page.xml");
 const pomXml = fixture("pom.xml");
 const htmlPage = fixture("html-page.html");
-
-// ---- helpers ----
-function asNodes(result: unknown): (TNode | string)[] {
-  return result as (TNode | string)[];
-}
 
 // =================================================================
 // Tests ported from upstream tXml test suite
@@ -109,9 +105,7 @@ describe("parse", () => {
   });
 
   it("ignores doctype declaration", () => {
-    expect(
-      parse("<!DOCTYPE html><test><cc></cc><cc></cc></test>"),
-    ).toEqual([
+    expect(parse("<!DOCTYPE html><test><cc></cc><cc></cc></test>")).toEqual([
       "!DOCTYPE html",
       {
         tagName: "test",
@@ -185,7 +179,7 @@ describe("parse", () => {
 
   it("attribute without value", () => {
     const s = "<test><something flag></something></test>";
-    expect(stringify(asNodes(parse(s)))).toBe(s);
+    expect(writer(parse(s))).toBe(s);
   });
 
   it("CDATA", () => {
@@ -203,11 +197,9 @@ describe("parse", () => {
   });
 
   it("keepComments option", () => {
-    expect(
-      parse("<test><!-- test --></test>", { keepComments: true }),
-    ).toEqual([
-      { tagName: "test", attributes: {}, children: ["<!-- test -->"] },
-    ]);
+    expect(parse("<test><!-- test --></test>", { keepComments: true })).toEqual(
+      [{ tagName: "test", attributes: {}, children: ["<!-- test -->"] }],
+    );
   });
 
   it("keeps two comments", () => {
@@ -231,7 +223,7 @@ describe("parse", () => {
   });
 
   it("SVG with comment", () => {
-    expect(parse(commentedSvg)).toEqual([
+    expect(parse(commentedSvg, { trimWhitespace: true })).toEqual([
       {
         tagName: "?xml",
         attributes: { version: "1.0", encoding: "UTF-8" },
@@ -254,12 +246,21 @@ describe("parse", () => {
     ]);
   });
 
-  it("keepWhitespace option preserves spaces in text nodes", () => {
+  it("preserves whitespace in text nodes by default", () => {
     const filtered = filter(
-      asNodes(parse(wordpadDocxDocument, { keepWhitespace: true })),
+      parse(wordpadDocxDocument),
       (n) => n.tagName === "w:t",
     );
     expect(filtered[1]!.children[0]).toBe("    ");
+  });
+
+  it("trimWhitespace option trims and discards whitespace-only text nodes", () => {
+    const filtered = filter(
+      parse(wordpadDocxDocument, { trimWhitespace: true }),
+      (n) => n.tagName === "w:t",
+    );
+    // The whitespace-only "    " child should be discarded
+    expect(filtered[1]!.children).toEqual([]);
   });
 
   it("arbitrary text / lorem ipsum", () => {
@@ -269,27 +270,21 @@ describe("parse", () => {
   });
 
   it("mixed text with XML fragments", () => {
-    const result = asNodes(
-      parse("Some text before <tag>content</tag> and after"),
-    );
+    const result = parse("Some text before <tag>content</tag> and after");
     expect(result).toHaveLength(3);
-    expect(result[0]).toBe("Some text before");
+    expect(result[0]).toBe("Some text before ");
     expect((result[1] as TNode).tagName).toBe("tag");
-    expect(result[2]).toBe("and after");
+    expect(result[2]).toBe(" and after");
   });
 
   it("duplicate attributes (last wins)", () => {
-    const result = asNodes(
-      parse('<test att="first" att="second" att="third">'),
-    );
+    const result = parse('<test att="first" att="second" att="third">');
     expect((result[0] as TNode).attributes.att).toBe("third");
   });
 
   it("many attributes", () => {
-    const result = asNodes(
-      parse(
-        '<element id="test-id" class="cls" data-value="123" disabled aria-label="lbl" tabindex="0" role="button">',
-      ),
+    const result = parse(
+      '<element id="test-id" class="cls" data-value="123" disabled aria-label="lbl" tabindex="0" role="button">',
     );
     const el = result[0] as TNode;
     expect(el.attributes.id).toBe("test-id");
@@ -304,11 +299,9 @@ describe("parse", () => {
   it("XML with namespaces", () => {
     const xml =
       '<root xmlns:custom="http://example.com/custom"><custom:element custom:attr="value">Content</custom:element></root>';
-    const result = asNodes(parse(xml));
+    const result = parse(xml);
     const root = result[0] as TNode;
-    expect(root.attributes["xmlns:custom"]).toBe(
-      "http://example.com/custom",
-    );
+    expect(root.attributes["xmlns:custom"]).toBe("http://example.com/custom");
     const child = root.children.find(
       (el) => typeof el === "object" && el.tagName === "custom:element",
     ) as TNode;
@@ -325,7 +318,7 @@ describe("parse", () => {
       { length: depth },
       (_, i) => `</l${depth - 1 - i}>`,
     ).join("");
-    const result = asNodes(parse(openTags + "deep" + closeTags));
+    const result = parse(openTags + "deep" + closeTags);
     expect(result).toHaveLength(1);
     let cur = result[0] as TNode;
     for (let i = 1; i < depth; i++) {
@@ -337,9 +330,7 @@ describe("parse", () => {
   });
 
   it("self-closing tags (explicit slash)", () => {
-    const result = asNodes(
-      parse("<root><empty></empty><sc/><sc2 /></root>"),
-    );
+    const result = parse("<root><empty></empty><sc/><sc2 /></root>");
     const root = result[0] as TNode;
     expect(root.children).toHaveLength(3);
     for (const child of root.children) {
@@ -348,10 +339,8 @@ describe("parse", () => {
   });
 
   it("mixed quoted attributes", () => {
-    const result = asNodes(
-      parse(
-        `<e single='v1' double="v2" mixed='has "q"' other="has 'q'"/>`,
-      ),
+    const result = parse(
+      `<e single='v1' double="v2" mixed='has "q"' other="has 'q'"/>`,
     );
     const el = result[0] as TNode;
     expect(el.attributes.single).toBe("v1");
@@ -361,19 +350,15 @@ describe("parse", () => {
   });
 
   it("unicode and emoji", () => {
-    const result = asNodes(
-      parse('<msg lang="多语言">Hello 世界 🌍</msg>'),
-    );
+    const result = parse('<msg lang="多语言">Hello 世界 🌍</msg>');
     const el = result[0] as TNode;
     expect(el.attributes.lang).toBe("多语言");
     expect(el.children[0]).toBe("Hello 世界 🌍");
   });
 
   it("processing instructions", () => {
-    const result = asNodes(
-      parse(
-        '<?xml version="1.0" encoding="UTF-8"?><root>content</root>',
-      ),
+    const result = parse(
+      '<?xml version="1.0" encoding="UTF-8"?><root>content</root>',
     );
     const root = result.find(
       (el) => typeof el === "object" && el.tagName === "root",
@@ -383,10 +368,8 @@ describe("parse", () => {
   });
 
   it("HTML5 doctype", () => {
-    const result = asNodes(
-      parse(
-        "<!DOCTYPE html><html><head><title>Test</title></head><body><h1>Hello</h1></body></html>",
-      ),
+    const result = parse(
+      "<!DOCTYPE html><html><head><title>Test</title></head><body><h1>Hello</h1></body></html>",
     );
     expect(result[0]).toBe("!DOCTYPE html");
     const html = result.find(
@@ -396,9 +379,9 @@ describe("parse", () => {
   });
 
   it("custom selfClosingTags option", () => {
-    const result = asNodes(
-      parse("<div><custom></div>", { selfClosingTags: ["custom"] }),
-    );
+    const result = parse("<div><custom></div>", {
+      selfClosingTags: ["custom"],
+    });
     const div = result[0] as TNode;
     const custom = div.children[0] as TNode;
     expect(custom.tagName).toBe("custom");
@@ -406,9 +389,7 @@ describe("parse", () => {
   });
 
   it("null vs empty string vs value in attributes", () => {
-    const result = asNodes(
-      parse('<input disabled required="" value="test" checked>'),
-    );
+    const result = parse('<input disabled required="" value="test" checked>');
     const el = result[0] as TNode;
     expect(el.attributes.disabled).toBeNull();
     expect(el.attributes.checked).toBeNull();
@@ -426,27 +407,21 @@ describe("filter", () => {
   });
 
   it("filters top-level nodes by tagName", () => {
-    const root = asNodes(
-      parse("<root><a></a><b></b><a></a></root>"),
-    )[0] as TNode;
+    const root = parse("<root><a></a><b></b><a></a></root>")[0] as TNode;
     const result = filter(root.children, (n) => n.tagName === "a");
     expect(result).toHaveLength(2);
     expect(result.every((n) => n.tagName === "a")).toBe(true);
   });
 
   it("filters recursively into children", () => {
-    const root = asNodes(
-      parse("<root><a><b></b></a></root>"),
-    )[0] as TNode;
+    const root = parse("<root><a><b></b></a></root>")[0] as TNode;
     const result = filter(root.children, (n) => n.tagName === "b");
     expect(result).toHaveLength(1);
     expect(result[0]!.tagName).toBe("b");
   });
 
   it("provides depth and path to filter function", () => {
-    const root = asNodes(
-      parse("<root><a><b></b></a></root>"),
-    )[0] as TNode;
+    const root = parse("<root><a><b></b></a></root>")[0] as TNode;
     const calls: { depth: number; path: string }[] = [];
     filter(root.children, (_n, _i, depth, path) => {
       calls.push({ depth, path });
@@ -458,51 +433,48 @@ describe("filter", () => {
   });
 
   it("returns empty array when nothing matches", () => {
-    const root = asNodes(parse("<root><a></a></root>"))[0] as TNode;
+    const root = parse("<root><a></a></root>")[0] as TNode;
     expect(filter(root.children, (n) => n.tagName === "z")).toEqual([]);
   });
 });
 
 // =================================================================
-// stringify
+// writer
 // =================================================================
-describe("stringify", () => {
+describe("writer", () => {
   it("roundtrips optimal XML", () => {
-    const x =
-      '<test a="value"><child a=\'g"g\'>text</child></test>';
-    expect(stringify(asNodes(parse(x)))).toBe(x);
+    const x = '<test a="value"><child a=\'g"g\'>text</child></test>';
+    expect(writer(parse(x))).toBe(x);
   });
 
   it("roundtrips attribute without value", () => {
     const s = "<test><something flag></something></test>";
-    expect(stringify(asNodes(parse(s)))).toBe(s);
+    expect(writer(parse(s))).toBe(s);
   });
 
   it("returns empty string for undefined", () => {
-    expect(stringify(undefined as any)).toBe("");
+    expect(writer(undefined as any)).toBe("");
   });
 
   it("stringifies a simple element", () => {
-    expect(
-      stringify({ tagName: "div", attributes: {}, children: [] }),
-    ).toBe("<div></div>");
+    expect(writer({ tagName: "div", attributes: {}, children: [] })).toBe(
+      "<div></div>",
+    );
   });
 
   it("stringifies nested elements", () => {
     expect(
-      stringify({
+      writer({
         tagName: "a",
         attributes: {},
-        children: [
-          { tagName: "b", attributes: {}, children: ["text"] },
-        ],
+        children: [{ tagName: "b", attributes: {}, children: ["text"] }],
       }),
     ).toBe("<a><b>text</b></a>");
   });
 
   it("stringifies boolean attributes", () => {
     expect(
-      stringify({
+      writer({
         tagName: "input",
         attributes: { disabled: null },
         children: [],
@@ -512,7 +484,7 @@ describe("stringify", () => {
 
   it("stringifies an array of nodes", () => {
     expect(
-      stringify([
+      writer([
         { tagName: "a", attributes: {}, children: [] },
         { tagName: "b", attributes: {}, children: [] },
       ]),
@@ -521,7 +493,7 @@ describe("stringify", () => {
 
   it("stringifies processing instructions", () => {
     expect(
-      stringify({
+      writer({
         tagName: "?xml",
         attributes: { version: "1.0" },
         children: [],
@@ -531,12 +503,113 @@ describe("stringify", () => {
 
   it("uses single quotes when value contains double quotes", () => {
     expect(
-      stringify({
+      writer({
         tagName: "div",
         attributes: { data: 'he said "hi"' },
         children: [],
       }),
     ).toBe("<div data='he said \"hi\"'></div>");
+  });
+
+  // --- pretty option ---
+
+  it("pretty: true uses 2-space indent", () => {
+    const tree = parse("<root><child><leaf></leaf></child></root>");
+    expect(writer(tree, { pretty: true })).toBe(
+      "<root>\n  <child>\n    <leaf/>\n  </child>\n</root>",
+    );
+  });
+
+  it("pretty: custom indent string", () => {
+    const tree = parse("<root><child></child></root>");
+    expect(writer(tree, { pretty: "\t" })).toBe("<root>\n\t<child/>\n</root>");
+  });
+
+  it("pretty: empty elements self-close", () => {
+    expect(
+      writer({ tagName: "br", attributes: {}, children: [] }, { pretty: true }),
+    ).toBe("<br/>");
+  });
+
+  it("pretty: text-only elements stay inline", () => {
+    const tree = parse("<name>Alice</name>");
+    expect(writer(tree, { pretty: true })).toBe("<name>Alice</name>");
+  });
+
+  it("pretty: mixed content stays inline", () => {
+    const tree = parse("<p>Hello <b>world</b>!</p>");
+    expect(writer(tree, { pretty: true })).toBe("<p>Hello<b>world</b>!</p>");
+  });
+
+  it("pretty: processing instructions render correctly", () => {
+    expect(
+      writer(
+        { tagName: "?xml", attributes: { version: "1.0" }, children: [] },
+        { pretty: true },
+      ),
+    ).toBe('<?xml version="1.0"?>');
+  });
+
+  it("pretty: attributes are preserved", () => {
+    const tree = parse('<root id="1"><child class="a"></child></root>');
+    expect(writer(tree, { pretty: true })).toBe(
+      '<root id="1">\n  <child class="a"/>\n</root>',
+    );
+  });
+
+  it("pretty: multiple top-level nodes", () => {
+    const tree = parse('<?xml version="1.0"?><root><a></a></root>');
+    expect(writer(tree, { pretty: true })).toBe(
+      '<?xml version="1.0"?>\n<root>\n  <a/>\n</root>',
+    );
+  });
+
+  it("pretty: deeply nested structure", () => {
+    const tree = parse("<a><b><c><d></d></c></b></a>");
+    expect(writer(tree, { pretty: true })).toBe(
+      "<a>\n  <b>\n    <c>\n      <d/>\n    </c>\n  </b>\n</a>",
+    );
+  });
+
+  it("pretty: boolean attributes", () => {
+    expect(
+      writer(
+        {
+          tagName: "input",
+          attributes: { disabled: null, type: "text" },
+          children: [],
+        },
+        { pretty: true },
+      ),
+    ).toBe('<input disabled type="text"/>');
+  });
+
+  it("pretty: element-only children with text leaf", () => {
+    const tree = parse(
+      "<root><header><title>Hello</title></header><body></body></root>",
+    );
+    expect(writer(tree, { pretty: true })).toBe(
+      "<root>\n  <header>\n    <title>Hello</title>\n  </header>\n  <body/>\n</root>",
+    );
+  });
+
+  it("pretty: false is same as no option", () => {
+    const tree = parse("<root><child></child></root>");
+    expect(writer(tree, { pretty: false })).toBe(writer(tree));
+  });
+
+  it("pretty: mixed content with nested inline elements", () => {
+    const tree = parse("<p>Click <a><b>here</b></a> now</p>");
+    expect(writer(tree, { pretty: true })).toBe(
+      "<p>Click<a><b>here</b></a>now</p>",
+    );
+  });
+
+  it("pretty: four-space indent string", () => {
+    const tree = parse("<root><child></child></root>");
+    expect(writer(tree, { pretty: "    " })).toBe(
+      "<root>\n    <child/>\n</root>",
+    );
   });
 });
 
@@ -546,16 +619,12 @@ describe("stringify", () => {
 describe("toContentString", () => {
   it("extracts text from mixed content", () => {
     expect(
-      toContentString(
-        asNodes(
-          parse('<test>f<case number="2">f</case>f</test>'),
-        ),
-      ),
+      toContentString(parse('<test>f<case number="2">f</case>f</test>')),
     ).toBe("f f  f");
   });
 
   it("extracts text from deeply nested elements", () => {
-    const dom = asNodes(parse("<a><b><c>deep</c></b></a>"));
+    const dom = parse("<a><b><c>deep</c></b></a>");
     expect(toContentString(dom)).toBe("deep");
   });
 
@@ -564,15 +633,13 @@ describe("toContentString", () => {
   });
 
   it("handles a single TNode", () => {
-    const el = asNodes(parse("<p>hi</p>"))[0] as TNode;
+    const el = parse("<p>hi</p>")[0] as TNode;
     expect(toContentString(el)).toBe("hi");
   });
 
   it("concatenates text from nested elements", () => {
-    const dom = asNodes(
-      parse(
-        "<article><title>The Title</title><p>First <b>bold</b>.</p></article>",
-      ),
+    const dom = parse(
+      "<article><title>The Title</title><p>First <b>bold</b>.</p></article>",
     );
     const content = toContentString(dom);
     expect(content).toContain("The Title");
@@ -597,7 +664,9 @@ describe("getElementById", () => {
   });
 
   it("returns undefined when id not found", () => {
-    expect(getElementById("<div><span>no id</span></div>", "missing")).toBeUndefined();
+    expect(
+      getElementById("<div><span>no id</span></div>", "missing"),
+    ).toBeUndefined();
   });
 });
 
@@ -609,7 +678,7 @@ describe("getElementsByClassName", () => {
     const result = getElementsByClassName(
       '<html><head></head><body><h1 class="test package-name other-class test2"></h1></body></html>',
       "package-name",
-    ) as TNode[];
+    );
     expect(result).toEqual([
       {
         tagName: "h1",
@@ -624,14 +693,9 @@ describe("getElementsByClassName", () => {
   it("finds multiple elements by class", () => {
     const html =
       '<div><span class="highlight active">1</span><span class="highlight">2</span><span class="active">3</span></div>';
-    expect(
-      (getElementsByClassName(html, "highlight") as TNode[]).length,
-    ).toBe(2);
-    expect(
-      (getElementsByClassName(html, "active") as TNode[]).length,
-    ).toBe(2);
+    expect(getElementsByClassName(html, "highlight").length).toBe(2);
+    expect(getElementsByClassName(html, "active").length).toBe(2);
   });
-
 });
 
 // =================================================================
@@ -643,17 +707,16 @@ describe("isTextNode", () => {
   });
 
   it("returns false for TNode objects", () => {
-    expect(
-      isTextNode({ tagName: "div", attributes: {}, children: [] }),
-    ).toBe(false);
+    expect(isTextNode({ tagName: "div", attributes: {}, children: [] })).toBe(
+      false,
+    );
   });
 
   it("filters text nodes from parsed children", () => {
-    const [div] = asNodes(
-      parse("<div>Hello <span>World</span>!</div>"),
-    ) as TNode[];
+    const [div] = parse("<div>Hello <span>World</span>!</div>");
+    assert(isElementNode(div!));
     const texts = div!.children.filter(isTextNode);
-    expect(texts).toEqual(["Hello", "!"]);
+    expect(texts).toEqual(["Hello ", "!"]);
   });
 });
 
@@ -669,11 +732,11 @@ describe("isElementNode", () => {
   });
 
   it("filters element nodes from parsed children", () => {
-    const [div] = asNodes(
-      parse("<div>Hello <span>World</span>!</div>"),
-    ) as TNode[];
+    const [div] = parse("<div>Hello <span>World</span>!</div>");
+    assert(isElementNode(div!));
     const elements = div!.children.filter(isElementNode);
     expect(elements).toHaveLength(1);
+    assert(isElementNode(elements[0]!));
     expect(elements[0]!.tagName).toBe("span");
   });
 });
@@ -683,33 +746,29 @@ describe("isElementNode", () => {
 // =================================================================
 describe("fixture: rss-feed.xml", () => {
   it("parses without error", () => {
-    const result = asNodes(parse(rssFeed));
+    const result = parse(rssFeed);
     expect(result.length).toBeGreaterThan(0);
   });
 
   it("finds the rss root with version attribute", () => {
-    const result = asNodes(parse(rssFeed));
+    const result = parse(rssFeed);
     const rss = result.find(
       (n) => typeof n === "object" && n.tagName === "rss",
     ) as TNode;
     expect(rss).toBeDefined();
     expect(rss.attributes.version).toBe("2.0");
-    expect(rss.attributes["xmlns:atom"]).toBe(
-      "http://www.w3.org/2005/Atom",
-    );
-    expect(rss.attributes["xmlns:dc"]).toBe(
-      "http://purl.org/dc/elements/1.1/",
-    );
+    expect(rss.attributes["xmlns:atom"]).toBe("http://www.w3.org/2005/Atom");
+    expect(rss.attributes["xmlns:dc"]).toBe("http://purl.org/dc/elements/1.1/");
   });
 
   it("extracts all three items", () => {
-    const result = asNodes(parse(rssFeed));
+    const result = parse(rssFeed);
     const items = filter(result, (n) => n.tagName === "item");
     expect(items).toHaveLength(3);
   });
 
   it("extracts CDATA content in description", () => {
-    const result = asNodes(parse(rssFeed));
+    const result = parse(rssFeed);
     const items = filter(result, (n) => n.tagName === "item");
     const desc = items[0]!.children.find(
       (c) => typeof c === "object" && c.tagName === "description",
@@ -722,10 +781,10 @@ describe("fixture: rss-feed.xml", () => {
   });
 
   it("handles ampersand in dc:creator", () => {
-    const result = asNodes(parse(rssFeed));
+    const result = parse(rssFeed);
     const creators = filter(result, (n) => n.tagName === "dc:creator");
-    const bobCarol = creators.find(
-      (c) => (c.children[0] as string).includes("Bob"),
+    const bobCarol = creators.find((c) =>
+      (c.children[0] as string).includes("Bob"),
     );
     expect(bobCarol).toBeDefined();
     // &amp; is raw in XML, parser should preserve it as-is or decode
@@ -733,7 +792,7 @@ describe("fixture: rss-feed.xml", () => {
   });
 
   it("finds multiple category elements per item", () => {
-    const result = asNodes(parse(rssFeed));
+    const result = parse(rssFeed);
     const items = filter(result, (n) => n.tagName === "item");
     const firstItemCategories = items[0]!.children.filter(
       (c) => typeof c === "object" && c.tagName === "category",
@@ -746,10 +805,10 @@ describe("fixture: rss-feed.xml", () => {
     ]);
   });
 
-  it("roundtrips via stringify then re-parse", () => {
-    const result = asNodes(parse(rssFeed));
-    const xml = stringify(result);
-    const reparsed = asNodes(parse(xml));
+  it("roundtrips via writer then re-parse", () => {
+    const result = parse(rssFeed, { trimWhitespace: true });
+    const xml = writer(result);
+    const reparsed = parse(xml, { trimWhitespace: true });
     // Same number of top-level nodes
     expect(reparsed.length).toBe(result.length);
     // Same number of items
@@ -759,7 +818,7 @@ describe("fixture: rss-feed.xml", () => {
   });
 
   it("extracts text content from the entire feed", () => {
-    const result = asNodes(parse(rssFeed));
+    const result = parse(rssFeed);
     const content = toContentString(result);
     expect(content).toContain("Tech Engineering Blog");
     expect(content).toContain("Migrating to Web Streams");
@@ -767,7 +826,7 @@ describe("fixture: rss-feed.xml", () => {
   });
 
   it("self-closing atom:link is parsed correctly", () => {
-    const result = asNodes(parse(rssFeed));
+    const result = parse(rssFeed);
     const atomLinks = filter(result, (n) => n.tagName === "atom:link");
     expect(atomLinks.length).toBeGreaterThanOrEqual(1);
     expect(atomLinks[0]!.attributes.rel).toBe("self");
@@ -780,12 +839,12 @@ describe("fixture: rss-feed.xml", () => {
 // =================================================================
 describe("fixture: soap-envelope.xml", () => {
   it("parses without error", () => {
-    const result = asNodes(parse(soapEnvelope));
+    const result = parse(soapEnvelope);
     expect(result.length).toBeGreaterThan(0);
   });
 
   it("finds the soap:Envelope root with multiple namespace declarations", () => {
-    const result = asNodes(parse(soapEnvelope));
+    const result = parse(soapEnvelope);
     const envelope = result.find(
       (n) => typeof n === "object" && n.tagName === "soap:Envelope",
     ) as TNode;
@@ -800,7 +859,7 @@ describe("fixture: soap-envelope.xml", () => {
   });
 
   it("finds soap:Header and soap:Body", () => {
-    const result = asNodes(parse(soapEnvelope));
+    const result = parse(soapEnvelope);
     const envelope = result.find(
       (n) => typeof n === "object" && n.tagName === "soap:Envelope",
     ) as TNode;
@@ -816,7 +875,7 @@ describe("fixture: soap-envelope.xml", () => {
   });
 
   it("drills into deeply nested WS-Security elements", () => {
-    const result = asNodes(parse(soapEnvelope));
+    const result = parse(soapEnvelope);
     const security = filter(result, (n) => n.tagName === "wsse:Security");
     expect(security).toHaveLength(1);
     expect(security[0]!.attributes["soap:mustUnderstand"]).toBe("1");
@@ -827,7 +886,7 @@ describe("fixture: soap-envelope.xml", () => {
   });
 
   it("finds ds:Reference elements with URI attributes", () => {
-    const result = asNodes(parse(soapEnvelope));
+    const result = parse(soapEnvelope);
     const refs = filter(result, (n) => n.tagName === "ds:Reference");
     expect(refs).toHaveLength(2);
     const uris = refs.map((r) => r.attributes.URI);
@@ -836,7 +895,7 @@ describe("fixture: soap-envelope.xml", () => {
   });
 
   it("finds self-closing elements with Algorithm attributes", () => {
-    const result = asNodes(parse(soapEnvelope));
+    const result = parse(soapEnvelope);
     const methods = filter(
       result,
       (n) =>
@@ -853,13 +912,16 @@ describe("fixture: soap-envelope.xml", () => {
   });
 
   it("finds the request body with nested filter elements", () => {
-    const result = asNodes(parse(soapEnvelope));
+    const result = parse(soapEnvelope);
     const request = filter(
       result,
       (n) => n.tagName === "GetOrderDetailsRequest",
     );
     expect(request).toHaveLength(1);
-    const statuses = filter(request[0]!.children, (n) => n.tagName === "Status");
+    const statuses = filter(
+      request[0]!.children,
+      (n) => n.tagName === "Status",
+    );
     expect(statuses).toHaveLength(3);
     expect(statuses.map((s) => s.children[0])).toEqual([
       "CONFIRMED",
@@ -869,7 +931,7 @@ describe("fixture: soap-envelope.xml", () => {
   });
 
   it("preserves comments with keepComments", () => {
-    const result = asNodes(parse(soapEnvelope, { keepComments: true }));
+    const result = parse(soapEnvelope, { keepComments: true });
     const allText = filter(result, () => false); // just to walk the tree
     // Check that the comment is a string child somewhere
     const envelope = result.find(
@@ -890,12 +952,12 @@ describe("fixture: soap-envelope.xml", () => {
 // =================================================================
 describe("fixture: atom-feed.xml", () => {
   it("parses without error", () => {
-    const result = asNodes(parse(atomFeed));
+    const result = parse(atomFeed);
     expect(result.length).toBeGreaterThan(0);
   });
 
   it("finds the feed root with multiple namespace attributes", () => {
-    const result = asNodes(parse(atomFeed));
+    const result = parse(atomFeed);
     const feed = result.find(
       (n) => typeof n === "object" && n.tagName === "feed",
     ) as TNode;
@@ -911,13 +973,13 @@ describe("fixture: atom-feed.xml", () => {
   });
 
   it("extracts all three entries", () => {
-    const result = asNodes(parse(atomFeed));
+    const result = parse(atomFeed);
     const entries = filter(result, (n) => n.tagName === "entry");
     expect(entries).toHaveLength(3);
   });
 
   it("finds multiple link elements with different rel attributes", () => {
-    const result = asNodes(parse(atomFeed));
+    const result = parse(atomFeed);
     const feed = result.find(
       (n) => typeof n === "object" && n.tagName === "feed",
     ) as TNode;
@@ -933,7 +995,7 @@ describe("fixture: atom-feed.xml", () => {
   });
 
   it("parses XHTML content blocks within entries", () => {
-    const result = asNodes(parse(atomFeed));
+    const result = parse(atomFeed);
     const entries = filter(result, (n) => n.tagName === "entry");
     const tsEntry = entries[0]!;
     const contentEl = tsEntry.children.find(
@@ -950,13 +1012,10 @@ describe("fixture: atom-feed.xml", () => {
   });
 
   it("finds media:group and georss elements", () => {
-    const result = asNodes(parse(atomFeed));
+    const result = parse(atomFeed);
     const mediaGroups = filter(result, (n) => n.tagName === "media:group");
     expect(mediaGroups).toHaveLength(1);
-    const mediaContent = filter(
-      result,
-      (n) => n.tagName === "media:content",
-    );
+    const mediaContent = filter(result, (n) => n.tagName === "media:content");
     expect(mediaContent).toHaveLength(1);
     expect(mediaContent[0]!.attributes.type).toBe("image/png");
 
@@ -968,14 +1027,14 @@ describe("fixture: atom-feed.xml", () => {
   });
 
   it("handles HTML entities in subtitle", () => {
-    const result = asNodes(parse(atomFeed));
+    const result = parse(atomFeed);
     const subtitles = filter(result, (n) => n.tagName === "subtitle");
     expect(subtitles).toHaveLength(1);
     expect(subtitles[0]!.attributes.type).toBe("html");
   });
 
   it("parses entry with HTML-encoded content (Node.js 24 entry)", () => {
-    const result = asNodes(parse(atomFeed));
+    const result = parse(atomFeed);
     const entries = filter(result, (n) => n.tagName === "entry");
     const nodeEntry = entries[2]!;
     const contentEl = nodeEntry.children.find(
@@ -987,7 +1046,6 @@ describe("fixture: atom-feed.xml", () => {
     const text = contentEl.children[0] as string;
     expect(text).toContain("Node.js 24 LTS");
   });
-
 });
 
 // =================================================================
@@ -995,12 +1053,12 @@ describe("fixture: atom-feed.xml", () => {
 // =================================================================
 describe("fixture: xhtml-page.xml", () => {
   it("parses without error", () => {
-    const result = asNodes(parse(xhtmlPage));
+    const result = parse(xhtmlPage);
     expect(result.length).toBeGreaterThan(0);
   });
 
   it("finds doctype and html root", () => {
-    const result = asNodes(parse(xhtmlPage));
+    const result = parse(xhtmlPage);
     const doctype = result.find(
       (n) => typeof n === "string" && n.startsWith("!DOCTYPE"),
     );
@@ -1015,7 +1073,7 @@ describe("fixture: xhtml-page.xml", () => {
   });
 
   it("finds head with meta, title, link, and style elements", () => {
-    const result = asNodes(parse(xhtmlPage));
+    const result = parse(xhtmlPage);
     const html = result.find(
       (n) => typeof n === "object" && n.tagName === "html",
     ) as TNode;
@@ -1039,15 +1097,17 @@ describe("fixture: xhtml-page.xml", () => {
     ) as TNode;
     expect(style).toBeDefined();
     // Style content should include the CSS with the <tag> comment
-    const css = style.children[0] as string;
-    expect(css).toContain("box-sizing");
-    expect(css).toContain("<tag>");
+    const cssText = style.children
+      .filter((c): c is string => typeof c === "string")
+      .join("");
+    expect(cssText).toContain("box-sizing");
+    expect(cssText).toContain("<tag>");
   });
 
   it("finds self-closing meta and link elements", () => {
-    const result = asNodes(
-      parse(xhtmlPage, { selfClosingTags: ["meta", "link", "img", "br", "input", "hr"] }),
-    );
+    const result = parse(xhtmlPage, {
+      selfClosingTags: ["meta", "link", "img", "br", "input", "hr"],
+    });
     const metas = filter(result, (n) => n.tagName === "meta");
     for (const meta of metas) {
       expect(meta.children).toEqual([]);
@@ -1059,7 +1119,7 @@ describe("fixture: xhtml-page.xml", () => {
   });
 
   it("preserves comments with keepComments", () => {
-    const result = asNodes(parse(xhtmlPage, { keepComments: true }));
+    const result = parse(xhtmlPage, { keepComments: true });
     // Collect all string children that are comments
     const allComments: string[] = [];
     function collectComments(nodes: (TNode | string)[]) {
@@ -1073,16 +1133,14 @@ describe("fixture: xhtml-page.xml", () => {
     }
     collectComments(result);
     expect(allComments.length).toBeGreaterThanOrEqual(4);
-    expect(
-      allComments.some((c) => c.includes("Primary Navigation")),
-    ).toBe(true);
-    expect(
-      allComments.some((c) => c.includes("Hero Section")),
-    ).toBe(true);
+    expect(allComments.some((c) => c.includes("Primary Navigation"))).toBe(
+      true,
+    );
+    expect(allComments.some((c) => c.includes("Hero Section"))).toBe(true);
   });
 
   it("parses the feature comparison table", () => {
-    const result = asNodes(parse(xhtmlPage));
+    const result = parse(xhtmlPage);
     const tables = filter(result, (n) => n.tagName === "table");
     const featureTable = tables.find(
       (t) => t.attributes.class === "feature-table",
@@ -1105,21 +1163,17 @@ describe("fixture: xhtml-page.xml", () => {
   });
 
   it("parses deeply nested article with microdata", () => {
-    const result = asNodes(parse(xhtmlPage));
+    const result = parse(xhtmlPage);
     const articles = filter(result, (n) => n.tagName === "article");
     expect(articles.length).toBeGreaterThanOrEqual(1);
-    const post = articles.find(
-      (a) => a.attributes.class === "blog-post",
-    );
+    const post = articles.find((a) => a.attributes.class === "blog-post");
     expect(post).toBeDefined();
     expect(post!.attributes.itemscope).toBe(""); // XHTML boolean attribute (itemscope="")
-    expect(post!.attributes.itemtype).toBe(
-      "https://schema.org/BlogPosting",
-    );
+    expect(post!.attributes.itemtype).toBe("https://schema.org/BlogPosting");
   });
 
   it("parses definition list (dl/dt/dd)", () => {
-    const result = asNodes(parse(xhtmlPage));
+    const result = parse(xhtmlPage);
     const dls = filter(result, (n) => n.tagName === "dl");
     expect(dls).toHaveLength(1);
     const dts = filter(dls[0]!.children, (n) => n.tagName === "dt");
@@ -1129,7 +1183,7 @@ describe("fixture: xhtml-page.xml", () => {
   });
 
   it("parses script elements with their content preserved", () => {
-    const result = asNodes(parse(xhtmlPage));
+    const result = parse(xhtmlPage);
     const scripts = filter(result, (n) => n.tagName === "script");
     expect(scripts.length).toBeGreaterThanOrEqual(2);
     // JSON-LD script
@@ -1145,15 +1199,17 @@ describe("fixture: xhtml-page.xml", () => {
       (s) => s.attributes.type === "text/javascript",
     );
     expect(jsScript).toBeDefined();
-    expect(jsScript!.children[0]).toContain("createElement");
+    const jsText = jsScript!.children
+      .filter((c): c is string => typeof c === "string")
+      .join("");
+    expect(jsText).toContain("createElement");
   });
 
   it("parses the diagram figure with data-step attributes", () => {
-    const result = asNodes(parse(xhtmlPage));
+    const result = parse(xhtmlPage);
     const stages = filter(
       result,
-      (n) =>
-        n.tagName === "div" && n.attributes.class === "stage",
+      (n) => n.tagName === "div" && n.attributes.class === "stage",
     );
     expect(stages).toHaveLength(5);
     expect(stages.map((s) => s.attributes["data-step"])).toEqual([
@@ -1166,7 +1222,7 @@ describe("fixture: xhtml-page.xml", () => {
   });
 
   it("extracts full text content", () => {
-    const result = asNodes(parse(xhtmlPage));
+    const result = parse(xhtmlPage);
     const content = toContentString(result);
     expect(content).toContain("Complex XHTML");
     expect(content).toContain("Getting Started");
@@ -1201,26 +1257,24 @@ describe("fixture: xhtml-page.xml", () => {
 // =================================================================
 describe("fixture: pom.xml", () => {
   it("parses without error", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     expect(result.length).toBeGreaterThan(0);
   });
 
   it("finds the project root with Maven namespace", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     const project = result.find(
       (n) => typeof n === "object" && n.tagName === "project",
     ) as TNode;
     expect(project).toBeDefined();
-    expect(project.attributes.xmlns).toBe(
-      "http://maven.apache.org/POM/4.0.0",
-    );
+    expect(project.attributes.xmlns).toBe("http://maven.apache.org/POM/4.0.0");
     expect(project.attributes["xmlns:xsi"]).toBe(
       "http://www.w3.org/2001/XMLSchema-instance",
     );
   });
 
   it("extracts GAV coordinates", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     const project = result.find(
       (n) => typeof n === "object" && n.tagName === "project",
     ) as TNode;
@@ -1239,27 +1293,25 @@ describe("fixture: pom.xml", () => {
   });
 
   it("finds the parent POM reference", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     const parents = filter(result, (n) => n.tagName === "parent");
     expect(parents).toHaveLength(1);
     const parentChildren = parents[0]!.children.filter(
       (c) => typeof c === "object",
     ) as TNode[];
-    const parentGroupId = parentChildren.find(
-      (c) => c.tagName === "groupId",
-    )!;
+    const parentGroupId = parentChildren.find((c) => c.tagName === "groupId")!;
     expect(parentGroupId.children[0]).toBe("com.example");
   });
 
   it("extracts all dependency elements", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     const allDeps = filter(result, (n) => n.tagName === "dependency");
     // Should have many dependencies (managed + direct + test)
     expect(allDeps.length).toBeGreaterThanOrEqual(20);
   });
 
   it("finds dependencies by scope", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     const allDeps = filter(result, (n) => n.tagName === "dependency");
     const testDeps = allDeps.filter((d) => {
       const scope = d.children.find(
@@ -1271,7 +1323,7 @@ describe("fixture: pom.xml", () => {
   });
 
   it("finds exclusions in test dependencies", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     const exclusions = filter(result, (n) => n.tagName === "exclusion");
     expect(exclusions).toHaveLength(1);
     const excludedArtifact = exclusions[0]!.children.find(
@@ -1281,7 +1333,7 @@ describe("fixture: pom.xml", () => {
   });
 
   it("extracts property values", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     const props = filter(result, (n) => n.tagName === "properties");
     expect(props).toHaveLength(1);
     const javaVersion = props[0]!.children.find(
@@ -1295,7 +1347,7 @@ describe("fixture: pom.xml", () => {
   });
 
   it("finds build plugins and their configurations", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     const plugins = filter(result, (n) => n.tagName === "plugin");
     expect(plugins.length).toBeGreaterThanOrEqual(4);
 
@@ -1317,7 +1369,7 @@ describe("fixture: pom.xml", () => {
   });
 
   it("finds profiles", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     const profiles = filter(result, (n) => n.tagName === "profile");
     expect(profiles).toHaveLength(2);
     const profileIds = profiles.map((p) => {
@@ -1331,7 +1383,7 @@ describe("fixture: pom.xml", () => {
   });
 
   it("finds developers with roles", () => {
-    const result = asNodes(parse(pomXml));
+    const result = parse(pomXml);
     const developers = filter(result, (n) => n.tagName === "developer");
     expect(developers).toHaveLength(2);
 
@@ -1348,7 +1400,7 @@ describe("fixture: pom.xml", () => {
   });
 
   it("preserves comments about dependency sections", () => {
-    const result = asNodes(parse(pomXml, { keepComments: true }));
+    const result = parse(pomXml, { keepComments: true });
     const allComments: string[] = [];
     function collectComments(nodes: (TNode | string)[]) {
       for (const node of nodes) {
@@ -1361,21 +1413,17 @@ describe("fixture: pom.xml", () => {
     }
     collectComments(result);
     expect(allComments.length).toBeGreaterThanOrEqual(5);
-    expect(
-      allComments.some((c) => c.includes("Spring Boot Starters")),
-    ).toBe(true);
-    expect(
-      allComments.some((c) => c.includes("Database")),
-    ).toBe(true);
-    expect(
-      allComments.some((c) => c.includes("Testing")),
-    ).toBe(true);
+    expect(allComments.some((c) => c.includes("Spring Boot Starters"))).toBe(
+      true,
+    );
+    expect(allComments.some((c) => c.includes("Database"))).toBe(true);
+    expect(allComments.some((c) => c.includes("Testing"))).toBe(true);
   });
 
-  it("roundtrips via stringify", () => {
-    const result = asNodes(parse(pomXml));
-    const xml = stringify(result);
-    const reparsed = asNodes(parse(xml));
+  it("roundtrips via writer", () => {
+    const result = parse(pomXml);
+    const xml = writer(result);
+    const reparsed = parse(xml);
     // Same number of dependencies
     const origDeps = filter(result, (n) => n.tagName === "dependency");
     const reparsedDeps = filter(reparsed, (n) => n.tagName === "dependency");
@@ -1412,7 +1460,7 @@ describe("fixture: html-page.html", () => {
   });
 
   it("finds head and body as children of html", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const html = result.find(
       (n): n is TNode => typeof n === "object" && n.tagName === "html",
     )!;
@@ -1429,7 +1477,7 @@ describe("fixture: html-page.html", () => {
   // --- Void elements ---
 
   it("parses all meta elements as self-closing", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const metas = filter(result, (n) => n.tagName === "meta");
     expect(metas.length).toBe(5);
     for (const m of metas) {
@@ -1440,23 +1488,19 @@ describe("fixture: html-page.html", () => {
   });
 
   it("parses all link elements as self-closing", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const links = filter(result, (n) => n.tagName === "link");
     expect(links.length).toBe(7);
     for (const l of links) {
       expect(l.children).toEqual([]);
     }
-    const canonical = links.find(
-      (l) => l.attributes.rel === "canonical",
-    );
+    const canonical = links.find((l) => l.attributes.rel === "canonical");
     expect(canonical).toBeDefined();
-    expect(canonical!.attributes.href).toBe(
-      "https://example.com/dashboard",
-    );
+    expect(canonical!.attributes.href).toBe("https://example.com/dashboard");
   });
 
   it("parses img elements as self-closing", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const imgs = filter(result, (n) => n.tagName === "img");
     expect(imgs.length).toBe(3);
     for (const img of imgs) {
@@ -1467,7 +1511,7 @@ describe("fixture: html-page.html", () => {
   });
 
   it("parses input elements as self-closing with various types", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const inputs = filter(result, (n) => n.tagName === "input");
     expect(inputs.length).toBe(13);
     for (const input of inputs) {
@@ -1486,7 +1530,7 @@ describe("fixture: html-page.html", () => {
   });
 
   it("parses hr elements as self-closing", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const hrs = filter(result, (n) => n.tagName === "hr");
     expect(hrs.length).toBe(5);
     for (const hr of hrs) {
@@ -1495,7 +1539,7 @@ describe("fixture: html-page.html", () => {
   });
 
   it("parses source and track elements as self-closing", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const sources = filter(result, (n) => n.tagName === "source");
     expect(sources.length).toBe(2);
     for (const s of sources) {
@@ -1507,15 +1551,13 @@ describe("fixture: html-page.html", () => {
       expect(t.children).toEqual([]);
     }
     // Verify track attributes
-    const englishTrack = tracks.find(
-      (t) => t.attributes.srclang === "en",
-    );
+    const englishTrack = tracks.find((t) => t.attributes.srclang === "en");
     expect(englishTrack).toBeDefined();
     expect(englishTrack!.attributes.default).toBeNull(); // boolean attr
   });
 
   it("parses col and embed elements as self-closing", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const cols = filter(result, (n) => n.tagName === "col");
     expect(cols.length).toBe(5);
     const embed = filter(result, (n) => n.tagName === "embed");
@@ -1525,7 +1567,7 @@ describe("fixture: html-page.html", () => {
   });
 
   it("parses wbr elements as self-closing", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const wbrs = filter(result, (n) => n.tagName === "wbr");
     expect(wbrs.length).toBe(5);
     for (const w of wbrs) {
@@ -1536,7 +1578,7 @@ describe("fixture: html-page.html", () => {
   // --- Raw content tags (script, style) ---
 
   it("preserves style content as raw text including CSS child selectors and comments", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const styles = filter(result, (n) => n.tagName === "style");
     expect(styles.length).toBe(1);
     const css = styles[0]!.children[0] as string;
@@ -1553,7 +1595,7 @@ describe("fixture: html-page.html", () => {
   });
 
   it("parses JSON-LD script with structured data", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const scripts = filter(result, (n) => n.tagName === "script");
     const jsonLd = scripts.find(
       (s) => s.attributes.type === "application/ld+json",
@@ -1567,7 +1609,7 @@ describe("fixture: html-page.html", () => {
   });
 
   it("preserves inline JavaScript with angle brackets and DOM creation", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const scripts = filter(result, (n) => n.tagName === "script");
     const inlineScript = scripts.find(
       (s) => !s.attributes.type && s.children.length > 0,
@@ -1577,7 +1619,7 @@ describe("fixture: html-page.html", () => {
     // DOM manipulation with innerHTML containing HTML
     expect(js).toContain("banner.innerHTML = '<span");
     // Template literal with embedded HTML
-    expect(js).toContain("<div class=\"tooltip\">");
+    expect(js).toContain('<div class="tooltip">');
     // Comparison operators that look like XML
     expect(js).toContain("v > 1000 && v < 10000");
     // Dynamic script creation
@@ -1589,11 +1631,9 @@ describe("fixture: html-page.html", () => {
   });
 
   it("preserves module script content", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const scripts = filter(result, (n) => n.tagName === "script");
-    const moduleScript = scripts.find(
-      (s) => s.attributes.type === "module",
-    );
+    const moduleScript = scripts.find((s) => s.attributes.type === "module");
     expect(moduleScript).toBeDefined();
     const js = moduleScript!.children[0] as string;
     expect(js).toContain("import { Chart }");
@@ -1603,7 +1643,7 @@ describe("fixture: html-page.html", () => {
   // --- Boolean attributes ---
 
   it("parses boolean attributes as null", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     // disabled button
     const buttons = filter(result, (n) => n.tagName === "button");
     const disabledBtn = buttons.find(
@@ -1634,7 +1674,7 @@ describe("fixture: html-page.html", () => {
   // --- Complex structure ---
 
   it("parses the navigation with nested menus and ARIA attributes", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const navs = filter(
       result,
       (n) =>
@@ -1646,8 +1686,7 @@ describe("fixture: html-page.html", () => {
     // Top-level menu items
     const menuItems = filter(
       nav.children.filter((c) => typeof c === "object") as TNode[],
-      (n) =>
-        n.tagName === "a" && n.attributes.role === "menuitem",
+      (n) => n.tagName === "a" && n.attributes.role === "menuitem",
     );
     expect(menuItems.length).toBeGreaterThanOrEqual(4);
     // Dashboard has aria-current
@@ -1663,7 +1702,7 @@ describe("fixture: html-page.html", () => {
   });
 
   it("parses the data table with rows and columns", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const tables = filter(result, (n) => n.tagName === "table");
     expect(tables.length).toBe(1);
     const table = tables[0]!;
@@ -1691,12 +1730,10 @@ describe("fixture: html-page.html", () => {
   });
 
   it("parses the form with various input types and fieldsets", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const forms = filter(result, (n) => n.tagName === "form");
     expect(forms.length).toBe(2);
-    const filterForm = forms.find(
-      (f) => f.attributes.id === "filter-form",
-    );
+    const filterForm = forms.find((f) => f.attributes.id === "filter-form");
     expect(filterForm).toBeDefined();
     const fieldsets = filter([filterForm!], (n) => n.tagName === "fieldset");
     expect(fieldsets.length).toBe(3);
@@ -1710,7 +1747,7 @@ describe("fixture: html-page.html", () => {
   });
 
   it("parses the video element with source and track children", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const videos = filter(result, (n) => n.tagName === "video");
     expect(videos.length).toBe(1);
     const video = videos[0]!;
@@ -1731,21 +1768,22 @@ describe("fixture: html-page.html", () => {
   });
 
   it("parses summary cards with data attributes", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const cards = filter(
       result,
-      (n) =>
-        n.tagName === "div" &&
-        n.attributes["data-metric"] !== undefined,
+      (n) => n.tagName === "div" && n.attributes["data-metric"] !== undefined,
     );
     expect(cards.length).toBe(4);
-    expect(
-      cards.map((c) => c.attributes["data-metric"]),
-    ).toEqual(["revenue", "users", "orders", "conversion"]);
+    expect(cards.map((c) => c.attributes["data-metric"])).toEqual([
+      "revenue",
+      "users",
+      "orders",
+      "conversion",
+    ]);
   });
 
   it("preserves HTML entities as-is in text content", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     // &amp; is preserved as-is (the parser does not decode entities)
     const text = toContentString(result as (TNode | string)[]);
     expect(text).toContain("Bob Smith &amp; Partners");
@@ -1770,19 +1808,17 @@ describe("fixture: html-page.html", () => {
     }
     collectComments(result);
     expect(allComments.length).toBeGreaterThanOrEqual(4);
-    expect(
-      allComments.some((c) => c.includes("Skip navigation")),
-    ).toBe(true);
-    expect(
-      allComments.some((c) => c.includes("Primary navigation")),
-    ).toBe(true);
+    expect(allComments.some((c) => c.includes("Skip navigation"))).toBe(true);
+    expect(allComments.some((c) => c.includes("Primary navigation"))).toBe(
+      true,
+    );
     expect(
       allComments.some((c) => c.includes("More rows loaded dynamically")),
     ).toBe(true);
   });
 
   it("extracts text content from the entire document", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
+    const result = parse(htmlPage, { html: true });
     const text = toContentString(result as (TNode | string)[]);
     expect(text).toContain("Dashboard Overview");
     expect(text).toContain("Revenue");
@@ -1811,12 +1847,10 @@ describe("fixture: html-page.html", () => {
 
   it("allows overriding rawContentTags in html mode", () => {
     // Override to also treat <textarea> as raw content
-    const result = asNodes(
-      parse(
-        "<div><textarea><b>bold</b></textarea></div>",
-        { html: true, rawContentTags: ["script", "style", "textarea"] },
-      ),
-    );
+    const result = parse("<div><textarea><b>bold</b></textarea></div>", {
+      html: true,
+      rawContentTags: ["script", "style", "textarea"],
+    });
     const textarea = filter(result, (n) => n.tagName === "textarea");
     expect(textarea.length).toBe(1);
     // Content should be raw text, not parsed
@@ -1825,12 +1859,10 @@ describe("fixture: html-page.html", () => {
 
   it("allows overriding selfClosingTags in html mode", () => {
     // Override to only treat <br> as self-closing
-    const result = asNodes(
-      parse("<div><br><hr></hr></div>", {
-        html: true,
-        selfClosingTags: ["br"],
-      }),
-    );
+    const result = parse("<div><br><hr></hr></div>", {
+      html: true,
+      selfClosingTags: ["br"],
+    });
     const div = result[0] as TNode;
     const br = div.children.find(
       (c): c is TNode => typeof c === "object" && c.tagName === "br",

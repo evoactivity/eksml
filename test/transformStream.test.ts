@@ -3,7 +3,8 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { transformStream } from "../src/transformStream.js";
-import type { TNode } from "../src/txml.js";
+import { isElementNode, type TNode } from "../src/parser.js";
+import assert from "node:assert";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
@@ -37,9 +38,7 @@ async function collect(
 describe("transformStream", () => {
   it("parses all nodes from a single chunk", async () => {
     const stream = transformStream();
-    const results = await collect(stream, [
-      "<a>1</a><b>2</b><c>3</c>",
-    ]);
+    const results = await collect(stream, ["<a>1</a><b>2</b><c>3</c>"]);
     const tags = results
       .filter((r): r is TNode => typeof r === "object")
       .map((r) => r.tagName);
@@ -48,9 +47,7 @@ describe("transformStream", () => {
 
   it("parses a complete XML document in a single chunk", async () => {
     const stream = transformStream();
-    const results = await collect(stream, [
-      "<root><item>hello</item></root>",
-    ]);
+    const results = await collect(stream, ["<root><item>hello</item></root>"]);
     expect(results).toHaveLength(1);
     const root = results[0] as TNode;
     expect(root.tagName).toBe("root");
@@ -61,10 +58,7 @@ describe("transformStream", () => {
 
   it("parses XML split across multiple chunks", async () => {
     const stream = transformStream();
-    const results = await collect(stream, [
-      "<a>1</a><b>he",
-      "llo</b><c>3</c>",
-    ]);
+    const results = await collect(stream, ["<a>1</a><b>he", "llo</b><c>3</c>"]);
     const tags = results
       .filter((r): r is TNode => typeof r === "object")
       .map((r) => r.tagName);
@@ -78,9 +72,7 @@ describe("transformStream", () => {
   it("accepts a numeric offset", async () => {
     const prefix = "JUNK";
     const stream = transformStream(prefix.length);
-    const results = await collect(stream, [
-      prefix + "<a>text</a>",
-    ]);
+    const results = await collect(stream, [prefix + "<a>text</a>"]);
     const a = results.find(
       (r) => typeof r === "object" && r.tagName === "a",
     ) as TNode;
@@ -91,9 +83,7 @@ describe("transformStream", () => {
   it("accepts a string offset (uses its length)", async () => {
     const prefix = "PREFIX";
     const stream = transformStream(prefix);
-    const results = await collect(stream, [
-      prefix + "<a>ok</a>",
-    ]);
+    const results = await collect(stream, [prefix + "<a>ok</a>"]);
     const a = results.find(
       (r) => typeof r === "object" && r.tagName === "a",
     ) as TNode;
@@ -103,9 +93,7 @@ describe("transformStream", () => {
 
   it("skips comments by default", async () => {
     const stream = transformStream();
-    const results = await collect(stream, [
-      "<!-- comment --><a>val</a>",
-    ]);
+    const results = await collect(stream, ["<!-- comment --><a>val</a>"]);
     const strings = results.filter(
       (r) => typeof r === "string" && r.startsWith("<!--"),
     );
@@ -119,9 +107,7 @@ describe("transformStream", () => {
 
   it("emits comments when keepComments is true", async () => {
     const stream = transformStream(0, { keepComments: true });
-    const results = await collect(stream, [
-      "<!-- hello --><a>val</a>",
-    ]);
+    const results = await collect(stream, ["<!-- hello --><a>val</a>"]);
     const comments = results.filter(
       (r) => typeof r === "string" && r.startsWith("<!--"),
     );
@@ -161,9 +147,7 @@ describe("transformStream", () => {
 
   it("handles self-closing tags", async () => {
     const stream = transformStream();
-    const results = await collect(stream, [
-      "<br/><hr/>",
-    ]);
+    const results = await collect(stream, ["<br/><hr/>"]);
     const tags = results
       .filter((r): r is TNode => typeof r === "object")
       .map((r) => r.tagName);
@@ -194,9 +178,7 @@ describe("transformStream", () => {
     const stream = transformStream(0, {
       selfClosingTags: ["custom"],
     });
-    const results = await collect(stream, [
-      "<custom><a>text</a>",
-    ]);
+    const results = await collect(stream, ["<custom><a>text</a>"]);
     const tags = results
       .filter((r): r is TNode => typeof r === "object")
       .map((r) => r.tagName);
@@ -227,9 +209,7 @@ describe("transformStream", () => {
 
   it("emits both nodes for two sibling elements", async () => {
     const stream = transformStream();
-    const results = await collect(stream, [
-      "<first/><second/>",
-    ]);
+    const results = await collect(stream, ["<first/><second/>"]);
     const tags = results
       .filter((r): r is TNode => typeof r === "object")
       .map((r) => r.tagName);
@@ -238,9 +218,7 @@ describe("transformStream", () => {
 
   it("flushes a trailing comment when keepComments is true", async () => {
     const stream = transformStream(0, { keepComments: true });
-    const results = await collect(stream, [
-      "<a>1</a><!-- trailing -->",
-    ]);
+    const results = await collect(stream, ["<a>1</a><!-- trailing -->"]);
     const comments = results.filter(
       (r) => typeof r === "string" && r.startsWith("<!--"),
     );
@@ -274,9 +252,7 @@ describe("transformStream with large fixtures", () => {
     it("streams entire document as a single chunk", async () => {
       const stream = transformStream();
       const results = await collect(stream, [rssFeed]);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       expect(nodes.length).toBeGreaterThanOrEqual(1);
       // Should emit the rss root (possibly preceded by a processing instruction)
       const rss = nodes.find((n) => n.tagName === "rss");
@@ -288,9 +264,7 @@ describe("transformStream with large fixtures", () => {
       const stream = transformStream();
       const chunks = chunkString(rssFeed, 64);
       const results = await collect(stream, chunks);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const rss = nodes.find((n) => n.tagName === "rss");
       expect(rss).toBeDefined();
     });
@@ -299,9 +273,7 @@ describe("transformStream with large fixtures", () => {
       const stream = transformStream();
       const chunks = chunkString(rssFeed, 256);
       const results = await collect(stream, chunks);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       expect(nodes.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -327,9 +299,7 @@ describe("transformStream with large fixtures", () => {
     it("streams entire document as a single chunk", async () => {
       const stream = transformStream();
       const results = await collect(stream, [soapEnvelope]);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const envelope = nodes.find((n) => n.tagName === "soap:Envelope");
       expect(envelope).toBeDefined();
       expect(envelope!.attributes["xmlns:soap"]).toBe(
@@ -341,9 +311,7 @@ describe("transformStream with large fixtures", () => {
       const stream = transformStream();
       const chunks = chunkString(soapEnvelope, 48);
       const results = await collect(stream, chunks);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const envelope = nodes.find((n) => n.tagName === "soap:Envelope");
       expect(envelope).toBeDefined();
     });
@@ -352,9 +320,7 @@ describe("transformStream with large fixtures", () => {
       const stream = transformStream();
       const chunks = chunkString(soapEnvelope, 100);
       const results = await collect(stream, chunks);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const envelope = nodes.find((n) => n.tagName === "soap:Envelope");
       expect(envelope).toBeDefined();
 
@@ -395,9 +361,7 @@ describe("transformStream with large fixtures", () => {
     it("streams entire document as a single chunk", async () => {
       const stream = transformStream();
       const results = await collect(stream, [atomFeed]);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const feed = nodes.find((n) => n.tagName === "feed");
       expect(feed).toBeDefined();
       expect(feed!.attributes.xmlns).toBe("http://www.w3.org/2005/Atom");
@@ -407,9 +371,7 @@ describe("transformStream with large fixtures", () => {
       const stream = transformStream();
       const chunks = chunkString(atomFeed, 80);
       const results = await collect(stream, chunks);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const feed = nodes.find((n) => n.tagName === "feed");
       expect(feed).toBeDefined();
     });
@@ -435,9 +397,7 @@ describe("transformStream with large fixtures", () => {
     it("streams entire document as a single chunk", async () => {
       const stream = transformStream();
       const results = await collect(stream, [xhtmlPage]);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const html = nodes.find((n) => n.tagName === "html");
       expect(html).toBeDefined();
     });
@@ -446,9 +406,7 @@ describe("transformStream with large fixtures", () => {
       const stream = transformStream();
       const chunks = chunkString(xhtmlPage, 100);
       const results = await collect(stream, chunks);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const html = nodes.find((n) => n.tagName === "html");
       expect(html).toBeDefined();
     });
@@ -461,9 +419,7 @@ describe("transformStream with large fixtures", () => {
       );
       // There should be no top-level comments (they are all inside <html>)
       // but the nodes inside should still have comments preserved
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const html = nodes.find((n) => n.tagName === "html");
       expect(html).toBeDefined();
     });
@@ -489,9 +445,7 @@ describe("transformStream with large fixtures", () => {
     it("streams entire document as a single chunk", async () => {
       const stream = transformStream();
       const results = await collect(stream, [pomXml]);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const project = nodes.find((n) => n.tagName === "project");
       expect(project).toBeDefined();
     });
@@ -500,9 +454,7 @@ describe("transformStream with large fixtures", () => {
       const stream = transformStream();
       const chunks = chunkString(pomXml, 64);
       const results = await collect(stream, chunks);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const project = nodes.find((n) => n.tagName === "project");
       expect(project).toBeDefined();
     });
@@ -511,24 +463,24 @@ describe("transformStream with large fixtures", () => {
       const stream = transformStream();
       const chunks = chunkString(pomXml, 128);
       const results = await collect(stream, chunks);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const project = nodes.find((n) => n.tagName === "project");
       expect(project).toBeDefined();
 
       // Verify we can drill into build > plugins > plugin
       const build = project!.children.find(
         (c) => typeof c === "object" && c.tagName === "build",
-      ) as TNode;
+      );
       expect(build).toBeDefined();
-      const plugins = build.children.find(
+      assert(isElementNode(build!));
+      const plugins = build!.children.find(
         (c) => typeof c === "object" && c.tagName === "plugins",
-      ) as TNode;
+      );
       expect(plugins).toBeDefined();
-      const pluginElements = plugins.children.filter(
+      assert(isElementNode(plugins!));
+      const pluginElements = plugins!.children.filter(
         (c) => typeof c === "object" && c.tagName === "plugin",
-      ) as TNode[];
+      );
       expect(pluginElements.length).toBeGreaterThanOrEqual(3);
     });
 
@@ -735,14 +687,12 @@ describe("transformStream with large fixtures", () => {
       expect(channels.size).toBe(8);
 
       // Programmes with apostrophes and special characters
-      const oneShow = epg["bbc1.uk"]!.find(
-        (p) => p.title === "The One Show",
-      );
+      const oneShow = epg["bbc1.uk"]!.find((p) => p.title === "The One Show");
       expect(oneShow).toBeDefined();
 
       // Sky News documentary with long description
-      const climateFiles = epg["sky-news.uk"]!.find(
-        (p) => p.title.includes("Climate Files"),
+      const climateFiles = epg["sky-news.uk"]!.find((p) =>
+        p.title.includes("Climate Files"),
       );
       expect(climateFiles).toBeDefined();
       expect(climateFiles!.description).toContain("leaked documents");
@@ -804,9 +754,7 @@ describe("transformStream with large fixtures", () => {
     it("streams entire document as a single chunk with html mode", async () => {
       const stream = transformStream(0, { html: true });
       const results = await collect(stream, [htmlPage]);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const html = nodes.find((n) => n.tagName === "html");
       expect(html).toBeDefined();
       expect(html!.attributes.lang).toBe("en");
@@ -816,9 +764,7 @@ describe("transformStream with large fixtures", () => {
       const stream = transformStream(0, { html: true });
       const chunks = chunkString(htmlPage, 100);
       const results = await collect(stream, chunks);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const html = nodes.find((n) => n.tagName === "html");
       expect(html).toBeDefined();
     });
@@ -826,9 +772,7 @@ describe("transformStream with large fixtures", () => {
     it("preserves script content when streamed with html mode", async () => {
       const stream = transformStream(0, { html: true });
       const results = await collect(stream, [htmlPage]);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const html = nodes.find((n) => n.tagName === "html")!;
       // Find scripts deeply
       const scripts: TNode[] = [];
@@ -862,9 +806,7 @@ describe("transformStream with large fixtures", () => {
     it("preserves style content when streamed with html mode", async () => {
       const stream = transformStream(0, { html: true });
       const results = await collect(stream, [htmlPage]);
-      const nodes = results.filter(
-        (r): r is TNode => typeof r === "object",
-      );
+      const nodes = results.filter((r): r is TNode => typeof r === "object");
       const html = nodes.find((n) => n.tagName === "html")!;
       // Find style deeply
       const styles: TNode[] = [];
