@@ -18,7 +18,7 @@ import { parseStringPromise } from "xml2js";
 import {
   parse as txmlParse,
   simplify as txmlSimplify,
-  simplifyLostLess as txmlSimplifyLossless,
+  simplifyLostLess,
 } from "txml";
 
 // ---------------------------------------------------------------------------
@@ -62,8 +62,8 @@ describe("convert: small XML (~100 B)", () => {
     txmlSimplify(txmlParse(small));
   });
 
-  bench("txml (simplifyLossless)", () => {
-    txmlSimplifyLossless(txmlParse(small));
+  bench("txml (simplifyLostLess)", () => {
+    simplifyLostLess(txmlParse(small));
   });
 });
 
@@ -91,8 +91,8 @@ describe("convert: RSS feed (~3 KB)", () => {
     txmlSimplify(txmlParse(rssFeed));
   });
 
-  bench("txml (simplifyLossless)", () => {
-    txmlSimplifyLossless(txmlParse(rssFeed));
+  bench("txml (simplifyLostLess)", () => {
+    simplifyLostLess(txmlParse(rssFeed));
   });
 });
 
@@ -120,8 +120,8 @@ describe("convert: SOAP envelope (~3 KB)", () => {
     txmlSimplify(txmlParse(soapEnvelope));
   });
 
-  bench("txml (simplifyLossless)", () => {
-    txmlSimplifyLossless(txmlParse(soapEnvelope));
+  bench("txml (simplifyLostLess)", () => {
+    simplifyLostLess(txmlParse(soapEnvelope));
   });
 });
 
@@ -149,8 +149,8 @@ describe("convert: Atom feed (~6 KB)", () => {
     txmlSimplify(txmlParse(atomFeed));
   });
 
-  bench("txml (simplifyLossless)", () => {
-    txmlSimplifyLossless(txmlParse(atomFeed));
+  bench("txml (simplifyLostLess)", () => {
+    simplifyLostLess(txmlParse(atomFeed));
   });
 });
 
@@ -178,8 +178,8 @@ describe("convert: Maven POM (~8 KB)", () => {
     txmlSimplify(txmlParse(pomXml));
   });
 
-  bench("txml (simplifyLossless)", () => {
-    txmlSimplifyLossless(txmlParse(pomXml));
+  bench("txml (simplifyLostLess)", () => {
+    simplifyLostLess(txmlParse(pomXml));
   });
 });
 
@@ -207,7 +207,7 @@ describe("convert: XMLTV EPG (~30 KB)", () => {
     txmlSimplify(txmlParse(xmltvEpg));
   });
 
-  bench("txml (simplifyLossless)", () => {
-    txmlSimplifyLossless(txmlParse(xmltvEpg));
+  bench("txml (simplifyLostLess)", () => {
+    simplifyLostLess(txmlParse(xmltvEpg));
   });
 });

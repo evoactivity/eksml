@@ -58,12 +58,16 @@ export interface LosslessOptions {
   trimWhitespace?: boolean;
 }
 
+function hasKeys(obj: Record<string, unknown>): boolean {
+  for (const _ in obj) return true;
+  return false;
+}
+
 function convertNode(node: TNode): LosslessEntry {
   const children: LosslessEntry[] = [];
 
   // Attributes go first as { $attr: { ... } }
-  const keys = Object.keys(node.attributes);
-  if (keys.length > 0) {
+  if (hasKeys(node.attributes)) {
     children.push({ $attr: node.attributes });
   }
 

@@ -96,9 +96,7 @@ describe("basic parsing", () => {
   });
 
   it("parses multiple children", () => {
-    expect(
-      lossless("<root><a>1</a><b>2</b><c>3</c></root>"),
-    ).toMatchSnapshot();
+    expect(lossless("<root><a>1</a><b>2</b><c>3</c></root>")).toMatchSnapshot();
   });
 
   it("parses self-closing elements", () => {
@@ -159,9 +157,7 @@ describe("CDATA", () => {
 // =================================================================
 describe("comments", () => {
   it("strips comments by default", () => {
-    expect(
-      lossless("<root><!-- comment --><child/></root>"),
-    ).toMatchSnapshot();
+    expect(lossless("<root><!-- comment --><child/></root>")).toMatchSnapshot();
   });
 
   it("preserves comments with keepComments", () => {

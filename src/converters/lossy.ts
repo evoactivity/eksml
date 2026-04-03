@@ -88,9 +88,15 @@ export type LossyMixedEntry = string | { [tagName: string]: LossyValue };
  * Convert a single TNode into its simplified lossy value.
  */
 function convertNode(node: TNode): LossyValue {
-  const hasAttrs = Object.keys(node.attributes).length > 0;
   const children = node.children;
   const len = children.length;
+
+  // Check for attributes without allocating Object.keys()
+  let hasAttrs = false;
+  for (const _ in node.attributes) {
+    hasAttrs = true;
+    break;
+  }
 
   // --- Empty element ---
   if (len === 0 && !hasAttrs) {
@@ -106,11 +112,22 @@ function convertNode(node: TNode): LossyValue {
   const obj: LossyObject = {};
 
   // Attributes go first, prefixed with $
-  for (const key in node.attributes) {
-    obj["$" + key] = node.attributes[key]!;
+  if (hasAttrs) {
+    for (const key in node.attributes) {
+      obj["$" + key] = node.attributes[key]!;
+    }
   }
 
-  // Check if children contain any text nodes (strings)
+  // Single-pass: detect content type and handle accordingly.
+  // We check the first child to determine the path, then branch.
+  // Most XML elements are either all-text, all-elements, or mixed.
+
+  if (len === 0) {
+    // Empty element with attributes only
+    return obj;
+  }
+
+  // Check content type in a single scan
   let hasText = false;
   let hasElements = false;
   for (let i = 0; i < len; i++) {
@@ -119,9 +136,10 @@ function convertNode(node: TNode): LossyValue {
     } else {
       hasElements = true;
     }
+    if (hasText && hasElements) break;
   }
 
-  // --- Text + elements mixed content, or text with attributes → use $$ array ---
+  // --- Mixed content or text-with-attributes → use $$ array ---
   if (hasText && (hasElements || hasAttrs)) {
     const mixed: LossyMixedEntry[] = [];
     for (let i = 0; i < len; i++) {
@@ -136,11 +154,8 @@ function convertNode(node: TNode): LossyValue {
     return obj;
   }
 
-  // --- Text-only with attributes (already handled above by hasText && hasAttrs) ---
-
   // --- Text-only, no attributes, multiple text nodes (edge case) ---
-  if (hasText && !hasElements && !hasAttrs) {
-    // Multiple text children, no elements — join them
+  if (hasText) {
     let text = "";
     for (let i = 0; i < len; i++) {
       text += children[i] as string;
@@ -148,33 +163,21 @@ function convertNode(node: TNode): LossyValue {
     return text;
   }
 
-  // --- Element-only children (no text) ---
-  // Group by tag name; repeated tags → array
-  // Also need to handle: attributes already written, so just add child keys
-  if (!hasAttrs && len === 0) {
-    return null;
-  }
-
-  // Track tag occurrence counts for array detection
-  const counts: Record<string, number> = {};
+  // --- Element-only children ---
+  // Single pass: build keys, promote to array on second occurrence
   for (let i = 0; i < len; i++) {
     const child = children[i] as TNode;
-    counts[child.tagName] = (counts[child.tagName] || 0) + 1;
-  }
-
-  // Build child keys
-  for (let i = 0; i < len; i++) {
-    const child = children[i] as TNode;
+    const tag = child.tagName;
     const val = convertNode(child);
-    if (counts[child.tagName]! > 1) {
-      // Array case
-      if (!obj[child.tagName]) {
-        obj[child.tagName] = [];
-      }
-      (obj[child.tagName] as LossyValue[]).push(val);
+    if (!(tag in obj)) {
+      // First occurrence — store as single value
+      obj[tag] = val;
+    } else if (!Array.isArray(obj[tag])) {
+      // Second occurrence — promote to array
+      obj[tag] = [obj[tag] as LossyValue, val];
     } else {
-      // Single case
-      obj[child.tagName] = val;
+      // Third+ occurrence — push to existing array
+      (obj[tag] as LossyValue[]).push(val);
     }
   }
 
