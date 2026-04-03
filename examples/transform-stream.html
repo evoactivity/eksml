@@ -41,7 +41,7 @@
     color: #aaa;
   }
 
-  select, button, input[type="number"] {
+  select, button, input[type="number"], input[type="text"] {
     font-family: inherit;
     font-size: 0.8rem;
     padding: 6px 12px;
@@ -55,6 +55,13 @@
   input[type="number"] {
     width: 80px;
     cursor: text;
+  }
+
+  input[type="text"] {
+    width: 160px;
+    cursor: text;
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 0.75rem;
   }
 
   select:hover, button:hover {
@@ -244,6 +251,9 @@
 
   <label for="chunk-size">Chunk size (bytes)</label>
   <input type="number" id="chunk-size" value="64" min="1" max="100000">
+
+  <label for="select-tags">Select</label>
+  <input type="text" id="select-tags" placeholder="e.g. book, author" spellcheck="false" title="Comma-separated tag names to emit (leave empty for default top-level emission)">
 
   <button class="primary" id="start-btn">Stream</button>
   <button class="danger" id="stop-btn" disabled>Stop</button>

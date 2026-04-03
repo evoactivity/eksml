@@ -1,4 +1,5 @@
 import { transformStream } from "#src/transformStream.ts";
+import type { TransformStreamOptions } from "#src/transformStream.ts";
 import type { TNode } from "#src/parser.ts";
 
 const inputEl = document.getElementById("input") as HTMLTextAreaElement;
@@ -7,6 +8,7 @@ const statsEl = document.getElementById("stats") as HTMLSpanElement;
 const progressEl = document.getElementById("progress") as HTMLDivElement;
 const throttleEl = document.getElementById("throttle") as HTMLSelectElement;
 const chunkSizeEl = document.getElementById("chunk-size") as HTMLInputElement;
+const selectTagsEl = document.getElementById("select-tags") as HTMLInputElement;
 const startBtn = document.getElementById("start-btn") as HTMLButtonElement;
 const stopBtn = document.getElementById("stop-btn") as HTMLButtonElement;
 
@@ -86,6 +88,17 @@ async function run(): Promise<void> {
   const delay = parseInt(throttleEl.value, 10);
   const chunkSize = Math.max(1, parseInt(chunkSizeEl.value, 10) || 64);
 
+  // Parse the select input: comma-separated tag names, trimmed, empty strings removed
+  const selectRaw = selectTagsEl.value
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  const options: TransformStreamOptions = {};
+  if (selectRaw.length > 0) {
+    options.select = selectRaw;
+  }
+
   // Reset
   logEl.innerHTML = "";
   statsEl.textContent = "";
@@ -108,7 +121,7 @@ async function run(): Promise<void> {
   let nodeCount = 0;
 
   // Create the transform stream
-  const stream = transformStream();
+  const stream = transformStream(undefined, options);
   const streamWriter = stream.writable.getWriter();
   const reader = stream.readable.getReader();
 

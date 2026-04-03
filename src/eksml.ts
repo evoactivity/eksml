@@ -46,6 +46,7 @@ import { parse } from "#src/parser.ts";
 import { writer } from "#src/writer.ts";
 import { fastStream } from "#src/fastStream.ts";
 import { transformStream } from "#src/transformStream.ts";
+import type { TransformStreamOptions } from "#src/transformStream.ts";
 import { lossy } from "#src/converters/lossy.ts";
 import { lossless } from "#src/converters/lossless.ts";
 import {
@@ -180,18 +181,23 @@ export class Eksml<M extends OutputMode = "dom"> {
    * Pipes the input through an internal `TransformStream` powered by the SAX
    * engine, emitting complete `TNode` subtrees as each top-level element closes.
    *
+   * Use the `select` option to emit specific elements as they close at any
+   * depth, without waiting for the entire document root to finish.
+   *
    * Note: stream always emits DOM nodes (`TNode | string`) regardless of
    * the constructor's `output` mode.
    *
    * @param input - A ReadableStream of string chunks (e.g. from `fetch`).
-   * @param overrides - Per-call parse option overrides.
+   * @param overrides - Per-call stream options (html, keepComments, select, etc.).
    * @returns A ReadableStream emitting parsed TNode and string values.
    */
   stream(
     input: ReadableStream<string>,
-    overrides?: ParseOptions,
+    overrides?: TransformStreamOptions,
   ): ReadableStream<TNode | string> {
-    const merged = this.mergeParseOptions(overrides);
+    const merged: TransformStreamOptions = overrides
+      ? { ...this.streamDefaults(), ...overrides }
+      : this.streamDefaults();
     const transform = transformStream(undefined, merged);
     return input.pipeThrough(transform);
   }
@@ -282,5 +288,15 @@ export class Eksml<M extends OutputMode = "dom"> {
   private mergeParseOptions(overrides?: Partial<ParseOptions>): ParseOptions {
     if (!overrides) return this.defaults;
     return { ...this.defaults, ...overrides };
+  }
+
+  /** Extract the subset of constructor defaults relevant to transformStream. */
+  private streamDefaults(): TransformStreamOptions {
+    return {
+      html: this.defaults.html,
+      selfClosingTags: this.defaults.selfClosingTags,
+      rawContentTags: this.defaults.rawContentTags,
+      keepComments: this.defaults.keepComments,
+    };
   }
 }
