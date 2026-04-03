@@ -15,6 +15,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, "examples/index.html"),
         parse: resolve(import.meta.dirname, "examples/parse.html"),
+        writer: resolve(import.meta.dirname, "examples/writer.html"),
         "fast-stream": resolve(import.meta.dirname, "examples/fast-stream.html"),
         "transform-stream": resolve(
           import.meta.dirname,
