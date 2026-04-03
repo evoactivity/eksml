@@ -52,6 +52,7 @@
  */
 
 import { parse, type TNode, type ParseOptions } from "../parser.ts";
+import { DOLLAR } from "../utilities/charCodes.ts";
 
 /** Options for lossy. */
 export interface LossyOptions extends ParseOptions {}
@@ -76,33 +77,33 @@ export type LossyMixedEntry = string | { [tagName: string]: LossyValue };
  */
 function convertNode(node: TNode): LossyValue {
   const children = node.children;
-  const len = children ? children.length : 0;
-  const attrs = node.attributes;
-  const hasAttrs = attrs !== null;
+  const childrenLength = children ? children.length : 0;
+  const attributes = node.attributes;
+  const hasAttributes = attributes !== null;
 
   // --- Empty element ---
-  if (len === 0 && !hasAttrs) {
+  if (childrenLength === 0 && !hasAttributes) {
     return null;
   }
 
   // --- Text-only element, no attributes ---
-  if (len === 1 && typeof children[0] === "string" && !hasAttrs) {
+  if (childrenLength === 1 && typeof children[0] === "string" && !hasAttributes) {
     return children[0];
   }
 
   // --- Build object with attributes ---
   // Use null-prototype object to prevent __proto__ / constructor pollution
-  const obj: LossyObject = Object.create(null);
+  const elementObject: LossyObject = Object.create(null);
 
-  if (hasAttrs) {
-    for (const key in attrs) {
-      obj["$" + key] = attrs[key]!;
+  if (hasAttributes) {
+    for (const key in attributes) {
+      elementObject["$" + key] = attributes[key]!;
     }
   }
 
-  if (len === 0) {
+  if (childrenLength === 0) {
     // Empty element with attributes only
-    return obj;
+    return elementObject;
   }
 
   // --- Single-pass: build element-only object, upgrade to mixed if needed ---
@@ -113,33 +114,33 @@ function convertNode(node: TNode): LossyValue {
   let hasText = false;
   let mixed: LossyMixedEntry[] | null = null;
 
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < childrenLength; i++) {
     const child = children[i]!;
     if (typeof child === "string") {
       hasText = true;
       if (mixed !== null) {
         // Already in mixed mode
         mixed.push(child);
-      } else if (hasElements || hasAttrs) {
+      } else if (hasElements || hasAttributes) {
         // Upgrade to mixed mode — retroactively convert prior children.
-        // Remove element keys that were speculatively added to obj.
-        for (const k in obj) {
-          if (k.charCodeAt(0) !== 36) delete obj[k]; // keep $-prefixed attrs
+        // Remove element keys that were speculatively added to elementObject.
+        for (const propertyKey in elementObject) {
+          if (propertyKey.charCodeAt(0) !== DOLLAR) delete elementObject[propertyKey]; // keep $-prefixed attrs
         }
         mixed = [];
         for (let j = 0; j < i; j++) {
-          const prev = children[j]!;
-          if (typeof prev === "string") {
-            mixed.push(prev);
+          const previousChild = children[j]!;
+          if (typeof previousChild === "string") {
+            mixed.push(previousChild);
           } else {
-            mixed.push({ [prev.tagName]: convertNode(prev) });
+            mixed.push({ [previousChild.tagName]: convertNode(previousChild) });
           }
         }
         mixed.push(child);
       }
-      // If !hasElements && !hasAttrs, we're still in potential text-only mode
+      // If !hasElements && !hasAttributes, we're still in potential text-only mode
     } else {
-      if (!hasElements && hasText && !hasAttrs) {
+      if (!hasElements && hasText && !hasAttributes) {
         // First element after text-only so far — upgrade to mixed mode
         hasElements = true;
         mixed = [];
@@ -151,16 +152,16 @@ function convertNode(node: TNode): LossyValue {
       }
       hasElements = true;
       const tag = child.tagName;
-      const val = convertNode(child);
+      const convertedValue = convertNode(child);
       if (mixed !== null) {
-        mixed.push({ [tag]: val });
+        mixed.push({ [tag]: convertedValue });
       } else {
-        if (!(tag in obj)) {
-          obj[tag] = val;
-        } else if (!Array.isArray(obj[tag])) {
-          obj[tag] = [obj[tag] as LossyValue, val];
+        if (!(tag in elementObject)) {
+          elementObject[tag] = convertedValue;
+        } else if (!Array.isArray(elementObject[tag])) {
+          elementObject[tag] = [elementObject[tag] as LossyValue, convertedValue];
         } else {
-          (obj[tag] as LossyValue[]).push(val);
+          (elementObject[tag] as LossyValue[]).push(convertedValue);
         }
       }
     }
@@ -168,18 +169,18 @@ function convertNode(node: TNode): LossyValue {
 
   // If we switched to mixed mode, attach and return
   if (mixed !== null) {
-    obj.$$ = mixed;
-    return obj;
+    elementObject.$$ = mixed;
+    return elementObject;
   }
 
-  // If we had elements, obj is already populated — return it
+  // If we had elements, elementObject is already populated — return it
   if (hasElements) {
-    return obj;
+    return elementObject;
   }
 
   // --- Text-only, no attributes, multiple text nodes (edge case) ---
   let text = "";
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < childrenLength; i++) {
     text += children[i] as string;
   }
   return text;
@@ -204,17 +205,17 @@ export function lossy(
   // (e.g. <?xml version="1.0"?>) which are metadata, not content.
   const nodes: (TNode | string)[] = [];
   for (let i = 0; i < dom.length; i++) {
-    const n = dom[i]!;
-    if (typeof n === "string") {
+    const node = dom[i]!;
+    if (typeof node === "string") {
       // Keep non-whitespace text at top level
-      if (n.trim().length > 0) {
-        nodes.push(n);
+      if (node.trim().length > 0) {
+        nodes.push(node);
       }
-    } else if (n.tagName[0] === "?") {
+    } else if (node.tagName[0] === "?") {
       // Skip processing instructions (<?xml?>, <?xsl?>, etc.)
       continue;
     } else {
-      nodes.push(n);
+      nodes.push(node);
     }
   }
 

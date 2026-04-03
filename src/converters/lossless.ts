@@ -62,12 +62,12 @@ function convertNode(node: TNode): LosslessEntry {
   return { [node.tagName]: children };
 }
 
-function convertString(s: string): LosslessEntry {
+function convertString(text: string): LosslessEntry {
   // Comments from parse() come as "<!-- ... -->"
-  if (s.startsWith("<!--") && s.endsWith("-->")) {
-    return { $comment: s.substring(4, s.length - 3) };
+  if (text.startsWith("<!--") && text.endsWith("-->")) {
+    return { $comment: text.substring(4, text.length - 3) };
   }
-  return { $text: s };
+  return { $text: text };
 }
 
 /**

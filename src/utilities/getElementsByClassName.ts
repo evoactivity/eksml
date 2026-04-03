@@ -3,17 +3,17 @@ import { parse } from "../parser.ts";
 
 /**
  * Find elements by class name
- * @param S - XML string to search
- * @param classname - Class name to find
+ * @param xmlString - XML string to search
+ * @param className - Class name to find
  * @returns Found nodes
  */
 export function getElementsByClassName(
-  S: string,
-  classname: string,
+  xmlString: string,
+  className: string,
 ): (TNode | string)[] {
-  const out = parse(S, {
+  const out = parse(xmlString, {
     attrName: "class",
-    attrValue: "[a-zA-Z0-9- ]*" + classname + "[a-zA-Z0-9- ]*",
+    attrValue: "[a-zA-Z0-9- ]*" + className + "[a-zA-Z0-9- ]*",
   });
   return out;
 }

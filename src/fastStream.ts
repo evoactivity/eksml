@@ -21,23 +21,11 @@
  *   parser.close();
  */
 
-// ---------------------------------------------------------------------------
-// Character codes
-// ---------------------------------------------------------------------------
-const GT = 62; // >
-const SLASH = 47; // /
-const BANG = 33; // !
-const DASH = 45; // -
-const QUESTION = 63; // ?
-const SQUOTE = 39; // '
-const DQUOTE = 34; // "
-const EQ = 61; // =
-const LBRACKET = 91; // [
-const RBRACKET = 93; // ]
-const TAB = 9;
-const LF = 10;
-const CR = 13;
-const SPACE = 32;
+import {
+  GT, SLASH, BANG, DASH, QUESTION, SQUOTE, DQUOTE, EQ,
+  LBRACKET, RBRACKET, TAB, LF, CR, SPACE,
+  UPPER_C, UPPER_D, UPPER_A, UPPER_T,
+} from "./utilities/charCodes.ts";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -142,63 +130,50 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
   let state: State = State.TEXT;
   let text = "";
   let tagName = "";
-  let attrName = "";
-  let attrValue = "";
-  let attrs: Attributes = {};
+  let attributeName = "";
+  let attributeValue = "";
+  let attributes: Attributes = {};
   let special = "";
   let rawTag = "";
   let rawText = "";
-  let rawMatchIdx = 0;
+  let rawCloseTagMatchIndex = 0;
 
   // --- Emit helpers ---
+
+  function trimWhitespace(input: string): string {
+    let startIndex = 0;
+    let endIndex = input.length - 1;
+    while (startIndex <= endIndex) {
+      const charCode = input.charCodeAt(startIndex);
+      if (charCode !== SPACE && charCode !== TAB && charCode !== LF && charCode !== CR) break;
+      startIndex++;
+    }
+    while (endIndex >= startIndex) {
+      const charCode = input.charCodeAt(endIndex);
+      if (charCode !== SPACE && charCode !== TAB && charCode !== LF && charCode !== CR) break;
+      endIndex--;
+    }
+    return startIndex === 0 && endIndex === input.length - 1 ? input : input.substring(startIndex, endIndex + 1);
+  }
 
   function emitText(): void {
     if (text.length === 0) return;
     if (ontext) {
-      let s = 0;
-      let e = text.length - 1;
-      while (s <= e) {
-        const cc = text.charCodeAt(s);
-        if (cc !== SPACE && cc !== TAB && cc !== LF && cc !== CR) break;
-        s++;
-      }
-      while (e >= s) {
-        const cc = text.charCodeAt(e);
-        if (cc !== SPACE && cc !== TAB && cc !== LF && cc !== CR) break;
-        e--;
-      }
-      if (s <= e) {
-        ontext(s === 0 && e === text.length - 1 ? text : text.substring(s, e + 1));
-      }
+      const trimmed = trimWhitespace(text);
+      if (trimmed.length > 0) ontext(trimmed);
     }
     text = "";
   }
 
-  function trimCloseTag(raw: string): string {
-    let s = 0;
-    let e = raw.length - 1;
-    while (s <= e) {
-      const cc = raw.charCodeAt(s);
-      if (cc !== SPACE && cc !== TAB && cc !== LF && cc !== CR) break;
-      s++;
-    }
-    while (e >= s) {
-      const cc = raw.charCodeAt(e);
-      if (cc !== SPACE && cc !== TAB && cc !== LF && cc !== CR) break;
-      e--;
-    }
-    return s === 0 && e === raw.length - 1 ? raw : raw.substring(s, e + 1);
-  }
-
   /** After we finish parsing an open tag's `>`, handle void/raw transitions. */
   function finishOpenTag(): void {
-    if (onopentag) onopentag(tagName, attrs);
+    if (onopentag) onopentag(tagName, attributes);
     if (voidSet !== null && voidSet.has(tagName)) {
       if (onclosetag) onclosetag(tagName);
     } else if (rawSet !== null && rawSet.has(tagName)) {
       rawTag = tagName;
       rawText = "";
-      rawMatchIdx = 0;
+      rawCloseTagMatchIndex = 0;
       state = State.RAW_TEXT;
     }
   }
@@ -208,33 +183,33 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
   // If the token isn't complete in this chunk, they return -1.
 
   /**
-   * Returns true if `cc` is a tag-name-ending character:
+   * Returns true if `charCode` is a tag-name-ending character:
    * `>`, `/`, `=`, or whitespace.
    */
-  function isNameEnd(cc: number): boolean {
-    return cc === GT || cc === SLASH || cc === EQ ||
-           cc === SPACE || cc === TAB || cc === LF || cc === CR;
+  function isNameEnd(charCode: number): boolean {
+    return charCode === GT || charCode === SLASH || charCode === EQ ||
+           charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR;
   }
 
   function processChunk(chunk: string): void {
-    const len = chunk.length;
+    const chunkLength = chunk.length;
     let i = 0;
 
-    while (i < len) {
+    while (i < chunkLength) {
       switch (state) {
         // ==================================================================
         // TEXT
         // ==================================================================
         case State.TEXT: {
-          const ltIdx = chunk.indexOf("<", i);
-          if (ltIdx === -1) {
+          const lessThanIndex = chunk.indexOf("<", i);
+          if (lessThanIndex === -1) {
             text += (i === 0 ? chunk : chunk.substring(i));
-            i = len;
+            i = chunkLength;
           } else {
-            if (ltIdx > i) text += chunk.substring(i, ltIdx);
+            if (lessThanIndex > i) text += chunk.substring(i, lessThanIndex);
             emitText();
             state = State.TAG_OPEN;
-            i = ltIdx + 1;
+            i = lessThanIndex + 1;
           }
           continue;
         }
@@ -243,23 +218,23 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // TAG_OPEN
         // ==================================================================
         case State.TAG_OPEN: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === SLASH) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === SLASH) {
             state = State.CLOSE_TAG;
             tagName = "";
             i++;
-          } else if (cc === BANG) {
+          } else if (charCode === BANG) {
             state = State.BANG_START;
             special = "";
             i++;
-          } else if (cc === QUESTION) {
+          } else if (charCode === QUESTION) {
             state = State.PI;
             special = "";
             i++;
           } else {
             state = State.OPEN_TAG_NAME;
             tagName = "";
-            attrs = {};
+            attributes = {};
           }
           continue;
         }
@@ -270,25 +245,25 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         case State.OPEN_TAG_NAME: {
           // Scan ahead for end of tag name
           let j = i;
-          while (j < len) {
-            const cc = chunk.charCodeAt(j);
-            if (isNameEnd(cc)) break;
+          while (j < chunkLength) {
+            const charCode = chunk.charCodeAt(j);
+            if (isNameEnd(charCode)) break;
             j++;
           }
           // Accumulate what we scanned
           if (j > i) tagName += chunk.substring(i, j);
-          if (j >= len) {
+          if (j >= chunkLength) {
             // Tag name continues in next chunk
-            i = len;
+            i = chunkLength;
             continue;
           }
           // We hit a terminator
-          const cc = chunk.charCodeAt(j);
-          if (cc === GT) {
+          const charCode = chunk.charCodeAt(j);
+          if (charCode === GT) {
             state = State.TEXT;
             i = j + 1;
             finishOpenTag();
-          } else if (cc === SLASH) {
+          } else if (charCode === SLASH) {
             state = State.SELF_CLOSING;
             i = j + 1;
           } else {
@@ -303,19 +278,19 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // OPEN_TAG_BODY
         // ==================================================================
         case State.OPEN_TAG_BODY: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === GT) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === GT) {
             state = State.TEXT;
             i++;
             finishOpenTag();
-          } else if (cc === SLASH) {
+          } else if (charCode === SLASH) {
             state = State.SELF_CLOSING;
             i++;
-          } else if (cc === SPACE || cc === TAB || cc === LF || cc === CR) {
+          } else if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) {
             i++;
           } else {
             state = State.ATTR_NAME;
-            attrName = "";
+            attributeName = "";
             // don't advance — first char of attr name
           }
           continue;
@@ -326,26 +301,26 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // ==================================================================
         case State.ATTR_NAME: {
           let j = i;
-          while (j < len) {
-            const cc = chunk.charCodeAt(j);
-            if (cc === EQ || cc === GT || cc === SLASH ||
-                cc === SPACE || cc === TAB || cc === LF || cc === CR) break;
+          while (j < chunkLength) {
+            const charCode = chunk.charCodeAt(j);
+            if (charCode === EQ || charCode === GT || charCode === SLASH ||
+                charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) break;
             j++;
           }
-          if (j > i) attrName += chunk.substring(i, j);
-          if (j >= len) { i = len; continue; }
+          if (j > i) attributeName += chunk.substring(i, j);
+          if (j >= chunkLength) { i = chunkLength; continue; }
 
-          const cc = chunk.charCodeAt(j);
-          if (cc === EQ) {
+          const charCode = chunk.charCodeAt(j);
+          if (charCode === EQ) {
             state = State.ATTR_AFTER_EQ;
             i = j + 1;
-          } else if (cc === GT) {
-            attrs[attrName] = null;
+          } else if (charCode === GT) {
+            attributes[attributeName] = null;
             state = State.TEXT;
             i = j + 1;
             finishOpenTag();
-          } else if (cc === SLASH) {
-            attrs[attrName] = null;
+          } else if (charCode === SLASH) {
+            attributes[attributeName] = null;
             state = State.SELF_CLOSING;
             i = j + 1;
           } else {
@@ -360,26 +335,26 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // ATTR_AFTER_NAME
         // ==================================================================
         case State.ATTR_AFTER_NAME: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === EQ) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === EQ) {
             state = State.ATTR_AFTER_EQ;
             i++;
-          } else if (cc === SPACE || cc === TAB || cc === LF || cc === CR) {
+          } else if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) {
             i++;
-          } else if (cc === GT) {
-            attrs[attrName] = null;
+          } else if (charCode === GT) {
+            attributes[attributeName] = null;
             state = State.TEXT;
             i++;
             finishOpenTag();
-          } else if (cc === SLASH) {
-            attrs[attrName] = null;
+          } else if (charCode === SLASH) {
+            attributes[attributeName] = null;
             state = State.SELF_CLOSING;
             i++;
           } else {
             // New attribute — boolean (no value)
-            attrs[attrName] = null;
+            attributes[attributeName] = null;
             state = State.ATTR_NAME;
-            attrName = "";
+            attributeName = "";
           }
           continue;
         }
@@ -388,25 +363,25 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // ATTR_AFTER_EQ
         // ==================================================================
         case State.ATTR_AFTER_EQ: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === DQUOTE) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === DQUOTE) {
             state = State.ATTR_VALUE_DQ;
-            attrValue = "";
+            attributeValue = "";
             i++;
-          } else if (cc === SQUOTE) {
+          } else if (charCode === SQUOTE) {
             state = State.ATTR_VALUE_SQ;
-            attrValue = "";
+            attributeValue = "";
             i++;
-          } else if (cc === SPACE || cc === TAB || cc === LF || cc === CR) {
+          } else if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) {
             i++;
-          } else if (cc === GT) {
-            attrs[attrName] = "";
+          } else if (charCode === GT) {
+            attributes[attributeName] = "";
             state = State.TEXT;
             i++;
             finishOpenTag();
           } else {
             state = State.ATTR_VALUE_UQ;
-            attrValue = "";
+            attributeValue = "";
             // don't advance — first char of value
           }
           continue;
@@ -416,15 +391,15 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // ATTR_VALUE_DQ — batch scan for closing "
         // ==================================================================
         case State.ATTR_VALUE_DQ: {
-          const qIdx = chunk.indexOf('"', i);
-          if (qIdx === -1) {
-            attrValue += (i === 0 ? chunk : chunk.substring(i));
-            i = len;
+          const quoteIndex = chunk.indexOf('"', i);
+          if (quoteIndex === -1) {
+            attributeValue += (i === 0 ? chunk : chunk.substring(i));
+            i = chunkLength;
           } else {
-            if (qIdx > i) attrValue += chunk.substring(i, qIdx);
-            attrs[attrName] = attrValue;
+            if (quoteIndex > i) attributeValue += chunk.substring(i, quoteIndex);
+            attributes[attributeName] = attributeValue;
             state = State.OPEN_TAG_BODY;
-            i = qIdx + 1;
+            i = quoteIndex + 1;
           }
           continue;
         }
@@ -433,15 +408,15 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // ATTR_VALUE_SQ — batch scan for closing '
         // ==================================================================
         case State.ATTR_VALUE_SQ: {
-          const qIdx = chunk.indexOf("'", i);
-          if (qIdx === -1) {
-            attrValue += (i === 0 ? chunk : chunk.substring(i));
-            i = len;
+          const quoteIndex = chunk.indexOf("'", i);
+          if (quoteIndex === -1) {
+            attributeValue += (i === 0 ? chunk : chunk.substring(i));
+            i = chunkLength;
           } else {
-            if (qIdx > i) attrValue += chunk.substring(i, qIdx);
-            attrs[attrName] = attrValue;
+            if (quoteIndex > i) attributeValue += chunk.substring(i, quoteIndex);
+            attributes[attributeName] = attributeValue;
             state = State.OPEN_TAG_BODY;
-            i = qIdx + 1;
+            i = quoteIndex + 1;
           }
           continue;
         }
@@ -451,22 +426,22 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // ==================================================================
         case State.ATTR_VALUE_UQ: {
           let j = i;
-          while (j < len) {
-            const cc = chunk.charCodeAt(j);
-            if (cc === SPACE || cc === TAB || cc === LF || cc === CR ||
-                cc === GT || cc === SLASH) break;
+          while (j < chunkLength) {
+            const charCode = chunk.charCodeAt(j);
+            if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR ||
+                charCode === GT || charCode === SLASH) break;
             j++;
           }
-          if (j > i) attrValue += chunk.substring(i, j);
-          if (j >= len) { i = len; continue; }
+          if (j > i) attributeValue += chunk.substring(i, j);
+          if (j >= chunkLength) { i = chunkLength; continue; }
 
-          const cc = chunk.charCodeAt(j);
-          attrs[attrName] = attrValue;
-          if (cc === GT) {
+          const charCode = chunk.charCodeAt(j);
+          attributes[attributeName] = attributeValue;
+          if (charCode === GT) {
             state = State.TEXT;
             i = j + 1;
             finishOpenTag();
-          } else if (cc === SLASH) {
+          } else if (charCode === SLASH) {
             state = State.SELF_CLOSING;
             i = j + 1;
           } else {
@@ -480,15 +455,15 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // CLOSE_TAG — batch scan for >
         // ==================================================================
         case State.CLOSE_TAG: {
-          const gtIdx = chunk.indexOf(">", i);
-          if (gtIdx === -1) {
+          const greaterThanIndex = chunk.indexOf(">", i);
+          if (greaterThanIndex === -1) {
             tagName += (i === 0 ? chunk : chunk.substring(i));
-            i = len;
+            i = chunkLength;
           } else {
-            if (gtIdx > i) tagName += chunk.substring(i, gtIdx);
-            if (onclosetag) onclosetag(trimCloseTag(tagName));
+            if (greaterThanIndex > i) tagName += chunk.substring(i, greaterThanIndex);
+            if (onclosetag) onclosetag(trimWhitespace(tagName));
             state = State.TEXT;
-            i = gtIdx + 1;
+            i = greaterThanIndex + 1;
           }
           continue;
         }
@@ -497,11 +472,11 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // SELF_CLOSING
         // ==================================================================
         case State.SELF_CLOSING: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === GT) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === GT) {
             state = State.TEXT;
             i++;
-            if (onopentag) onopentag(tagName, attrs);
+            if (onopentag) onopentag(tagName, attributes);
             if (onclosetag) onclosetag(tagName);
           } else {
             state = State.OPEN_TAG_BODY;
@@ -513,12 +488,12 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // BANG_START
         // ==================================================================
         case State.BANG_START: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === DASH) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === DASH) {
             state = State.COMMENT_1;
             special = "<!-";
             i++;
-          } else if (cc === LBRACKET) {
+          } else if (charCode === LBRACKET) {
             state = State.CDATA_1;
             i++;
           } else {
@@ -532,8 +507,8 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // COMMENT_1
         // ==================================================================
         case State.COMMENT_1: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === DASH) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === DASH) {
             state = State.COMMENT;
             special = "<!--";
             i++;
@@ -549,15 +524,15 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // ==================================================================
         case State.COMMENT: {
           // Batch: scan for '-' which might start '-->'
-          const dIdx = chunk.indexOf("-", i);
-          if (dIdx === -1) {
+          const dashIndex = chunk.indexOf("-", i);
+          if (dashIndex === -1) {
             special += (i === 0 ? chunk : chunk.substring(i));
-            i = len;
+            i = chunkLength;
           } else {
-            if (dIdx > i) special += chunk.substring(i, dIdx);
+            if (dashIndex > i) special += chunk.substring(i, dashIndex);
             special += "-";
             state = State.COMMENT_END1;
-            i = dIdx + 1;
+            i = dashIndex + 1;
           }
           continue;
         }
@@ -566,8 +541,8 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // COMMENT_END1
         // ==================================================================
         case State.COMMENT_END1: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === DASH) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === DASH) {
             state = State.COMMENT_END2;
             special += "-";
             i++;
@@ -583,14 +558,14 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // COMMENT_END2
         // ==================================================================
         case State.COMMENT_END2: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === GT) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === GT) {
             special += ">";
             if (oncomment) oncomment(special);
             special = "";
             state = State.TEXT;
             i++;
-          } else if (cc === DASH) {
+          } else if (charCode === DASH) {
             special += "-";
             i++;
           } else {
@@ -605,27 +580,27 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // CDATA handshake states
         // ==================================================================
         case State.CDATA_1: { // expecting C
-          if (chunk.charCodeAt(i) === 67) { state = State.CDATA_2; i++; }
+          if (chunk.charCodeAt(i) === UPPER_C) { state = State.CDATA_2; i++; }
           else { state = State.DOCTYPE; i++; }
           continue;
         }
         case State.CDATA_2: { // expecting D
-          if (chunk.charCodeAt(i) === 68) { state = State.CDATA_3; i++; }
+          if (chunk.charCodeAt(i) === UPPER_D) { state = State.CDATA_3; i++; }
           else { state = State.DOCTYPE; i++; }
           continue;
         }
         case State.CDATA_3: { // expecting A
-          if (chunk.charCodeAt(i) === 65) { state = State.CDATA_4; i++; }
+          if (chunk.charCodeAt(i) === UPPER_A) { state = State.CDATA_4; i++; }
           else { state = State.DOCTYPE; i++; }
           continue;
         }
         case State.CDATA_4: { // expecting T
-          if (chunk.charCodeAt(i) === 84) { state = State.CDATA_5; i++; }
+          if (chunk.charCodeAt(i) === UPPER_T) { state = State.CDATA_5; i++; }
           else { state = State.DOCTYPE; i++; }
           continue;
         }
         case State.CDATA_5: { // expecting A
-          if (chunk.charCodeAt(i) === 65) { state = State.CDATA_6; i++; }
+          if (chunk.charCodeAt(i) === UPPER_A) { state = State.CDATA_6; i++; }
           else { state = State.DOCTYPE; i++; }
           continue;
         }
@@ -639,14 +614,14 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // CDATA — batch scan for ]
         // ==================================================================
         case State.CDATA: {
-          const bIdx = chunk.indexOf("]", i);
-          if (bIdx === -1) {
+          const bracketIndex = chunk.indexOf("]", i);
+          if (bracketIndex === -1) {
             special += (i === 0 ? chunk : chunk.substring(i));
-            i = len;
+            i = chunkLength;
           } else {
-            if (bIdx > i) special += chunk.substring(i, bIdx);
+            if (bracketIndex > i) special += chunk.substring(i, bracketIndex);
             state = State.CDATA_END1;
-            i = bIdx + 1;
+            i = bracketIndex + 1;
           }
           continue;
         }
@@ -655,8 +630,8 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // CDATA_END1
         // ==================================================================
         case State.CDATA_END1: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === RBRACKET) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === RBRACKET) {
             state = State.CDATA_END2;
             i++;
           } else {
@@ -671,13 +646,13 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // CDATA_END2
         // ==================================================================
         case State.CDATA_END2: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === GT) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === GT) {
             if (oncdata) oncdata(special);
             special = "";
             state = State.TEXT;
             i++;
-          } else if (cc === RBRACKET) {
+          } else if (charCode === RBRACKET) {
             special += "]";
             i++;
           } else {
@@ -692,14 +667,14 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // PI — batch scan for ?
         // ==================================================================
         case State.PI: {
-          const qIdx = chunk.indexOf("?", i);
-          if (qIdx === -1) {
+          const questionMarkIndex = chunk.indexOf("?", i);
+          if (questionMarkIndex === -1) {
             special += (i === 0 ? chunk : chunk.substring(i));
-            i = len;
+            i = chunkLength;
           } else {
-            if (qIdx > i) special += chunk.substring(i, qIdx);
+            if (questionMarkIndex > i) special += chunk.substring(i, questionMarkIndex);
             state = State.PI_END;
-            i = qIdx + 1;
+            i = questionMarkIndex + 1;
           }
           continue;
         }
@@ -708,37 +683,37 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // PI_END
         // ==================================================================
         case State.PI_END: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === GT) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === GT) {
             if (onprocessinginstruction) {
               const inner = special;
-              let spaceIdx = -1;
+              let whitespaceIndex = -1;
               for (let j = 0; j < inner.length; j++) {
-                const c = inner.charCodeAt(j);
-                if (c === SPACE || c === TAB || c === LF || c === CR) {
-                  spaceIdx = j;
+                const innerCharCode = inner.charCodeAt(j);
+                if (innerCharCode === SPACE || innerCharCode === TAB || innerCharCode === LF || innerCharCode === CR) {
+                  whitespaceIndex = j;
                   break;
                 }
               }
-              if (spaceIdx === -1) {
+              if (whitespaceIndex === -1) {
                 onprocessinginstruction(inner, "");
               } else {
-                const piName = inner.substring(0, spaceIdx);
-                let bs = spaceIdx + 1;
-                while (bs < inner.length) {
-                  const bc = inner.charCodeAt(bs);
-                  if (bc !== SPACE && bc !== TAB && bc !== LF && bc !== CR) break;
-                  bs++;
+                const instructionName = inner.substring(0, whitespaceIndex);
+                let bodyStartIndex = whitespaceIndex + 1;
+                while (bodyStartIndex < inner.length) {
+                  const bodyCharCode = inner.charCodeAt(bodyStartIndex);
+                  if (bodyCharCode !== SPACE && bodyCharCode !== TAB && bodyCharCode !== LF && bodyCharCode !== CR) break;
+                  bodyStartIndex++;
                 }
-                let be = inner.length - 1;
-                while (be >= bs) {
-                  const bc = inner.charCodeAt(be);
-                  if (bc !== SPACE && bc !== TAB && bc !== LF && bc !== CR) break;
-                  be--;
+                let bodyEndIndex = inner.length - 1;
+                while (bodyEndIndex >= bodyStartIndex) {
+                  const bodyCharCode = inner.charCodeAt(bodyEndIndex);
+                  if (bodyCharCode !== SPACE && bodyCharCode !== TAB && bodyCharCode !== LF && bodyCharCode !== CR) break;
+                  bodyEndIndex--;
                 }
                 onprocessinginstruction(
-                  piName,
-                  bs <= be ? inner.substring(bs, be + 1) : "",
+                  instructionName,
+                  bodyStartIndex <= bodyEndIndex ? inner.substring(bodyStartIndex, bodyEndIndex + 1) : "",
                 );
               }
             }
@@ -757,11 +732,11 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // DOCTYPE
         // ==================================================================
         case State.DOCTYPE: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === GT) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === GT) {
             state = State.TEXT;
             i++;
-          } else if (cc === LBRACKET) {
+          } else if (charCode === LBRACKET) {
             state = State.DOCTYPE_BRACKET;
             i++;
           } else {
@@ -774,8 +749,8 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // DOCTYPE_BRACKET
         // ==================================================================
         case State.DOCTYPE_BRACKET: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === RBRACKET) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === RBRACKET) {
             state = State.DOCTYPE;
             i++;
           } else {
@@ -788,14 +763,14 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // RAW_TEXT — batch scan for <
         // ==================================================================
         case State.RAW_TEXT: {
-          const ltIdx = chunk.indexOf("<", i);
-          if (ltIdx === -1) {
+          const lessThanIndex = chunk.indexOf("<", i);
+          if (lessThanIndex === -1) {
             rawText += (i === 0 ? chunk : chunk.substring(i));
-            i = len;
+            i = chunkLength;
           } else {
-            if (ltIdx > i) rawText += chunk.substring(i, ltIdx);
+            if (lessThanIndex > i) rawText += chunk.substring(i, lessThanIndex);
             state = State.RAW_END_1;
-            i = ltIdx + 1;
+            i = lessThanIndex + 1;
           }
           continue;
         }
@@ -804,10 +779,10 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // RAW_END_1
         // ==================================================================
         case State.RAW_END_1: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === SLASH) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === SLASH) {
             state = State.RAW_END_2;
-            rawMatchIdx = 0;
+            rawCloseTagMatchIndex = 0;
             i++;
           } else {
             rawText += "<";
@@ -821,25 +796,25 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // RAW_END_2 — matching close tag name
         // ==================================================================
         case State.RAW_END_2: {
-          if (rawMatchIdx < rawTag.length) {
-            if (chunk[i] === rawTag[rawMatchIdx]) {
-              rawMatchIdx++;
+          if (rawCloseTagMatchIndex < rawTag.length) {
+            if (chunk[i] === rawTag[rawCloseTagMatchIndex]) {
+              rawCloseTagMatchIndex++;
               i++;
             } else {
-              rawText += "</" + rawTag.substring(0, rawMatchIdx);
+              rawText += "</" + rawTag.substring(0, rawCloseTagMatchIndex);
               state = State.RAW_TEXT;
               // don't advance — re-process this char
             }
           } else {
-            const cc = chunk.charCodeAt(i);
-            if (cc === GT) {
+            const charCode = chunk.charCodeAt(i);
+            if (charCode === GT) {
               if (ontext && rawText.length > 0) ontext(rawText);
               if (onclosetag) onclosetag(rawTag);
               rawText = "";
               rawTag = "";
               state = State.TEXT;
               i++;
-            } else if (cc === SPACE || cc === TAB || cc === LF || cc === CR) {
+            } else if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) {
               state = State.RAW_END_3;
               i++;
             } else {
@@ -855,15 +830,15 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         // RAW_END_3
         // ==================================================================
         case State.RAW_END_3: {
-          const cc = chunk.charCodeAt(i);
-          if (cc === GT) {
+          const charCode = chunk.charCodeAt(i);
+          if (charCode === GT) {
             if (ontext && rawText.length > 0) ontext(rawText);
             if (onclosetag) onclosetag(rawTag);
             rawText = "";
             rawTag = "";
             state = State.TEXT;
             i++;
-          } else if (cc === SPACE || cc === TAB || cc === LF || cc === CR) {
+          } else if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) {
             i++;
           } else {
             rawText += "</" + rawTag;
@@ -894,7 +869,7 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         if (state === State.RAW_END_1) {
           rawText += "<";
         } else if (state === State.RAW_END_2) {
-          rawText += "</" + rawTag.substring(0, rawMatchIdx);
+          rawText += "</" + rawTag.substring(0, rawCloseTagMatchIndex);
         }
         if (ontext && rawText.length > 0) ontext(rawText);
         if (onclosetag) onclosetag(rawTag);
@@ -904,8 +879,8 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
       }
       text = "";
       tagName = "";
-      attrName = "";
-      attrValue = "";
+      attributeName = "";
+      attributeValue = "";
       special = "";
       state = State.TEXT;
     },

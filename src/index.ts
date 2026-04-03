@@ -5,6 +5,7 @@ export * from "./fastStream.ts";
 export * from "./converters/lossless.ts";
 export * from "./converters/lossy.ts";
 export * from "./utilities/htmlConstants.ts";
+export * from "./utilities/charCodes.ts";
 export * from "./utilities/filter.ts";
 export * from "./utilities/toContentString.ts";
 export * from "./utilities/getElementById.ts";

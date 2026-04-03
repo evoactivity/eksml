@@ -1,6 +1,7 @@
 import { escapeText, escapeAttribute, encodeHTML } from "entities";
 import type { TNode } from "./parser.ts";
 import { HTML_VOID_ELEMENTS } from "./utilities/htmlConstants.ts";
+import { QUESTION } from "./utilities/charCodes.ts";
 
 /** Options for writer. */
 export interface WriterOptions {
@@ -38,30 +39,30 @@ export interface WriterOptions {
 /**
  * Serialize a parsed DOM back to XML.
  * Useful for removing whitespace or recreating XML with modified data.
- * @param O - The node(s) to serialize
+ * @param input - The node(s) to serialize
  * @param options - Formatting options
  * @returns XML string
  */
 export function writer(
-  O: TNode | (TNode | string)[],
+  input: TNode | (TNode | string)[],
   options?: WriterOptions,
 ): string {
-  if (!O) return "";
+  if (!input) return "";
 
   // Fast path: no options — skip all option parsing, closure creation,
   // identity function allocation, and voidSet construction.
   if (!options || (!options.pretty && !options.entities && !options.html)) {
-    return compactWrite(O);
+    return compactWrite(input);
   }
 
-  return fullWriter(O, options);
+  return fullWriter(input, options);
 }
 
 // ---------------------------------------------------------------------------
 // Fast path — compact output, no entities, no HTML mode
 // ---------------------------------------------------------------------------
 
-function compactWrite(O: TNode | (TNode | string)[]): string {
+function compactWrite(input: TNode | (TNode | string)[]): string {
   let out = "";
 
   function writeChildren(nodes: (TNode | string)[]): void {
@@ -75,41 +76,41 @@ function compactWrite(O: TNode | (TNode | string)[]): string {
     }
   }
 
-  function writeNode(N: TNode): void {
-    const tag = N.tagName;
-    const attrs = N.attributes;
-    if (attrs === null) {
+  function writeNode(node: TNode): void {
+    const tag = node.tagName;
+    const attributes = node.attributes;
+    if (attributes === null) {
       // No attributes — combine open tag into one concat
-      if (tag.charCodeAt(0) === 63 /* ? */) {
+      if (tag.charCodeAt(0) === QUESTION) {
         out += "<" + tag + "?>";
         return;
       }
       out += "<" + tag + ">";
     } else {
       out += "<" + tag;
-      const keys = Object.keys(attrs);
+      const keys = Object.keys(attributes);
       for (let j = 0; j < keys.length; j++) {
-        const k = keys[j]!;
-        const v = attrs[k];
-        if (v === null) {
-          out += " " + k;
-        } else if (v.indexOf('"') === -1) {
-          out += " " + k + '="' + v + '"';
+        const attributeName = keys[j]!;
+        const attributeValue = attributes[attributeName];
+        if (attributeValue === null) {
+          out += " " + attributeName;
+        } else if (attributeValue.indexOf('"') === -1) {
+          out += " " + attributeName + '="' + attributeValue + '"';
         } else {
-          out += " " + k + "='" + v + "'";
+          out += " " + attributeName + "='" + attributeValue + "'";
         }
       }
-      if (tag.charCodeAt(0) === 63 /* ? */) {
+      if (tag.charCodeAt(0) === QUESTION) {
         out += "?>";
         return;
       }
       out += ">";
     }
-    writeChildren(N.children);
+    writeChildren(node.children);
     out += "</" + tag + ">";
   }
 
-  writeChildren(Array.isArray(O) ? O : [O]);
+  writeChildren(Array.isArray(input) ? input : [input]);
   return out;
 }
 
@@ -118,7 +119,7 @@ function compactWrite(O: TNode | (TNode | string)[]): string {
 // ---------------------------------------------------------------------------
 
 function fullWriter(
-  O: TNode | (TNode | string)[],
+  input: TNode | (TNode | string)[],
   options: WriterOptions,
 ): string {
   const indent = !options.pretty
@@ -130,16 +131,16 @@ function fullWriter(
   // Entity encoding functions — identity when disabled
   const encodeEntities = !!options.entities;
   const htmlMode = !!options.html;
-  const encText: (s: string) => string = encodeEntities
+  const encodeTextContent: (input: string) => string = encodeEntities
     ? htmlMode
       ? encodeHTML
       : escapeText
-    : (s) => s;
-  const encAttr: (s: string) => string = encodeEntities
+    : (input) => input;
+  const encodeAttributeValue: (input: string) => string = encodeEntities
     ? htmlMode
       ? encodeHTML
       : escapeAttribute
-    : (s) => s;
+    : (input) => input;
 
   // HTML void elements — self-close without </tag> in html mode
   const voidSet: Set<string> | null = htmlMode
@@ -154,18 +155,18 @@ function fullWriter(
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]!;
         if (typeof node === "string") {
-          out += encText(node);
+          out += encodeTextContent(node);
         } else {
           writeNode(node);
         }
       }
     }
 
-    function writeNode(N: TNode): void {
-      const tag = N.tagName;
-      const attrs = N.attributes;
-      if (attrs === null) {
-        if (tag.charCodeAt(0) === 63 /* ? */) {
+    function writeNode(node: TNode): void {
+      const tag = node.tagName;
+      const attributes = node.attributes;
+      if (attributes === null) {
+        if (tag.charCodeAt(0) === QUESTION) {
           out += "<" + tag + "?>";
           return;
         }
@@ -177,22 +178,22 @@ function fullWriter(
         out += "<" + tag + ">";
       } else {
         out += "<" + tag;
-        const keys = Object.keys(attrs);
+        const keys = Object.keys(attributes);
         for (let j = 0; j < keys.length; j++) {
-          const k = keys[j]!;
-          const v = attrs[k];
-          if (v === null) {
-            out += " " + k;
+          const attributeName = keys[j]!;
+          const attributeValue = attributes[attributeName];
+          if (attributeValue === null) {
+            out += " " + attributeName;
           } else {
-            const encoded = encAttr(v);
+            const encoded = encodeAttributeValue(attributeValue);
             if (encoded.indexOf('"') === -1) {
-              out += " " + k + '="' + encoded + '"';
+              out += " " + attributeName + '="' + encoded + '"';
             } else {
-              out += " " + k + "='" + encoded + "'";
+              out += " " + attributeName + "='" + encoded + "'";
             }
           }
         }
-        if (tag.charCodeAt(0) === 63 /* ? */) {
+        if (tag.charCodeAt(0) === QUESTION) {
           out += "?>";
           return;
         }
@@ -203,11 +204,11 @@ function fullWriter(
         }
         out += ">";
       }
-      writeChildren(N.children);
+      writeChildren(node.children);
       out += "</" + tag + ">";
     }
 
-    writeChildren(Array.isArray(O) ? O : [O]);
+    writeChildren(Array.isArray(input) ? input : [input]);
     return out;
   }
 
@@ -221,16 +222,16 @@ function fullWriter(
     return false;
   }
 
-  function prettyWriteAttrs(N: TNode): void {
-    if (N.attributes === null) return;
-    const keys = Object.keys(N.attributes);
+  function prettyWriteAttributes(node: TNode): void {
+    if (node.attributes === null) return;
+    const keys = Object.keys(node.attributes);
     for (let j = 0; j < keys.length; j++) {
       const key = keys[j]!;
-      const val = N.attributes[key];
-      if (val === null) {
+      const attributeValue = node.attributes[key];
+      if (attributeValue === null) {
         out += " " + key;
       } else {
-        const encoded = encAttr(val);
+        const encoded = encodeAttributeValue(attributeValue);
         if (encoded.indexOf('"') === -1) {
           out += " " + key + '="' + encoded + '"';
         } else {
@@ -240,47 +241,47 @@ function fullWriter(
     }
   }
 
-  function prettyWriteNode(N: TNode, depth: number): void {
-    if (!N) return;
-    const pad = indent.repeat(depth);
-    const tag = N.tagName;
+  function prettyWriteNode(node: TNode, depth: number): void {
+    if (!node) return;
+    const padding = indent.repeat(depth);
+    const tag = node.tagName;
 
     // Processing instruction
-    if (tag.charCodeAt(0) === 63 /* ? */) {
-      out += pad + "<" + tag;
-      prettyWriteAttrs(N);
+    if (tag.charCodeAt(0) === QUESTION) {
+      out += padding + "<" + tag;
+      prettyWriteAttributes(node);
       out += "?>";
       return;
     }
 
-    const children = N.children;
-    const len = children.length;
+    const children = node.children;
+    const childrenLength = children.length;
 
     // HTML void elements — self-close without closing tag
     if (voidSet !== null && voidSet.has(tag)) {
-      out += pad + "<" + tag;
-      prettyWriteAttrs(N);
+      out += padding + "<" + tag;
+      prettyWriteAttributes(node);
       out += ">";
       return;
     }
 
     // Empty element — self-close
-    if (len === 0) {
-      out += pad + "<" + tag;
-      prettyWriteAttrs(N);
+    if (childrenLength === 0) {
+      out += padding + "<" + tag;
+      prettyWriteAttributes(node);
       out += "/>";
       return;
     }
 
     // Text-only or mixed content (has any string children) — keep inline
     if (hasTextChildren(children)) {
-      out += pad + "<" + tag;
-      prettyWriteAttrs(N);
+      out += padding + "<" + tag;
+      prettyWriteAttributes(node);
       out += ">";
-      for (let i = 0; i < len; i++) {
+      for (let i = 0; i < childrenLength; i++) {
         const child = children[i]!;
         if (typeof child === "string") {
-          out += encText(child);
+          out += encodeTextContent(child);
         } else {
           // Inline nested element within mixed content
           inlineWriteNode(child);
@@ -291,28 +292,28 @@ function fullWriter(
     }
 
     // Element-only children — indent each child
-    out += pad + "<" + tag;
-    prettyWriteAttrs(N);
+    out += padding + "<" + tag;
+    prettyWriteAttributes(node);
     out += ">";
-    for (let i = 0; i < len; i++) {
+    for (let i = 0; i < childrenLength; i++) {
       const child = children[i]!;
       if (typeof child === "string") {
-        out += encText(child);
+        out += encodeTextContent(child);
       } else {
         out += "\n";
         prettyWriteNode(child, depth + 1);
       }
     }
-    out += "\n" + pad + "</" + tag + ">";
+    out += "\n" + padding + "</" + tag + ">";
   }
 
   /** Write a node inline (no indentation), used inside mixed content. */
-  function inlineWriteNode(N: TNode): void {
-    if (!N) return;
-    const tag = N.tagName;
+  function inlineWriteNode(node: TNode): void {
+    if (!node) return;
+    const tag = node.tagName;
     out += "<" + tag;
-    prettyWriteAttrs(N);
-    if (tag.charCodeAt(0) === 63 /* ? */) {
+    prettyWriteAttributes(node);
+    if (tag.charCodeAt(0) === QUESTION) {
       out += "?>";
       return;
     }
@@ -321,15 +322,15 @@ function fullWriter(
       out += ">";
       return;
     }
-    if (N.children.length === 0) {
+    if (node.children.length === 0) {
       out += "/>";
       return;
     }
     out += ">";
-    for (let i = 0; i < N.children.length; i++) {
-      const child = N.children[i]!;
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i]!;
       if (typeof child === "string") {
-        out += encText(child);
+        out += encodeTextContent(child);
       } else {
         inlineWriteNode(child);
       }
@@ -337,12 +338,12 @@ function fullWriter(
     out += "</" + tag + ">";
   }
 
-  const nodes = Array.isArray(O) ? O : [O];
+  const nodes = Array.isArray(input) ? input : [input];
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i]!;
     if (i > 0) out += "\n";
     if (typeof node === "string") {
-      out += encText(node);
+      out += encodeTextContent(node);
     } else {
       prettyWriteNode(node, 0);
     }

@@ -5,6 +5,9 @@ import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
 } from "./utilities/htmlConstants.js";
+import {
+  SPACE, TAB, LF, CR, EQ, DQUOTE, SQUOTE,
+} from "./utilities/charCodes.js";
 
 /**
  * Parse a processing instruction body string into an attributes record.
@@ -15,79 +18,79 @@ import {
  * format that consumers expect.
  */
 function parsePIAttributes(body: string): Record<string, string | null> {
-  const attrs: Record<string, string | null> = {};
-  const len = body.length;
+  const attributes: Record<string, string | null> = {};
+  const bodyLength = body.length;
   let i = 0;
 
-  while (i < len) {
+  while (i < bodyLength) {
     // Skip whitespace
-    let cc = body.charCodeAt(i);
-    if (cc === 32 || cc === 9 || cc === 10 || cc === 13) {
+    let charCode = body.charCodeAt(i);
+    if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) {
       i++;
       continue;
     }
 
     // Read attribute name
     const nameStart = i;
-    while (i < len) {
-      cc = body.charCodeAt(i);
-      if (cc === 61 || cc === 32 || cc === 9 || cc === 10 || cc === 13) break; // = or whitespace
+    while (i < bodyLength) {
+      charCode = body.charCodeAt(i);
+      if (charCode === EQ || charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) break;
       i++;
     }
     if (i === nameStart) { i++; continue; }
     const name = body.substring(nameStart, i);
 
     // Skip whitespace
-    while (i < len) {
-      cc = body.charCodeAt(i);
-      if (cc !== 32 && cc !== 9 && cc !== 10 && cc !== 13) break;
+    while (i < bodyLength) {
+      charCode = body.charCodeAt(i);
+      if (charCode !== SPACE && charCode !== TAB && charCode !== LF && charCode !== CR) break;
       i++;
     }
 
     // Check for =
-    if (i < len && body.charCodeAt(i) === 61) {
+    if (i < bodyLength && body.charCodeAt(i) === EQ) {
       i++; // skip =
       // Skip whitespace
-      while (i < len) {
-        cc = body.charCodeAt(i);
-        if (cc !== 32 && cc !== 9 && cc !== 10 && cc !== 13) break;
+      while (i < bodyLength) {
+        charCode = body.charCodeAt(i);
+        if (charCode !== SPACE && charCode !== TAB && charCode !== LF && charCode !== CR) break;
         i++;
       }
       // Read value
-      if (i < len) {
-        const q = body.charCodeAt(i);
-        if (q === 34 || q === 39) { // " or '
-          const qChar = body[i]!;
+      if (i < bodyLength) {
+        const quoteCharCode = body.charCodeAt(i);
+        if (quoteCharCode === DQUOTE || quoteCharCode === SQUOTE) {
+          const quoteCharacter = body[i]!;
           i++; // skip opening quote
-          const valStart = i;
-          const end = body.indexOf(qChar, i);
+          const valueStartIndex = i;
+          const end = body.indexOf(quoteCharacter, i);
           if (end === -1) {
-            attrs[name] = body.substring(valStart);
-            i = len;
+            attributes[name] = body.substring(valueStartIndex);
+            i = bodyLength;
           } else {
-            attrs[name] = body.substring(valStart, end);
+            attributes[name] = body.substring(valueStartIndex, end);
             i = end + 1;
           }
         } else {
           // Unquoted value — read until whitespace
-          const valStart = i;
-          while (i < len) {
-            cc = body.charCodeAt(i);
-            if (cc === 32 || cc === 9 || cc === 10 || cc === 13) break;
+          const valueStartIndex = i;
+          while (i < bodyLength) {
+            charCode = body.charCodeAt(i);
+            if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) break;
             i++;
           }
-          attrs[name] = body.substring(valStart, i);
+          attributes[name] = body.substring(valueStartIndex, i);
         }
       } else {
-        attrs[name] = null;
+        attributes[name] = null;
       }
     } else {
       // Boolean attribute (no value)
-      attrs[name] = null;
+      attributes[name] = null;
     }
   }
 
-  return attrs;
+  return attributes;
 }
 
 /**
@@ -105,22 +108,22 @@ export function transformStream(
   offset?: number | string,
   parseOptions?: ParseOptions,
 ): TransformStream<string, TNode | string> {
-  const opts: ParseOptions = parseOptions ? { ...parseOptions } : {};
+  const resolvedOptions: ParseOptions = parseOptions ? { ...parseOptions } : {};
   let skipBytes: number =
     typeof offset === "string" ? offset.length : offset || 0;
 
   // Resolve HTML-mode defaults (same logic as parse())
-  const isHtml = opts.html === true;
+  const isHtml = resolvedOptions.html === true;
   const selfClosingTags =
-    opts.selfClosingTags ?? (isHtml ? HTML_VOID_ELEMENTS : []);
+    resolvedOptions.selfClosingTags ?? (isHtml ? HTML_VOID_ELEMENTS : []);
   const rawContentTags =
-    opts.rawContentTags ?? (isHtml ? HTML_RAW_CONTENT_TAGS : []);
-  const keepComments = opts.keepComments === true;
+    resolvedOptions.rawContentTags ?? (isHtml ? HTML_RAW_CONTENT_TAGS : []);
+  const keepComments = resolvedOptions.keepComments === true;
 
   // --- Tree-construction state ---
   // Stack of open nodes. When depth (stack.length) returns to 0, emit the node.
   const stack: TNode[] = [];
-  let controller: TransformStreamDefaultController<TNode | string> | null =
+  let streamController: TransformStreamDefaultController<TNode | string> | null =
     null;
 
   function currentParent(): TNode | null {
@@ -131,8 +134,8 @@ export function transformStream(
     const parent = currentParent();
     if (parent) {
       parent.children.push(item);
-    } else if (controller) {
-      controller.enqueue(item);
+    } else if (streamController) {
+      streamController.enqueue(item);
     }
   }
 
@@ -160,8 +163,8 @@ export function transformStream(
       const node = stack.pop();
       if (!node) return;
       // If stack is now empty, this was a top-level node — emit it
-      if (stack.length === 0 && controller) {
-        controller.enqueue(node);
+      if (stack.length === 0 && streamController) {
+        streamController.enqueue(node);
       }
     },
 
@@ -189,9 +192,9 @@ export function transformStream(
       if (parent) {
         // Inside a node — add comment as string child
         parent.children.push(comment);
-      } else if (controller) {
+      } else if (streamController) {
         // Top-level comment — emit directly
-        controller.enqueue(comment);
+        streamController.enqueue(comment);
       }
     },
 
@@ -208,9 +211,9 @@ export function transformStream(
   return new TransformStream<string, TNode | string>({
     transform(
       chunk: string,
-      ctrl: TransformStreamDefaultController<TNode | string>,
+      controller: TransformStreamDefaultController<TNode | string>,
     ): void {
-      controller = ctrl;
+      streamController = controller;
       // Handle offset: skip leading bytes from the first chunk(s)
       if (skipBytes > 0) {
         if (chunk.length <= skipBytes) {
@@ -224,9 +227,9 @@ export function transformStream(
     },
 
     flush(
-      ctrl: TransformStreamDefaultController<TNode | string>,
+      controller: TransformStreamDefaultController<TNode | string>,
     ): void {
-      controller = ctrl;
+      streamController = controller;
       parser.close();
     },
   });

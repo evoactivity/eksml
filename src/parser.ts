@@ -10,6 +10,20 @@ import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
 } from "./utilities/htmlConstants.ts";
+import {
+  LT,
+  GT,
+  SLASH,
+  BANG,
+  QUESTION,
+  SQUOTE,
+  DQUOTE,
+  LBRACKET,
+  RBRACKET,
+  DASH,
+  UNDERSCORE,
+  COLON,
+} from "./utilities/charCodes.ts";
 
 /**
  * A parsed XML node
@@ -105,17 +119,6 @@ interface InternalParseOptions extends ParseOptions {
   parseNode?: boolean;
 }
 
-const openBracket = "<";
-const openBracketCC = 60; // <
-const closeBracketCC = 62; // >
-const slashCC = 47; // /
-const exclamationCC = 33; // !
-const singleQuoteCC = 39; // '
-const doubleQuoteCC = 34; // "
-const openCornerBracketCC = 91; // [
-const closeCornerBracketCC = 93; // ]
-const questionCC = 63; // ?
-
 // Pre-computed lookup table: 1 for characters that terminate a name token
 // Name-ending chars: \t(9) \n(10) \r(13) space(32) /(47) =(61) >(62)
 const NAME_END = new Uint8Array(128);
@@ -137,33 +140,38 @@ export function parse(
   S: string,
   options?: ParseOptions | InternalParseOptions,
 ): (TNode | string)[] {
-  const opts = (options || {}) as InternalParseOptions;
+  const resolvedOptions = (options || {}) as InternalParseOptions;
 
-  let pos = opts.pos || 0;
-  const keepComments = !!opts.keepComments;
-  const trimWhitespace = !!opts.trimWhitespace;
-  const strict = !!opts.strict;
-  const htmlMode = !!opts.html;
-  const decode = opts.entities === true ? (htmlMode ? decodeHTML : decodeXML) : null;
+  let pos = resolvedOptions.pos || 0;
+  const keepComments = !!resolvedOptions.keepComments;
+  const trimWhitespace = !!resolvedOptions.trimWhitespace;
+  const strict = !!resolvedOptions.strict;
+  const htmlMode = !!resolvedOptions.html;
+  const decode =
+    resolvedOptions.entities === true
+      ? htmlMode
+        ? decodeHTML
+        : decodeXML
+      : null;
 
-  const selfClosingArr: string[] =
-    opts.selfClosingTags ?? (htmlMode ? HTML_VOID_ELEMENTS : []);
-  const rawContentArr: string[] =
-    opts.rawContentTags ?? (htmlMode ? HTML_RAW_CONTENT_TAGS : []);
+  const selfClosingTagList: string[] =
+    resolvedOptions.selfClosingTags ?? (htmlMode ? HTML_VOID_ELEMENTS : []);
+  const rawContentTagList: string[] =
+    resolvedOptions.rawContentTags ?? (htmlMode ? HTML_RAW_CONTENT_TAGS : []);
 
   // Convert to Sets for O(1) lookup when non-empty
   const selfClosingSet: Set<string> | null =
-    selfClosingArr.length > 0 ? new Set(selfClosingArr) : null;
+    selfClosingTagList.length > 0 ? new Set(selfClosingTagList) : null;
   const rawContentSet: Set<string> | null =
-    rawContentArr.length > 0 ? new Set(rawContentArr) : null;
+    rawContentTagList.length > 0 ? new Set(rawContentTagList) : null;
 
   /** Build an error with line/column info for strict mode. */
   function strictError(message: string): Error {
     const before = S.substring(0, pos);
     const lines = before.split("\n");
     const line = lines.length;
-    const col = lines[lines.length - 1]!.length + 1;
-    return new Error(`${message} at line ${line}, column ${col}`);
+    const column = lines[lines.length - 1]!.length + 1;
+    return new Error(`${message} at line ${line}, column ${column}`);
   }
 
   /**
@@ -175,31 +183,31 @@ export function parse(
     let hasElement = false;
     let hasWhitespaceOnlyText = false;
     for (let i = 0; i < children.length; i++) {
-      const c = children[i]!;
-      if (typeof c !== "string") {
+      const child = children[i]!;
+      if (typeof child !== "string") {
         hasElement = true;
-      } else if (c.trim().length === 0) {
+      } else if (child.trim().length === 0) {
         hasWhitespaceOnlyText = true;
       }
       if (hasElement && hasWhitespaceOnlyText) break;
     }
     if (hasElement && hasWhitespaceOnlyText) {
       // Compact in-place with a write pointer (avoids O(n) splice per removal)
-      let w = 0;
+      let writeIndex = 0;
       for (let i = 0; i < children.length; i++) {
-        const c = children[i]!;
-        if (typeof c === "string" && c.trim().length === 0) continue;
-        children[w++] = c;
+        const child = children[i]!;
+        if (typeof child === "string" && child.trim().length === 0) continue;
+        children[writeIndex++] = child;
       }
-      children.length = w;
+      children.length = writeIndex;
     }
   }
 
   function parseChildren(tagName: string): (TNode | string)[] {
     const children: (TNode | string)[] = [];
     while (S[pos]) {
-      if (S.charCodeAt(pos) === openBracketCC) {
-        if (S.charCodeAt(pos + 1) === slashCC) {
+      if (S.charCodeAt(pos) === LT) {
+        if (S.charCodeAt(pos + 1) === SLASH) {
           const closeStart = pos + 2;
           pos = S.indexOf(">", pos);
 
@@ -227,8 +235,8 @@ export function parse(
 
           stripIgnorableWhitespace(children);
           return children;
-        } else if (S.charCodeAt(pos + 1) === exclamationCC) {
-          if (S.charCodeAt(pos + 2) === 45 /* - */) {
+        } else if (S.charCodeAt(pos + 1) === BANG) {
+          if (S.charCodeAt(pos + 2) === DASH) {
             // comment: use indexOf("-->") for fast scanning
             const startCommentPos = pos;
             pos = S.indexOf("-->", pos + 3);
@@ -245,8 +253,8 @@ export function parse(
               }
             }
           } else if (
-            S.charCodeAt(pos + 2) === openCornerBracketCC &&
-            S.charCodeAt(pos + 8) === openCornerBracketCC &&
+            S.charCodeAt(pos + 2) === LBRACKET &&
+            S.charCodeAt(pos + 8) === LBRACKET &&
             S.substring(pos + 3, pos + 8).toLowerCase() === "cdata"
           ) {
             // cdata
@@ -265,24 +273,24 @@ export function parse(
             // For internal DTD subsets ([...]), skip quoted strings inside
             const startDoctype = pos + 1;
             pos += 2;
-            let encapsuled = false;
+            let insideBracketSection = false;
             while (
-              (S.charCodeAt(pos) !== closeBracketCC || encapsuled === true) &&
+              (S.charCodeAt(pos) !== GT || insideBracketSection === true) &&
               S[pos]
             ) {
-              if (S.charCodeAt(pos) === openCornerBracketCC) {
-                encapsuled = true;
+              if (S.charCodeAt(pos) === LBRACKET) {
+                insideBracketSection = true;
               } else if (
-                encapsuled === true &&
-                S.charCodeAt(pos) === closeCornerBracketCC
+                insideBracketSection === true &&
+                S.charCodeAt(pos) === RBRACKET
               ) {
-                encapsuled = false;
-              } else if (encapsuled === true) {
+                insideBracketSection = false;
+              } else if (insideBracketSection === true) {
                 // Skip quoted strings inside internal DTD subset
-                const qc = S.charCodeAt(pos);
-                if (qc === singleQuoteCC || qc === doubleQuoteCC) {
+                const quoteCharCode = S.charCodeAt(pos);
+                if (quoteCharCode === SQUOTE || quoteCharCode === DQUOTE) {
                   pos = S.indexOf(
-                    qc === singleQuoteCC ? "'" : '"',
+                    quoteCharCode === SQUOTE ? "'" : '"',
                     pos + 1,
                   );
                   if (pos === -1) {
@@ -301,7 +309,7 @@ export function parse(
         }
         const node = parseNode();
         children.push(node);
-        if (node.tagName.charCodeAt(0) === questionCC) {
+        if (node.tagName.charCodeAt(0) === QUESTION) {
           children.push(...node.children);
           node.children = [];
         }
@@ -331,18 +339,20 @@ export function parse(
 
   function parseText(): string {
     const start = pos;
-    pos = S.indexOf(openBracket, pos) - 1;
+    pos = S.indexOf("<", pos) - 1;
     if (pos === -2) pos = S.length;
     return S.substring(start, pos + 1);
   }
 
   function parseName(): string {
     const start = pos;
-    let cc = S.charCodeAt(pos);
+    let charCode = S.charCodeAt(pos);
     while (
-      cc < 128 ? NAME_END[cc] === 0 : cc === cc /* not NaN = not past end */
+      charCode < 128
+        ? NAME_END[charCode] === 0
+        : charCode === charCode /* not NaN = not past end */
     ) {
-      cc = S.charCodeAt(++pos);
+      charCode = S.charCodeAt(++pos);
     }
     return S.substring(start, pos);
   }
@@ -355,37 +365,37 @@ export function parse(
     let children: (TNode | string)[] = [];
 
     // parsing attributes
-    while (S.charCodeAt(pos) !== closeBracketCC && S[pos]) {
-      let c = S.charCodeAt(pos);
+    while (S.charCodeAt(pos) !== GT && S[pos]) {
+      let charCode = S.charCodeAt(pos);
       // Valid XML attribute name start: A-Z, a-z, _, :, or non-ASCII
       if (
-        (c > 64 && c < 91) ||
-        (c > 96 && c < 123) ||
-        c === 95 ||
-        c === 58 ||
-        c > 127
+        (charCode > 64 && charCode < 91) ||
+        (charCode > 96 && charCode < 123) ||
+        charCode === UNDERSCORE ||
+        charCode === COLON ||
+        charCode > 127
       ) {
         const name = parseName();
         // search beginning of the string
         let code = S.charCodeAt(pos);
         while (
           code &&
-          code !== singleQuoteCC &&
-          code !== doubleQuoteCC &&
+          code !== SQUOTE &&
+          code !== DQUOTE &&
           !(
             (code > 64 && code < 91) ||
             (code > 96 && code < 123) ||
-            code === 95 ||
-            code === 58 ||
+            code === UNDERSCORE ||
+            code === COLON ||
             code > 127
           ) &&
-          code !== closeBracketCC
+          code !== GT
         ) {
           pos++;
           code = S.charCodeAt(pos);
         }
         let value: string | null;
-        if (code === singleQuoteCC || code === doubleQuoteCC) {
+        if (code === SQUOTE || code === DQUOTE) {
           value = parseString();
           if (pos === -1) {
             return { tagName, attributes, children };
@@ -407,9 +417,9 @@ export function parse(
     // optional parsing of children
     // Self-closing: explicit />, processing instruction ?>, or declaration <!...>
     if (
-      S.charCodeAt(pos - 1) !== slashCC &&
-      S.charCodeAt(pos - 1) !== questionCC &&
-      tagName.charCodeAt(0) !== exclamationCC
+      S.charCodeAt(pos - 1) !== SLASH &&
+      S.charCodeAt(pos - 1) !== QUESTION &&
+      tagName.charCodeAt(0) !== BANG
     ) {
       if (rawContentSet !== null && rawContentSet.has(tagName)) {
         // Raw content tag: scan for the matching close tag and emit content as raw text
@@ -438,19 +448,23 @@ export function parse(
   }
 
   function parseString(): string {
-    const quoteCC = S.charCodeAt(pos);
-    const startpos = pos + 1;
-    pos = S.indexOf(quoteCC === singleQuoteCC ? "'" : '"', startpos);
-    return S.substring(startpos, pos);
+    const quoteCharCode = S.charCodeAt(pos);
+    const startPosition = pos + 1;
+    pos = S.indexOf(quoteCharCode === SQUOTE ? "'" : '"', startPosition);
+    return S.substring(startPosition, pos);
   }
 
   function findElements(): number {
-    if (!opts.attrName || !opts.attrValue) return -1;
-    const r = new RegExp(
-      "\\s" + opts.attrName + "\\s*=['\"]" + opts.attrValue + "['\"]",
+    if (!resolvedOptions.attrName || !resolvedOptions.attrValue) return -1;
+    const matchResult = new RegExp(
+      "\\s" +
+        resolvedOptions.attrName +
+        "\\s*=['\"]" +
+        resolvedOptions.attrValue +
+        "['\"]",
     ).exec(S);
-    if (r) {
-      return r.index;
+    if (matchResult) {
+      return matchResult.index;
     } else {
       return -1;
     }
@@ -458,8 +472,8 @@ export function parse(
 
   let out: (TNode | string)[] | TNode;
 
-  if (opts.attrValue !== undefined) {
-    opts.attrName = opts.attrName || "id";
+  if (resolvedOptions.attrValue !== undefined) {
+    resolvedOptions.attrName = resolvedOptions.attrName || "id";
     const results: (TNode | string)[] = [];
 
     while ((pos = findElements()) !== -1) {
@@ -471,20 +485,23 @@ export function parse(
       pos = 0;
     }
     out = results;
-  } else if (opts.parseNode) {
+  } else if (resolvedOptions.parseNode) {
     out = parseNode();
   } else {
     out = parseChildren("");
   }
 
-  if (opts.filter && Array.isArray(out)) {
-    out = filter(out, opts.filter);
+  if (resolvedOptions.filter && Array.isArray(out)) {
+    out = filter(out, resolvedOptions.filter);
   }
 
-  if (opts.setPos && typeof out === "object" && !Array.isArray(out)) {
+  if (
+    resolvedOptions.setPos &&
+    typeof out === "object" &&
+    !Array.isArray(out)
+  ) {
     (out as TNodeWithPos).pos = pos;
   }
 
   return out as (TNode | string)[];
 }
-
