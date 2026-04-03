@@ -36,6 +36,14 @@
       "types": "./dist/converters/lossless.d.mts",
       "import": "./dist/converters/lossless.mjs"
     },
+    "./from-lossy": {
+      "types": "./dist/converters/fromLossy.d.mts",
+      "import": "./dist/converters/fromLossy.mjs"
+    },
+    "./from-lossless": {
+      "types": "./dist/converters/fromLossless.d.mts",
+      "import": "./dist/converters/fromLossless.mjs"
+    },
     "./utilities": {
       "types": "./dist/utilities/index.d.mts",
       "import": "./dist/utilities/index.mjs"

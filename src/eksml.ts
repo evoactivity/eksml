@@ -49,6 +49,8 @@ import { transformStream } from "#src/transformStream.ts";
 import type { TransformStreamOptions } from "#src/transformStream.ts";
 import { lossy } from "#src/converters/lossy.ts";
 import { lossless } from "#src/converters/lossless.ts";
+import { fromLossy } from "#src/converters/fromLossy.ts";
+import { fromLossless } from "#src/converters/fromLossless.ts";
 import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
@@ -163,12 +165,22 @@ export class Eksml<M extends OutputMode = "dom"> {
   /**
    * Serialize a parsed tree back to an XML/HTML string.
    *
-   * @param input - A single TNode, or an array of TNode/string children.
+   * Accepts DOM nodes, lossy objects, or lossless entries. Lossy and lossless
+   * inputs are automatically converted to DOM before serialization.
+   *
+   * @param input - A TNode, TNode/string array, lossy value(s), or lossless entries.
    * @param options - Writer-specific options (pretty-print, entities, html mode).
    * @returns The serialized XML/HTML string.
    */
-  write(input: TNode | (TNode | string)[], options?: WriterOptions): string {
-    return writer(input, options);
+  write(input: TNode | (TNode | string)[], options?: WriterOptions): string;
+  write(input: LossyValue | LossyValue[], options?: WriterOptions): string;
+  write(input: LosslessEntry[], options?: WriterOptions): string;
+  write(
+    input: TNode | (TNode | string)[] | LossyValue | LossyValue[] | LosslessEntry[],
+    options?: WriterOptions,
+  ): string {
+    const dom = toDom(input);
+    return writer(dom, options);
   }
 
   // -------------------------------------------------------------------------
@@ -299,4 +311,93 @@ export class Eksml<M extends OutputMode = "dom"> {
       keepComments: this.defaults.keepComments,
     };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Input format detection and conversion
+// ---------------------------------------------------------------------------
+
+/**
+ * Detect the input format and convert to a `(TNode | string)[]` DOM array
+ * suitable for `writer()`.
+ *
+ * Detection heuristics:
+ * 1. A single TNode (has `tagName` string property) → wrap in array
+ * 2. An array whose first non-string element has `tagName` → already DOM
+ * 3. An array whose first non-string element has `$text`, `$comment`, `$attr`,
+ *    or a single key mapping to an array → lossless format
+ * 4. Anything else (including `null`, bare strings, objects without `tagName`) → lossy
+ */
+function toDom(
+  input: TNode | (TNode | string)[] | LossyValue | LossyValue[] | LosslessEntry[],
+): TNode | (TNode | string)[] {
+  if (input === null || input === undefined) return [];
+
+  // Single TNode — pass through
+  if (!Array.isArray(input) && typeof input === "object" && isTNode(input)) {
+    return input as TNode;
+  }
+
+  // Non-object, non-array: bare string (lossy top-level string)
+  if (!Array.isArray(input) && typeof input !== "object") {
+    return fromLossy(input as LossyValue);
+  }
+
+  // Non-array object without tagName → lossy object
+  if (!Array.isArray(input)) {
+    return fromLossy(input as LossyValue);
+  }
+
+  // Array — need to distinguish DOM, lossless, and lossy
+  const array = input as unknown[];
+  if (array.length === 0) return [];
+
+  // Find the first non-string element to inspect
+  let sample: unknown = undefined;
+  for (let i = 0; i < array.length; i++) {
+    if (typeof array[i] !== "string") {
+      sample = array[i];
+      break;
+    }
+  }
+
+  // All strings → could be DOM (text-only top level) — pass through
+  if (sample === undefined) return array as string[];
+
+  // TNode in the array → DOM format
+  if (typeof sample === "object" && sample !== null && isTNode(sample)) {
+    return array as (TNode | string)[];
+  }
+
+  // Lossless entry: has $text, $comment, $attr, or single key → array value
+  if (typeof sample === "object" && sample !== null && isLosslessEntry(sample)) {
+    return fromLossless(array as LosslessEntry[]);
+  }
+
+  // Everything else → lossy
+  return fromLossy(array as LossyValue[]);
+}
+
+/** Check if a value looks like a TNode (has tagName string + children array). */
+function isTNode(value: unknown): value is TNode {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as TNode).tagName === "string" &&
+    Array.isArray((value as TNode).children)
+  );
+}
+
+/** Check if a value looks like a LosslessEntry. */
+function isLosslessEntry(value: unknown): value is LosslessEntry {
+  if (typeof value !== "object" || value === null) return false;
+  const keys = Object.keys(value);
+  if (keys.length === 0) return false;
+  // Known lossless marker keys
+  if ("$text" in value || "$comment" in value || "$attr" in value) return true;
+  // Single key mapping to an array → element entry
+  if (keys.length === 1 && Array.isArray((value as Record<string, unknown>)[keys[0]!])) {
+    return true;
+  }
+  return false;
 }
