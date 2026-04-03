@@ -17,8 +17,12 @@ import { writer } from "../src/writer.ts";
 // --- competitors ---
 import { XMLParser, XMLBuilder } from "fast-xml-parser";
 import { Builder, parseStringPromise } from "xml2js";
-// @ts-expect-error — txml's package.json exports don't include types
-import { parse as txmlParse, stringify as txmlStringify } from "txml";
+import {
+  parse as txmlParse,
+  stringify as txmlStringify,
+  type tNode,
+  // @ts-ignore
+} from "txml/dist/txml.js";
 import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { parseDocument, DomUtils } from "htmlparser2";
 
@@ -125,7 +129,7 @@ describe("write: small XML (~100 B)", () => {
   });
 
   bench("txml", () => {
-    txmlStringify(txmlSmall);
+    txmlStringify(txmlSmall as unknown as tNode);
   });
 
   bench("@xmldom/xmldom", () => {
@@ -181,7 +185,7 @@ describe("write: SOAP envelope (~3 KB)", () => {
   });
 
   bench("txml", () => {
-    txmlStringify(txmlSoap);
+    txmlStringify(txmlSoap as unknown as tNode);
   });
 
   bench("@xmldom/xmldom", () => {
@@ -210,7 +214,7 @@ describe("write: Atom feed (~6 KB)", () => {
   });
 
   bench("txml", () => {
-    txmlStringify(txmlAtom);
+    txmlStringify(txmlAtom as unknown as tNode);
   });
 
   bench("@xmldom/xmldom", () => {
@@ -239,7 +243,7 @@ describe("write: Maven POM (~8 KB)", () => {
   });
 
   bench("txml", () => {
-    txmlStringify(txmlPom);
+    txmlStringify(txmlPom as unknown as tNode);
   });
 
   bench("@xmldom/xmldom", () => {
@@ -268,7 +272,7 @@ describe("write: XMLTV EPG (~30 KB)", () => {
   });
 
   bench("txml", () => {
-    txmlStringify(txmlEpg);
+    txmlStringify(txmlEpg as unknown as tNode);
   });
 
   bench("@xmldom/xmldom", () => {

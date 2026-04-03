@@ -17,8 +17,10 @@ import { XMLParser } from "fast-xml-parser";
 import { parseStringPromise } from "xml2js";
 import { DOMParser } from "@xmldom/xmldom";
 import { parseDocument } from "htmlparser2";
-// @ts-expect-error — txml's package.json exports don't include types
-import { parse as txmlParse } from "txml";
+import {
+  parse as txmlParse,
+  // @ts-ignore
+} from "txml/dist/txml.js";
 
 // ---------------------------------------------------------------------------
 // Fixtures

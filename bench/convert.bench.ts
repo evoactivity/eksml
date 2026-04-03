@@ -14,12 +14,13 @@ import { lossy } from "../src/converters/lossy.ts";
 // --- competitors ---
 import { XMLParser } from "fast-xml-parser";
 import { parseStringPromise } from "xml2js";
-// @ts-expect-error — txml's package.json exports don't include types
 import {
   parse as txmlParse,
   simplify as txmlSimplify,
   simplifyLostLess,
-} from "txml";
+  type tNode,
+  // @ts-ignore
+} from "txml/dist/txml.js";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -67,11 +68,11 @@ describe("convert: small XML (~100 B)", () => {
   });
 
   bench("txml (simplify)", () => {
-    txmlSimplify(txmlParse(small));
+    txmlSimplify(txmlParse(small) as tNode[]);
   });
 
   bench("txml (simplifyLostLess)", () => {
-    simplifyLostLess(txmlParse(small));
+    simplifyLostLess(txmlParse(small) as tNode[]);
   });
 });
 
@@ -135,11 +136,11 @@ describe("convert: SOAP envelope (~3 KB)", () => {
   });
 
   bench("txml (simplify)", () => {
-    txmlSimplify(txmlParse(soapEnvelope));
+    txmlSimplify(txmlParse(soapEnvelope) as tNode[]);
   });
 
   bench("txml (simplifyLostLess)", () => {
-    simplifyLostLess(txmlParse(soapEnvelope));
+    simplifyLostLess(txmlParse(soapEnvelope) as tNode[]);
   });
 });
 
@@ -172,11 +173,11 @@ describe("convert: Atom feed (~6 KB)", () => {
   });
 
   bench("txml (simplify)", () => {
-    txmlSimplify(txmlParse(atomFeed));
+    txmlSimplify(txmlParse(atomFeed) as tNode[]);
   });
 
   bench("txml (simplifyLostLess)", () => {
-    simplifyLostLess(txmlParse(atomFeed));
+    simplifyLostLess(txmlParse(atomFeed) as tNode[]);
   });
 });
 
@@ -209,11 +210,11 @@ describe("convert: Maven POM (~8 KB)", () => {
   });
 
   bench("txml (simplify)", () => {
-    txmlSimplify(txmlParse(pomXml));
+    txmlSimplify(txmlParse(pomXml) as tNode[]);
   });
 
   bench("txml (simplifyLostLess)", () => {
-    simplifyLostLess(txmlParse(pomXml));
+    simplifyLostLess(txmlParse(pomXml) as tNode[]);
   });
 });
 
@@ -246,10 +247,10 @@ describe("convert: XMLTV EPG (~30 KB)", () => {
   });
 
   bench("txml (simplify)", () => {
-    txmlSimplify(txmlParse(xmltvEpg));
+    txmlSimplify(txmlParse(xmltvEpg) as tNode[]);
   });
 
   bench("txml (simplifyLostLess)", () => {
-    simplifyLostLess(txmlParse(xmltvEpg));
+    simplifyLostLess(txmlParse(xmltvEpg) as tNode[]);
   });
 });
