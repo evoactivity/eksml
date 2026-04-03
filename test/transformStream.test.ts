@@ -3,7 +3,8 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { transformStream } from "../src/transformStream.js";
-import { isElementNode, type TNode } from "../src/parser.js";
+import { type TNode } from "../src/parser.js";
+import { isElementNode } from "../src/utilities/isElementNode.js";
 import assert from "node:assert";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

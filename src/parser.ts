@@ -5,6 +5,11 @@
  */
 
 import { decodeXML, decodeHTML } from "entities";
+import { filter } from "./utilities/filter.ts";
+import {
+  HTML_VOID_ELEMENTS,
+  HTML_RAW_CONTENT_TAGS,
+} from "./utilities/htmlConstants.ts";
 
 /**
  * A parsed XML node
@@ -121,33 +126,6 @@ NAME_END[32] = 1; // space
 NAME_END[47] = 1; // /
 NAME_END[61] = 1; // =
 NAME_END[62] = 1; // >
-
-/**
- * Standard HTML void elements that are self-closing and never have children.
- * Used as the default for `selfClosingTags` when `html: true`.
- */
-export const HTML_VOID_ELEMENTS = [
-  "area",
-  "base",
-  "br",
-  "col",
-  "embed",
-  "hr",
-  "img",
-  "input",
-  "link",
-  "meta",
-  "param",
-  "source",
-  "track",
-  "wbr",
-];
-
-/**
- * HTML elements whose content is raw text (not parsed as markup).
- * Used as the default for `rawContentTags` when `html: true`.
- */
-export const HTML_RAW_CONTENT_TAGS = ["script", "style"];
 
 /**
  * Parse XML/HTML into a DOM Object with minimal validation and fault tolerance
@@ -510,122 +488,3 @@ export function parse(
   return out as (TNode | string)[];
 }
 
-/**
- * Filter nodes like Array.filter - returns nodes where the filter function returns true
- * @param children - Array of nodes to filter
- * @param f - Filter function
- * @param dept - Current depth in the tree (internal use)
- * @param path - Current path in the tree (internal use)
- * @returns Filtered array of nodes
- */
-export function filter(
-  children: (TNode | string)[],
-  f: (node: TNode, index: number, depth: number, path: string) => boolean,
-  dept: number = 0,
-  path: string = "",
-): TNode[] {
-  let out: TNode[] = [];
-
-  children.forEach(function (child, i) {
-    if (typeof child === "object" && f(child, i, dept, path)) {
-      out.push(child);
-    }
-    if (typeof child === "object" && child.children) {
-      const kids = filter(
-        child.children,
-        f,
-        dept + 1,
-        (path ? path + "." : "") + i + "." + child.tagName,
-      );
-      out = out.concat(kids);
-    }
-  });
-  return out;
-}
-
-/**
- * Read the text content of a node, useful for mixed content.
- * Example: "this text has some <b>big</b> text and a <a href=''>link</a>"
- * @param tDom - The node(s) to extract text from
- * @returns Concatenated text content
- */
-export function toContentString(
-  tDom: TNode | (TNode | string)[] | string,
-): string {
-  if (Array.isArray(tDom)) {
-    let out = "";
-    tDom.forEach(function (e) {
-      out += " " + toContentString(e);
-      out = out.trim();
-    });
-    return out;
-  } else if (typeof tDom === "object" && tDom !== null) {
-    return toContentString(tDom.children);
-  } else {
-    return " " + tDom;
-  }
-}
-
-/**
- * Find an element by ID attribute
- * @param S - XML string to search
- * @param id - ID value to find
- * @returns Found node, or undefined if not found
- */
-export function getElementById(S: string, id: string): TNode | undefined {
-  const out = parse(S, { attrValue: id });
-  return out[0] as TNode | undefined;
-}
-
-/**
- * Find elements by class name
- * @param S - XML string to search
- * @param classname - Class name to find
- * @returns Found nodes
- */
-export function getElementsByClassName(
-  S: string,
-  classname: string,
-): (TNode | string)[] {
-  const out = parse(S, {
-    attrName: "class",
-    attrValue: "[a-zA-Z0-9- ]*" + classname + "[a-zA-Z0-9- ]*",
-  });
-  return out;
-}
-
-/**
- * Type guard to check if a node is a text node (string).
- * Useful for filtering and type narrowing when working with mixed node arrays.
- *
- * @param node - The node to check
- * @returns True if the node is a string (text node)
- * @example
- * const parsed = parse('<div>Hello <span>World</span></div>');
- * parsed[0].children.forEach(child => {
- *   if (isTextNode(child)) {
- *     console.log('Text:', child);
- *   }
- * });
- */
-export function isTextNode(node: TNode | string): node is string {
-  return typeof node === "string";
-}
-
-/**
- * Type guard to check if a node is an element node (TNode object).
- * Useful for filtering and type narrowing when working with mixed node arrays.
- *
- * @param node - The node to check
- * @returns True if the node is a TNode (element node)
- * @example
- * const parsed = parse('<div>Hello <span>World</span></div>');
- * parsed[0].children.forEach(child => {
- *   if (isElementNode(child)) {
- *     console.log('Element:', child.tagName);
- *   }
- * });
- */
-export function isElementNode(node: TNode | string): node is TNode {
-  return typeof node === "object" && node !== null && "tagName" in node;
-}

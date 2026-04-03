@@ -1,14 +1,11 @@
 import { describe, it, expect } from "vitest";
-import {
-  parse,
-  filter,
-  toContentString,
-  getElementById,
-  getElementsByClassName,
-  isTextNode,
-  isElementNode,
-  type TNode,
-} from "../src/parser.js";
+import { parse, type TNode } from "../src/parser.js";
+import { filter } from "../src/utilities/filter.js";
+import { toContentString } from "../src/utilities/toContentString.js";
+import { getElementById } from "../src/utilities/getElementById.js";
+import { getElementsByClassName } from "../src/utilities/getElementsByClassName.js";
+import { isTextNode } from "../src/utilities/isTextNode.js";
+import { isElementNode } from "../src/utilities/isElementNode.js";
 import assert from "node:assert";
 
 // =================================================================

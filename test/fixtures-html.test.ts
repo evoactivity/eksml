@@ -2,14 +2,13 @@ import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
+import { parse, type TNode } from "../src/parser.js";
+import { filter } from "../src/utilities/filter.js";
+import { toContentString } from "../src/utilities/toContentString.js";
 import {
-  parse,
-  filter,
-  toContentString,
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
-  type TNode,
-} from "../src/parser.js";
+} from "../src/utilities/htmlConstants.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>

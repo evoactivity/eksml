@@ -1,6 +1,6 @@
 import { escapeText, escapeAttribute, encodeHTML } from "entities";
 import type { TNode } from "./parser.ts";
-import { HTML_VOID_ELEMENTS } from "./parser.ts";
+import { HTML_VOID_ELEMENTS } from "./utilities/htmlConstants.ts";
 
 /** Options for writer. */
 export interface WriterOptions {

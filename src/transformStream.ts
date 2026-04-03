@@ -1,7 +1,10 @@
 import type { TNode, ParseOptions } from "./parser.js";
 import { fastStream } from "./fastStream.js";
 import type { Attributes } from "./fastStream.js";
-import { HTML_VOID_ELEMENTS, HTML_RAW_CONTENT_TAGS } from "./parser.js";
+import {
+  HTML_VOID_ELEMENTS,
+  HTML_RAW_CONTENT_TAGS,
+} from "./utilities/htmlConstants.js";
 
 /**
  * Parse a processing instruction body string into an attributes record.
