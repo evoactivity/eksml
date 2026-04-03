@@ -12,10 +12,6 @@ const fixture = (name: string) =>
 const commentedSvg = fixture("commented.svg");
 const wordpadDocxDocument = fixture("wordpad.docx.document.xml");
 
-// =================================================================
-// Tests ported from upstream tXml test suite
-// =================================================================
-
 describe("parse", () => {
   it("returns empty array for empty string", () => {
     expect(Array.isArray(parse(""))).toBe(true);
