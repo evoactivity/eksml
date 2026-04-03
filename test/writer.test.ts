@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parse } from "../src/parser.js";
 import { writer } from "../src/writer.js";
+import type { TNode } from "../src/parser.js";
 
 // =================================================================
 // writer
@@ -174,5 +175,337 @@ describe("writer", () => {
     expect(writer(tree, { pretty: "    " })).toBe(
       "<root>\n    <child/>\n</root>",
     );
+  });
+
+  // --- entities option (XML mode) ---
+
+  describe("entities: true (XML mode)", () => {
+    it("encodes &, <, > in text nodes", () => {
+      const tree: TNode = {
+        tagName: "p",
+        attributes: null,
+        children: ["Tom & Jerry < Mickey > Goofy"],
+      };
+      expect(writer(tree, { entities: true })).toBe(
+        "<p>Tom &amp; Jerry &lt; Mickey &gt; Goofy</p>",
+      );
+    });
+
+    it("encodes &, \", ' in attribute values", () => {
+      const tree: TNode = {
+        tagName: "div",
+        attributes: { title: 'A & B "quoted"' },
+        children: [],
+      };
+      // Since " is encoded, double-quote wrapper is safe
+      expect(writer(tree, { entities: true })).toBe(
+        '<div title="A &amp; B &quot;quoted&quot;"></div>',
+      );
+    });
+
+    it("does not encode single quotes in double-quoted attributes", () => {
+      // escapeAttribute only encodes & and " — single quotes are safe
+      // inside double-quoted attribute values
+      const tree: TNode = {
+        tagName: "div",
+        attributes: { title: "it's here" },
+        children: [],
+      };
+      expect(writer(tree, { entities: true })).toBe(
+        '<div title="it\'s here"></div>',
+      );
+    });
+
+    it("does not encode when entities is false (default)", () => {
+      const tree: TNode = {
+        tagName: "p",
+        attributes: { title: 'A & B "C"' },
+        children: ["Tom & Jerry"],
+      };
+      const result = writer(tree);
+      expect(result).toBe("<p title='A & B \"C\"'>Tom & Jerry</p>");
+    });
+
+    it("encodes text in compact mode", () => {
+      const tree: TNode = {
+        tagName: "root",
+        attributes: null,
+        children: [
+          { tagName: "a", attributes: null, children: ["1 < 2"] },
+          { tagName: "b", attributes: null, children: ["3 > 2"] },
+        ],
+      };
+      expect(writer(tree, { entities: true })).toBe(
+        "<root><a>1 &lt; 2</a><b>3 &gt; 2</b></root>",
+      );
+    });
+
+    it("encodes text in pretty mode", () => {
+      const tree: TNode = {
+        tagName: "root",
+        attributes: null,
+        children: [
+          { tagName: "msg", attributes: null, children: ["A & B"] },
+        ],
+      };
+      expect(writer(tree, { entities: true, pretty: true })).toBe(
+        "<root>\n  <msg>A &amp; B</msg>\n</root>",
+      );
+    });
+
+    it("encodes & in attributes in pretty mode (< and > are safe in attr values)", () => {
+      const tree: TNode = {
+        tagName: "input",
+        attributes: { value: "1 < 2 & 3 > 0" },
+        children: [],
+      };
+      // escapeAttribute encodes & and " only; < and > are valid in attribute values
+      expect(writer(tree, { entities: true, pretty: true })).toBe(
+        '<input value="1 < 2 &amp; 3 > 0"/>',
+      );
+    });
+
+    it("encodes mixed content (inline path)", () => {
+      const tree: TNode = {
+        tagName: "p",
+        attributes: null,
+        children: [
+          "Copyright ",
+          { tagName: "b", attributes: null, children: ["A & B"] },
+          // escapeText only handles &, <, > — non-ASCII like © is left as-is
+          " \u00A9 2024",
+        ],
+      };
+      expect(writer(tree, { entities: true, pretty: true })).toBe(
+        "<p>Copyright <b>A &amp; B</b> \u00A9 2024</p>",
+      );
+    });
+
+    it("handles already-safe text without changes", () => {
+      const tree: TNode = {
+        tagName: "p",
+        attributes: null,
+        children: ["Hello world"],
+      };
+      expect(writer(tree, { entities: true })).toBe("<p>Hello world</p>");
+    });
+
+    it("top-level string array elements are encoded", () => {
+      const nodes: (TNode | string)[] = [
+        "before & after",
+        { tagName: "br", attributes: null, children: [] },
+      ];
+      expect(writer(nodes, { entities: true })).toBe(
+        "before &amp; after<br></br>",
+      );
+    });
+
+    it("roundtrip: parse with entities → write with entities", () => {
+      const xml = '<root attr="a &amp; b">1 &lt; 2</root>';
+      const tree = parse(xml, { entities: true });
+      const result = writer(tree, { entities: true });
+      expect(result).toBe(xml);
+    });
+
+    it("roundtrip: complex XML with entities", () => {
+      // Use double-quote-safe entities that roundtrip cleanly
+      const xml =
+        '<catalog><book title="Smith &amp; Associates"><desc>Learn &lt;XML&gt; &amp; more</desc></book></catalog>';
+      const tree = parse(xml, { entities: true });
+      const result = writer(tree, { entities: true });
+      expect(result).toBe(xml);
+    });
+  });
+
+  // --- html option ---
+
+  describe("html: true", () => {
+    it("void elements self-close without closing tag (compact)", () => {
+      const tree: TNode = {
+        tagName: "div",
+        attributes: null,
+        children: [
+          { tagName: "br", attributes: null, children: [] },
+          "text",
+          { tagName: "hr", attributes: null, children: [] },
+        ],
+      };
+      expect(writer(tree, { html: true })).toBe("<div><br>text<hr></div>");
+    });
+
+    it("void elements self-close in pretty mode", () => {
+      const tree: TNode = {
+        tagName: "div",
+        attributes: null,
+        children: [
+          { tagName: "img", attributes: { src: "a.png" }, children: [] },
+          { tagName: "p", attributes: null, children: ["text"] },
+        ],
+      };
+      expect(writer(tree, { html: true, pretty: true })).toBe(
+        '<div>\n  <img src="a.png">\n  <p>text</p>\n</div>',
+      );
+    });
+
+    it("void elements self-close in inline (mixed content) path", () => {
+      const tree: TNode = {
+        tagName: "p",
+        attributes: null,
+        children: [
+          "line 1",
+          { tagName: "br", attributes: null, children: [] },
+          "line 2",
+        ],
+      };
+      expect(writer(tree, { html: true, pretty: true })).toBe(
+        "<p>line 1<br>line 2</p>",
+      );
+    });
+
+    it("non-void elements still get closing tags", () => {
+      const tree: TNode = {
+        tagName: "span",
+        attributes: null,
+        children: [],
+      };
+      expect(writer(tree, { html: true })).toBe("<span></span>");
+    });
+
+    it("void element with attributes", () => {
+      const tree: TNode = {
+        tagName: "input",
+        attributes: { type: "text", disabled: null },
+        children: [],
+      };
+      expect(writer(tree, { html: true })).toBe(
+        '<input type="text" disabled>',
+      );
+    });
+
+    it("all HTML void elements are recognized", () => {
+      const voids = [
+        "area", "base", "br", "col", "embed", "hr", "img",
+        "input", "link", "meta", "param", "source", "track", "wbr",
+      ];
+      for (const tag of voids) {
+        const tree: TNode = { tagName: tag, attributes: null, children: [] };
+        expect(writer(tree, { html: true })).toBe(`<${tag}>`);
+      }
+    });
+
+    it("void elements in pretty mode self-close (not self-closing />)", () => {
+      const tree: TNode = {
+        tagName: "br",
+        attributes: null,
+        children: [],
+      };
+      // Should be <br>, not <br/> or <br />
+      expect(writer(tree, { html: true, pretty: true })).toBe("<br>");
+    });
+  });
+
+  // --- html + entities combined ---
+
+  describe("html: true + entities: true", () => {
+    it("uses HTML named entities for text", () => {
+      const tree: TNode = {
+        tagName: "p",
+        attributes: null,
+        children: ["Copyright \u00A9 2024"],
+      };
+      const result = writer(tree, { html: true, entities: true });
+      expect(result).toBe("<p>Copyright &copy; 2024</p>");
+    });
+
+    it("uses HTML named entities for attributes", () => {
+      const tree: TNode = {
+        tagName: "div",
+        attributes: { title: "\u00A9 2024" },
+        children: [],
+      };
+      const result = writer(tree, { html: true, entities: true });
+      expect(result).toContain("&copy;");
+    });
+
+    it("encodes < and & in HTML mode text", () => {
+      const tree: TNode = {
+        tagName: "p",
+        attributes: null,
+        children: ["A & B < C"],
+      };
+      const result = writer(tree, { html: true, entities: true });
+      expect(result).toBe("<p>A &amp; B &lt; C</p>");
+    });
+
+    it("void elements + entities combined", () => {
+      const tree: TNode = {
+        tagName: "div",
+        attributes: null,
+        children: [
+          { tagName: "img", attributes: { alt: "Tom & Jerry" }, children: [] },
+          {
+            tagName: "p",
+            attributes: null,
+            children: ["\u00E9l\u00E8ve"],
+          },
+        ],
+      };
+      const result = writer(tree, { html: true, entities: true, pretty: true });
+      expect(result).toContain("<img");
+      expect(result).toContain("&amp;");
+      expect(result).toContain("&eacute;");
+      expect(result).toContain("&egrave;");
+      // img should NOT have a closing tag
+      expect(result).not.toContain("</img>");
+    });
+
+    it("pretty + html + entities: full example", () => {
+      const tree: TNode = {
+        tagName: "html",
+        attributes: null,
+        children: [
+          {
+            tagName: "head",
+            attributes: null,
+            children: [
+              {
+                tagName: "meta",
+                attributes: { charset: "utf-8" },
+                children: [],
+              },
+            ],
+          },
+          {
+            tagName: "body",
+            attributes: null,
+            children: [
+              {
+                tagName: "p",
+                attributes: null,
+                children: ["\u00A9 2024 Acme & Co."],
+              },
+              { tagName: "br", attributes: null, children: [] },
+              { tagName: "hr", attributes: null, children: [] },
+            ],
+          },
+        ],
+      };
+      const result = writer(tree, {
+        html: true,
+        entities: true,
+        pretty: true,
+      });
+      // Void elements should not have closing tags
+      expect(result).not.toContain("</meta>");
+      expect(result).not.toContain("</br>");
+      expect(result).not.toContain("</hr>");
+      // Entities should be encoded
+      expect(result).toContain("&copy;");
+      expect(result).toContain("&amp;");
+      // Structure check
+      expect(result).toContain("<meta");
+      expect(result).toContain("<br>");
+      expect(result).toContain("<hr>");
+    });
   });
 });

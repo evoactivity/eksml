@@ -1,4 +1,6 @@
+import { escapeText, escapeAttribute, encodeHTML } from "entities";
 import type { TNode } from "./parser.ts";
+import { HTML_VOID_ELEMENTS } from "./parser.ts";
 
 /** Options for writer. */
 export interface WriterOptions {
@@ -14,6 +16,23 @@ export interface WriterOptions {
    * avoid altering whitespace semantics.
    */
   pretty?: boolean | string;
+  /**
+   * Encode special characters in text content and attribute values as XML
+   * entities. In XML mode (default), `&`, `<`, `>` are encoded in text and
+   * `&`, `"`, `'` are encoded in attributes. In HTML mode (`html: true`),
+   * the full HTML named entity set is used (e.g. `&copy;`, `&eacute;`).
+   *
+   * Defaults to `false` — text and attribute values are written verbatim.
+   */
+  entities?: boolean;
+  /**
+   * Enable HTML mode. When enabled:
+   * - Void elements (`<br>`, `<img>`, `<hr>`, etc.) are self-closed without
+   *   a closing tag (e.g. `<br>` instead of `<br></br>` or `<br/>`).
+   * - When `entities` is also `true`, uses HTML named entities
+   *   (e.g. `&copy;` instead of `&#xa9;`) for encoding.
+   */
+  html?: boolean;
 }
 
 /**
@@ -35,6 +54,25 @@ export function writer(
       ? options.pretty
       : "  ";
 
+  // Entity encoding functions — identity when disabled
+  const encodeEntities = !!options?.entities;
+  const htmlMode = !!options?.html;
+  const encText: (s: string) => string = encodeEntities
+    ? htmlMode
+      ? encodeHTML
+      : escapeText
+    : (s) => s;
+  const encAttr: (s: string) => string = encodeEntities
+    ? htmlMode
+      ? encodeHTML
+      : escapeAttribute
+    : (s) => s;
+
+  // HTML void elements — self-close without </tag> in html mode
+  const voidSet: Set<string> | null = htmlMode
+    ? new Set(HTML_VOID_ELEMENTS)
+    : null;
+
   // Non-pretty fast path — original compact logic
   if (!indent) {
     let out = "";
@@ -44,7 +82,7 @@ export function writer(
         for (let i = 0; i < nodes.length; i++) {
           const node = nodes[i]!;
           if (typeof node === "string") {
-            out += node;
+            out += encText(node);
           } else if (node) {
             writeNode(node);
           }
@@ -60,6 +98,11 @@ export function writer(
         out += "?>";
         return;
       }
+      // HTML void elements self-close without a closing tag
+      if (voidSet !== null && voidSet.has(N.tagName)) {
+        out += ">";
+        return;
+      }
       out += ">";
       writeChildren(N.children);
       out += "</" + N.tagName + ">";
@@ -71,10 +114,13 @@ export function writer(
         const attrValue = N.attributes[i];
         if (attrValue === null) {
           out += " " + i;
-        } else if (attrValue.indexOf('"') === -1) {
-          out += " " + i + '="' + attrValue + '"';
         } else {
-          out += " " + i + "='" + attrValue + "'";
+          const encoded = encAttr(attrValue);
+          if (encoded.indexOf('"') === -1) {
+            out += " " + i + '="' + encoded + '"';
+          } else {
+            out += " " + i + "='" + encoded + "'";
+          }
         }
       }
     }
@@ -100,10 +146,13 @@ export function writer(
       const val = N.attributes[key];
       if (val === null) {
         out += " " + key;
-      } else if (val.indexOf('"') === -1) {
-        out += " " + key + '="' + val + '"';
       } else {
-        out += " " + key + "='" + val + "'";
+        const encoded = encAttr(val);
+        if (encoded.indexOf('"') === -1) {
+          out += " " + key + '="' + encoded + '"';
+        } else {
+          out += " " + key + "='" + encoded + "'";
+        }
       }
     }
   }
@@ -123,6 +172,14 @@ export function writer(
     const children = N.children;
     const len = children.length;
 
+    // HTML void elements — self-close without closing tag
+    if (voidSet !== null && voidSet.has(N.tagName)) {
+      out += pad + "<" + N.tagName;
+      prettyWriteAttrs(N);
+      out += ">";
+      return;
+    }
+
     // Empty element — self-close
     if (len === 0) {
       out += pad + "<" + N.tagName;
@@ -139,7 +196,7 @@ export function writer(
       for (let i = 0; i < len; i++) {
         const child = children[i]!;
         if (typeof child === "string") {
-          out += child;
+          out += encText(child);
         } else {
           // Inline nested element within mixed content
           inlineWriteNode(child);
@@ -156,7 +213,7 @@ export function writer(
     for (let i = 0; i < len; i++) {
       const child = children[i]!;
       if (typeof child === "string") {
-        out += child;
+        out += encText(child);
       } else {
         out += newline;
         prettyWriteNode(child, depth + 1);
@@ -174,6 +231,11 @@ export function writer(
       out += "?>";
       return;
     }
+    // HTML void elements self-close without closing tag
+    if (voidSet !== null && voidSet.has(N.tagName)) {
+      out += ">";
+      return;
+    }
     if (N.children.length === 0) {
       out += "/>";
       return;
@@ -182,7 +244,7 @@ export function writer(
     for (let i = 0; i < N.children.length; i++) {
       const child = N.children[i]!;
       if (typeof child === "string") {
-        out += child;
+        out += encText(child);
       } else {
         inlineWriteNode(child);
       }
@@ -195,7 +257,7 @@ export function writer(
     const node = nodes[i]!;
     if (i > 0) out += newline;
     if (typeof node === "string") {
-      out += node;
+      out += encText(node);
     } else {
       prettyWriteNode(node, 0);
     }
