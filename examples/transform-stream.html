@@ -129,22 +129,10 @@
     letter-spacing: normal;
   }
 
-  textarea {
+  .editor-container {
     flex: 1;
-    width: 100%;
-    padding: 14px;
-    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
-    font-size: 0.82rem;
-    line-height: 1.5;
-    background: transparent;
-    color: #e0e0e0;
-    border: none;
-    outline: none;
-    resize: none;
-    tab-size: 2;
+    min-height: 0;
   }
-
-  textarea:focus { background: #18181c; }
 
   .log-area {
     flex: 1;
@@ -262,37 +250,7 @@
 <div class="panes">
   <div class="pane">
     <div class="pane-header">Input XML</div>
-    <textarea id="input" spellcheck="false"><?xml version="1.0" encoding="UTF-8"?>
-<library>
-  <section name="Fiction">
-    <book isbn="978-0-13-468599-1">
-      <title>The Pragmatic Programmer</title>
-      <authors>
-        <author>David Thomas</author>
-        <author>Andrew Hunt</author>
-      </authors>
-      <year>2019</year>
-    </book>
-    <book isbn="978-0-596-51774-8">
-      <title>JavaScript: The Good Parts</title>
-      <authors>
-        <author>Douglas Crockford</author>
-      </authors>
-      <year>2008</year>
-    </book>
-  </section>
-  <section name="Science">
-    <book isbn="978-0-553-38016-2">
-      <title>A Brief History of Time</title>
-      <authors>
-        <author>Stephen Hawking</author>
-      </authors>
-      <year>1988</year>
-      <notes><![CDATA[Classic physics & cosmology text]]></notes>
-    </book>
-  </section>
-  <!-- More sections to come -->
-</library></textarea>
+    <div class="editor-container" id="input-editor"></div>
   </div>
 
   <div class="pane">

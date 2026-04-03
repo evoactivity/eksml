@@ -1,6 +1,11 @@
+import { init } from "modern-monaco";
 import { fastStream } from "#src/fastStream.ts";
 
-const inputEl = document.getElementById("input") as HTMLTextAreaElement;
+// ---------------------------------------------------------------------------
+// DOM refs
+// ---------------------------------------------------------------------------
+
+const inputEditorContainer = document.getElementById("input-editor")!;
 const logEl = document.getElementById("log") as HTMLDivElement;
 const statsEl = document.getElementById("stats") as HTMLSpanElement;
 const progressEl = document.getElementById("progress") as HTMLDivElement;
@@ -8,6 +13,85 @@ const throttleEl = document.getElementById("throttle") as HTMLSelectElement;
 const chunkSizeEl = document.getElementById("chunk-size") as HTMLInputElement;
 const startBtn = document.getElementById("start-btn") as HTMLButtonElement;
 const stopBtn = document.getElementById("stop-btn") as HTMLButtonElement;
+
+// ---------------------------------------------------------------------------
+// Default XML sample
+// ---------------------------------------------------------------------------
+
+const DEFAULT_XML = `\
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <product id="p1" category="electronics">
+    <name>Wireless Mouse</name>
+    <description><![CDATA[A smooth & responsive <wireless> mouse]]></description>
+    <price currency="USD">29.99</price>
+    <specs>
+      <weight unit="g">85</weight>
+      <battery>AA</battery>
+      <connectivity>2.4GHz</connectivity>
+    </specs>
+    <tags>
+      <tag>peripheral</tag>
+      <tag>wireless</tag>
+      <tag>ergonomic</tag>
+    </tags>
+  </product>
+  <product id="p2" category="accessories">
+    <name>USB-C Hub</name>
+    <description>Multi-port adapter with HDMI &amp; USB 3.0</description>
+    <price currency="USD">49.99</price>
+    <specs>
+      <ports>7</ports>
+      <weight unit="g">120</weight>
+    </specs>
+    <!-- Popular item -->
+    <tags>
+      <tag>adapter</tag>
+      <tag>usb-c</tag>
+    </tags>
+  </product>
+  <product id="p3" category="electronics">
+    <name>Mechanical Keyboard</name>
+    <description>Cherry MX Blue switches, full RGB</description>
+    <price currency="EUR">89.00</price>
+    <specs>
+      <switches>Cherry MX Blue</switches>
+      <layout>TKL</layout>
+      <weight unit="g">750</weight>
+    </specs>
+    <tags>
+      <tag>keyboard</tag>
+      <tag>mechanical</tag>
+      <tag>rgb</tag>
+    </tags>
+  </product>
+</catalog>`;
+
+// ---------------------------------------------------------------------------
+// Monaco editor setup
+// ---------------------------------------------------------------------------
+
+const EDITOR_THEME = "vitesse-dark";
+
+const monaco = await init();
+
+const inputEditor = monaco.editor.create(inputEditorContainer, {
+  automaticLayout: true,
+  fontSize: 13,
+  lineHeight: 1.5,
+  minimap: { enabled: false },
+  scrollBeyondLastLine: false,
+  padding: { top: 10 },
+  theme: EDITOR_THEME,
+  tabSize: 2,
+});
+
+const inputModel = monaco.editor.createModel(DEFAULT_XML, "xml");
+inputEditor.setModel(inputModel);
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 let abortController: AbortController | null = null;
 let eventCount = 0;
@@ -56,8 +140,12 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// ---------------------------------------------------------------------------
+// Stream run
+// ---------------------------------------------------------------------------
+
 async function run(): Promise<void> {
-  const xml = inputEl.value;
+  const xml = inputModel.getValue();
   const delay = parseInt(throttleEl.value, 10);
   const chunkSize = Math.max(1, parseInt(chunkSizeEl.value, 10) || 64);
 
@@ -171,9 +259,6 @@ function stop(): void {
 startBtn.addEventListener("click", run);
 stopBtn.addEventListener("click", stop);
 
-inputEl.addEventListener("keydown", (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-    e.preventDefault();
-    run();
-  }
+inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+  run();
 });

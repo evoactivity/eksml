@@ -105,38 +105,70 @@
     letter-spacing: normal;
   }
 
-  textarea {
+  .editor-container {
     flex: 1;
-    width: 100%;
+    min-height: 0;
+  }
+
+  .error-overlay {
+    position: absolute;
+    inset: 0;
     padding: 14px;
     font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
     font-size: 0.82rem;
     line-height: 1.5;
-    background: transparent;
-    color: #e0e0e0;
-    border: none;
-    outline: none;
-    resize: none;
-    tab-size: 2;
-  }
-
-  textarea:focus {
-    background: #18181c;
-  }
-
-  .output-area {
-    flex: 1;
+    color: #ef4444;
+    background: #16161a;
     overflow: auto;
-    padding: 14px;
-    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
-    font-size: 0.82rem;
-    line-height: 1.5;
     white-space: pre-wrap;
     word-break: break-word;
+    z-index: 10;
   }
 
-  .error {
-    color: #ef4444;
+  .tabs {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .tab:hover {
+    color: #aaa;
+    background: #1a1a1e;
+  }
+
+  .tab.active {
+    color: #e0e0e0;
+    background: #16161a;
+    border-bottom-color: #2563eb;
+  }
+
+  .tab .size {
+    color: #555;
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  .tab.active .size {
+    color: #6b7280;
   }
 
   @keyframes pulse {
@@ -180,35 +212,17 @@
 <div class="panes">
   <div class="pane">
     <div class="pane-header">Input XML</div>
-    <textarea id="input" spellcheck="false"><?xml version="1.0" encoding="UTF-8"?>
-<bookstore>
-  <book category="fiction">
-    <title lang="en">The Great Gatsby</title>
-    <author>F. Scott Fitzgerald</author>
-    <year>1925</year>
-    <price>10.99</price>
-  </book>
-  <book category="non-fiction">
-    <title lang="en">Sapiens</title>
-    <author>Yuval Noah Harari</author>
-    <year>2011</year>
-    <price>14.99</price>
-  </book>
-  <book category="fiction">
-    <title lang="es">Cien a&ntilde;os de soledad</title>
-    <author>Gabriel Garc&iacute;a M&aacute;rquez</author>
-    <year>1967</year>
-    <price>12.50</price>
-  </book>
-</bookstore></textarea>
+    <div class="tabs" id="tabs"></div>
+    <div class="editor-container" id="input-editor"></div>
   </div>
 
-  <div class="pane">
+  <div class="pane" style="position: relative;">
     <div class="pane-header">
       <span>Output</span>
       <span class="timing" id="timing"></span>
     </div>
-    <div class="output-area" id="output"></div>
+    <div class="editor-container" id="output-editor"></div>
+    <div class="error-overlay" id="error-overlay" hidden></div>
   </div>
 </div>
 

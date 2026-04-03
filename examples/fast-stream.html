@@ -122,22 +122,10 @@
     letter-spacing: normal;
   }
 
-  textarea {
+  .editor-container {
     flex: 1;
-    width: 100%;
-    padding: 14px;
-    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
-    font-size: 0.82rem;
-    line-height: 1.5;
-    background: transparent;
-    color: #e0e0e0;
-    border: none;
-    outline: none;
-    resize: none;
-    tab-size: 2;
+    min-height: 0;
   }
-
-  textarea:focus { background: #18181c; }
 
   .log-area {
     flex: 1;
@@ -220,53 +208,7 @@
 <div class="panes">
   <div class="pane">
     <div class="pane-header">Input XML</div>
-    <textarea id="input" spellcheck="false"><?xml version="1.0" encoding="UTF-8"?>
-<catalog>
-  <product id="p1" category="electronics">
-    <name>Wireless Mouse</name>
-    <description><![CDATA[A smooth & responsive <wireless> mouse]]></description>
-    <price currency="USD">29.99</price>
-    <specs>
-      <weight unit="g">85</weight>
-      <battery>AA</battery>
-      <connectivity>2.4GHz</connectivity>
-    </specs>
-    <tags>
-      <tag>peripheral</tag>
-      <tag>wireless</tag>
-      <tag>ergonomic</tag>
-    </tags>
-  </product>
-  <product id="p2" category="accessories">
-    <name>USB-C Hub</name>
-    <description>Multi-port adapter with HDMI &amp; USB 3.0</description>
-    <price currency="USD">49.99</price>
-    <specs>
-      <ports>7</ports>
-      <weight unit="g">120</weight>
-    </specs>
-    <!-- Popular item -->
-    <tags>
-      <tag>adapter</tag>
-      <tag>usb-c</tag>
-    </tags>
-  </product>
-  <product id="p3" category="electronics">
-    <name>Mechanical Keyboard</name>
-    <description>Cherry MX Blue switches, full RGB</description>
-    <price currency="EUR">89.00</price>
-    <specs>
-      <switches>Cherry MX Blue</switches>
-      <layout>TKL</layout>
-      <weight unit="g">750</weight>
-    </specs>
-    <tags>
-      <tag>keyboard</tag>
-      <tag>mechanical</tag>
-      <tag>rgb</tag>
-    </tags>
-  </product>
-</catalog></textarea>
+    <div class="editor-container" id="input-editor"></div>
   </div>
 
   <div class="pane">

@@ -1,8 +1,13 @@
+import { init } from "modern-monaco";
 import { transformStream } from "#src/transformStream.ts";
 import type { TransformStreamOptions } from "#src/transformStream.ts";
 import type { TNode } from "#src/parser.ts";
 
-const inputEl = document.getElementById("input") as HTMLTextAreaElement;
+// ---------------------------------------------------------------------------
+// DOM refs
+// ---------------------------------------------------------------------------
+
+const inputEditorContainer = document.getElementById("input-editor")!;
 const logEl = document.getElementById("log") as HTMLDivElement;
 const statsEl = document.getElementById("stats") as HTMLSpanElement;
 const progressEl = document.getElementById("progress") as HTMLDivElement;
@@ -11,6 +16,69 @@ const chunkSizeEl = document.getElementById("chunk-size") as HTMLInputElement;
 const selectTagsEl = document.getElementById("select-tags") as HTMLInputElement;
 const startBtn = document.getElementById("start-btn") as HTMLButtonElement;
 const stopBtn = document.getElementById("stop-btn") as HTMLButtonElement;
+
+// ---------------------------------------------------------------------------
+// Default XML sample
+// ---------------------------------------------------------------------------
+
+const DEFAULT_XML = `\
+<?xml version="1.0" encoding="UTF-8"?>
+<library>
+  <section name="Fiction">
+    <book isbn="978-0-13-468599-1">
+      <title>The Pragmatic Programmer</title>
+      <authors>
+        <author>David Thomas</author>
+        <author>Andrew Hunt</author>
+      </authors>
+      <year>2019</year>
+    </book>
+    <book isbn="978-0-596-51774-8">
+      <title>JavaScript: The Good Parts</title>
+      <authors>
+        <author>Douglas Crockford</author>
+      </authors>
+      <year>2008</year>
+    </book>
+  </section>
+  <section name="Science">
+    <book isbn="978-0-553-38016-2">
+      <title>A Brief History of Time</title>
+      <authors>
+        <author>Stephen Hawking</author>
+      </authors>
+      <year>1988</year>
+      <notes><![CDATA[Classic physics & cosmology text]]></notes>
+    </book>
+  </section>
+  <!-- More sections to come -->
+</library>`;
+
+// ---------------------------------------------------------------------------
+// Monaco editor setup
+// ---------------------------------------------------------------------------
+
+const EDITOR_THEME = "vitesse-dark";
+
+const monaco = await init();
+
+const inputEditor = monaco.editor.create(inputEditorContainer, {
+  automaticLayout: true,
+  fontSize: 13,
+  lineHeight: 1.5,
+  minimap: { enabled: false },
+  scrollBeyondLastLine: false,
+  padding: { top: 10 },
+  theme: EDITOR_THEME,
+  tabSize: 2,
+});
+
+const inputModel = monaco.editor.createModel(DEFAULT_XML, "xml");
+inputEditor.setModel(inputModel);
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 let abortController: AbortController | null = null;
 
@@ -83,8 +151,12 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// ---------------------------------------------------------------------------
+// Stream run
+// ---------------------------------------------------------------------------
+
 async function run(): Promise<void> {
-  const xml = inputEl.value;
+  const xml = inputModel.getValue();
   const delay = parseInt(throttleEl.value, 10);
   const chunkSize = Math.max(1, parseInt(chunkSizeEl.value, 10) || 64);
 
@@ -181,9 +253,6 @@ function stop(): void {
 startBtn.addEventListener("click", run);
 stopBtn.addEventListener("click", stop);
 
-inputEl.addEventListener("keydown", (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-    e.preventDefault();
-    run();
-  }
+inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+  run();
 });
