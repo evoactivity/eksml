@@ -63,6 +63,8 @@ export interface FastStreamHandlers {
   oncomment?: (comment: string) => void;
   /** Fired for processing instructions (`<?xml ... ?>`). */
   onprocessinginstruction?: (name: string, body: string) => void;
+  /** Fired for DOCTYPE declarations (`<!DOCTYPE html>`, `<!DOCTYPE svg PUBLIC "..." "...">`). */
+  ondoctype?: (tagName: string, attributes: Attributes) => void;
 }
 
 /** Options for the streaming parser. */
@@ -133,6 +135,7 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
     oncdata,
     oncomment,
     onprocessinginstruction,
+    ondoctype,
     selfClosingTags = [],
     rawContentTags = [],
   } = options;
@@ -178,6 +181,62 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
       if (trimmed.length > 0) ontext(trimmed);
     }
     text = "";
+  }
+
+  /**
+   * Parse the accumulated DOCTYPE body (everything between `<!` and `>`,
+   * excluding internal DTD subsets) and emit an ondoctype event.
+   *
+   * The body string starts with the declaration keyword (e.g. "DOCTYPE html ...")
+   * after the `!`. We prepend `!` to form the tagName (e.g. "!DOCTYPE"), then
+   * parse the remaining space-separated tokens as null-valued attributes.
+   * Quoted strings are unquoted and stored as attribute keys.
+   */
+  function emitDoctype(body: string): void {
+    const bodyLength = body.length;
+    let i = 0;
+
+    // Read the declaration keyword (e.g. "DOCTYPE")
+    while (i < bodyLength) {
+      const charCode = body.charCodeAt(i);
+      if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) break;
+      i++;
+    }
+    const tagName = "!" + body.substring(0, i);
+
+    // Parse space-separated tokens as null-valued attributes
+    const attributes: Attributes = {};
+    while (i < bodyLength) {
+      const charCode = body.charCodeAt(i);
+      // Skip whitespace
+      if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) {
+        i++;
+        continue;
+      }
+      // Quoted token — capture content without quotes as the key
+      if (charCode === DQUOTE || charCode === SQUOTE) {
+        const quoteChar = charCode === DQUOTE ? '"' : "'";
+        const closeIndex = body.indexOf(quoteChar, i + 1);
+        if (closeIndex === -1) {
+          // Unclosed quote — take rest as token
+          attributes[body.substring(i + 1)] = null;
+          break;
+        }
+        attributes[body.substring(i + 1, closeIndex)] = null;
+        i = closeIndex + 1;
+        continue;
+      }
+      // Unquoted token — scan until whitespace
+      const tokenStart = i;
+      while (i < bodyLength) {
+        const tokenCharCode = body.charCodeAt(i);
+        if (tokenCharCode === SPACE || tokenCharCode === TAB || tokenCharCode === LF || tokenCharCode === CR) break;
+        i++;
+      }
+      attributes[body.substring(tokenStart, i)] = null;
+    }
+
+    ondoctype!(tagName, attributes);
   }
 
   /** After we finish parsing an open tag's `>`, handle void/raw transitions. */
@@ -513,7 +572,8 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
             i++;
           } else {
             state = State.DOCTYPE;
-            i++;
+            special = "";
+            // don't advance — first char of declaration body
           }
           continue;
         }
@@ -528,8 +588,11 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
             special = "<!--";
             i++;
           } else {
+            // Not a comment (malformed <!-X...>) — fall through to DOCTYPE.
+            // We've consumed "<!-"; the body after "<!" is "-" plus remainder.
+            special = "-";
             state = State.DOCTYPE;
-            i++;
+            // don't advance — current char is part of the body
           }
           continue;
         }
@@ -593,35 +656,37 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
 
         // ==================================================================
         // CDATA handshake states
+        // These match the sequence <![CDATA[ char by char. On mismatch,
+        // fall through to DOCTYPE with the consumed prefix in `special`.
         // ==================================================================
-        case State.CDATA_1: { // expecting C
+        case State.CDATA_1: { // expecting C after <![
           if (chunk.charCodeAt(i) === UPPER_C) { state = State.CDATA_2; i++; }
-          else { state = State.DOCTYPE; i++; }
+          else { special = "["; state = State.DOCTYPE; }
           continue;
         }
         case State.CDATA_2: { // expecting D
           if (chunk.charCodeAt(i) === UPPER_D) { state = State.CDATA_3; i++; }
-          else { state = State.DOCTYPE; i++; }
+          else { special = "[C"; state = State.DOCTYPE; }
           continue;
         }
         case State.CDATA_3: { // expecting A
           if (chunk.charCodeAt(i) === UPPER_A) { state = State.CDATA_4; i++; }
-          else { state = State.DOCTYPE; i++; }
+          else { special = "[CD"; state = State.DOCTYPE; }
           continue;
         }
         case State.CDATA_4: { // expecting T
           if (chunk.charCodeAt(i) === UPPER_T) { state = State.CDATA_5; i++; }
-          else { state = State.DOCTYPE; i++; }
+          else { special = "[CDA"; state = State.DOCTYPE; }
           continue;
         }
         case State.CDATA_5: { // expecting A
           if (chunk.charCodeAt(i) === UPPER_A) { state = State.CDATA_6; i++; }
-          else { state = State.DOCTYPE; i++; }
+          else { special = "[CDAT"; state = State.DOCTYPE; }
           continue;
         }
         case State.CDATA_6: { // expecting [
           if (chunk.charCodeAt(i) === LBRACKET) { state = State.CDATA; special = ""; i++; }
-          else { state = State.DOCTYPE; i++; }
+          else { special = "[CDATA"; state = State.DOCTYPE; }
           continue;
         }
 
@@ -744,18 +809,31 @@ export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
         }
 
         // ==================================================================
-        // DOCTYPE
+        // DOCTYPE — accumulate body, parse tokens on >
         // ==================================================================
         case State.DOCTYPE: {
           const charCode = chunk.charCodeAt(i);
           if (charCode === GT) {
+            if (ondoctype) {
+              emitDoctype(special);
+            }
+            special = "";
             state = State.TEXT;
             i++;
           } else if (charCode === LBRACKET) {
             state = State.DOCTYPE_BRACKET;
             i++;
           } else {
-            i++;
+            // Batch scan: find the next > or [ to avoid per-char accumulation
+            let j = i;
+            while (j < chunkLength) {
+              const scanCharCode = chunk.charCodeAt(j);
+              if (scanCharCode === GT || scanCharCode === LBRACKET) break;
+              j++;
+            }
+            special += chunk.substring(i, j);
+            i = j;
+            // If j < chunkLength, the next iteration will handle > or [
           }
           continue;
         }

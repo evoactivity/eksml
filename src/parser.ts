@@ -263,40 +263,88 @@ export function parse(
             }
             continue;
           } else {
-            // doctype / other <!...> declarations: skip to matching '>'
-            // For internal DTD subsets ([...]), skip quoted strings inside
-            const startDoctype = pos + 1;
-            pos += 2;
-            let insideBracketSection = false;
-            while (
-              (S.charCodeAt(pos) !== GT || insideBracketSection === true) &&
-              S[pos]
-            ) {
-              if (S.charCodeAt(pos) === LBRACKET) {
-                insideBracketSection = true;
-              } else if (
-                insideBracketSection === true &&
-                S.charCodeAt(pos) === RBRACKET
-              ) {
-                insideBracketSection = false;
-              } else if (insideBracketSection === true) {
-                // Skip quoted strings inside internal DTD subset
-                const quoteCharCode = S.charCodeAt(pos);
-                if (quoteCharCode === SQUOTE || quoteCharCode === DQUOTE) {
-                  pos = S.indexOf(
-                    quoteCharCode === SQUOTE ? "'" : '"',
-                    pos + 1,
-                  );
-                  if (pos === -1) {
-                    pos = S.length;
-                    break;
-                  }
-                }
-              }
+            // doctype / other <!...> declarations: parse as TNode
+            // Read the declaration keyword (e.g. "!DOCTYPE")
+            pos += 2; // skip '<!'
+            const keywordStart = pos - 1; // include the '!'
+            while (pos < S.length) {
+              const cc = S.charCodeAt(pos);
+              if (cc <= 32 || cc === GT || cc === LBRACKET) break;
               pos++;
             }
-            if (strict && !S[pos]) throw strictError("Unclosed declaration");
-            children.push(S.substring(startDoctype, pos));
+            const tagName = S.substring(keywordStart, pos);
+
+            // Parse space-separated tokens as null-valued attributes
+            let attributes: Record<string, string | null> | null = null;
+            while (pos < S.length) {
+              const cc = S.charCodeAt(pos);
+              if (cc === GT || cc === LBRACKET) break;
+              // Skip whitespace
+              if (cc <= 32) { pos++; continue; }
+              // Quoted token — capture including quotes as the key
+              if (cc === SQUOTE || cc === DQUOTE) {
+                const closePos = S.indexOf(
+                  cc === SQUOTE ? "'" : '"',
+                  pos + 1,
+                );
+                if (closePos === -1) {
+                  if (strict) throw strictError("Unclosed declaration");
+                  pos = S.length;
+                  break;
+                }
+                const token = S.substring(pos + 1, closePos);
+                if (attributes === null) attributes = Object.create(null);
+                attributes![token] = null;
+                pos = closePos + 1;
+                continue;
+              }
+              // Unquoted token
+              const tokenStart = pos;
+              while (pos < S.length) {
+                const tc = S.charCodeAt(pos);
+                if (tc <= 32 || tc === GT || tc === LBRACKET) break;
+                pos++;
+              }
+              const token = S.substring(tokenStart, pos);
+              if (attributes === null) attributes = Object.create(null);
+              attributes![token] = null;
+            }
+
+            // Skip internal DTD subset ([...]) if present
+            if (pos < S.length && S.charCodeAt(pos) === LBRACKET) {
+              pos++; // skip '['
+              let insideBracketSection = true;
+              while (insideBracketSection && pos < S.length) {
+                if (S.charCodeAt(pos) === RBRACKET) {
+                  insideBracketSection = false;
+                } else {
+                  // Skip quoted strings inside internal DTD subset
+                  const quoteCharCode = S.charCodeAt(pos);
+                  if (quoteCharCode === SQUOTE || quoteCharCode === DQUOTE) {
+                    pos = S.indexOf(
+                      quoteCharCode === SQUOTE ? "'" : '"',
+                      pos + 1,
+                    );
+                    if (pos === -1) {
+                      pos = S.length;
+                      break;
+                    }
+                  }
+                }
+                pos++;
+              }
+              // Skip any whitespace between ] and >
+              while (pos < S.length && S.charCodeAt(pos) <= 32) pos++;
+            }
+
+            if (strict && (pos >= S.length || S.charCodeAt(pos) !== GT))
+              throw strictError("Unclosed declaration");
+
+            children.push({
+              tagName,
+              attributes,
+              children: [],
+            } as TNode);
           }
           pos++;
           continue;

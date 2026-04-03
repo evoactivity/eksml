@@ -116,10 +116,11 @@ describe("entity handling (from entities_spec)", () => {
     const xml = `<?xml version='1.0' standalone='no'?>
             <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" >
             <svg><metadata>test</metadata></svg>`;
-    // DOCTYPE is preserved as a top-level string alongside the root element
+    // DOCTYPE is preserved as a lossy object alongside the root element
     const result = lossy(xml) as any;
     expect(Array.isArray(result)).toBe(true);
-    expect(result[0]).toMatch(/^!DOCTYPE svg/);
+    expect(result[0]["!DOCTYPE"]).toBeDefined();
+    expect(result[0]["!DOCTYPE"]["$svg"]).toBe(null);
     expect(result[1].svg.metadata).toBe("test");
   });
 
@@ -131,7 +132,8 @@ describe("entity handling (from entities_spec)", () => {
         </svg>`;
     const result = lossy(xml) as any;
     expect(Array.isArray(result)).toBe(true);
-    expect(result[0]).toMatch(/^!DOCTYPE svg/);
+    expect(result[0]["!DOCTYPE"]).toBeDefined();
+    expect(result[0]["!DOCTYPE"]["$svg"]).toBe(null);
     expect(result[1].svg.metadata).toBe("[test]");
   });
 
@@ -147,19 +149,21 @@ describe("entity handling (from entities_spec)", () => {
       "<!--close the DOCTYPE declaration-->" +
       "]>" +
       "<foo>Hello World.</foo>";
-    // DOCTYPE is preserved as a top-level string
+    // DOCTYPE is preserved as a lossy object
     const result = lossy(xml) as any;
     expect(Array.isArray(result)).toBe(true);
-    expect(result[0]).toMatch(/^!DOCTYPE foo/);
+    expect(result[0]["!DOCTYPE"]).toBeDefined();
+    expect(result[0]["!DOCTYPE"]["$foo"]).toBe(null);
     expect(result[1].foo).toBe("Hello World.");
   });
 
   it("should not throw when DTD comments contain '<' or '>'", () => {
     const xml = `<!DOCTYPE greeting [<!-- < > < -->]><root>ok</root>`;
-    // DOCTYPE is preserved as a top-level string
+    // DOCTYPE is preserved as a lossy object
     const result = lossy(xml) as any;
     expect(Array.isArray(result)).toBe(true);
-    expect(result[0]).toMatch(/^!DOCTYPE greeting/);
+    expect(result[0]["!DOCTYPE"]).toBeDefined();
+    expect(result[0]["!DOCTYPE"]["$greeting"]).toBe(null);
     expect(result[1].root).toBe("ok");
   });
 
@@ -172,7 +176,8 @@ describe("entity handling (from entities_spec)", () => {
     // Since <X> contains both elements and text (CDATA), it's genuine mixed content → $$
     const result = lossy(xml) as any;
     expect(Array.isArray(result)).toBe(true);
-    expect(result[0]).toMatch(/^!DOCTYPE x/);
+    expect(result[0]["!DOCTYPE"]).toBeDefined();
+    expect(result[0]["!DOCTYPE"]["$x"]).toBe(null);
     // Y is inside the $$ mixed-content array as { Y: null }
     const mixed = result[1].X.$$;
     expect(mixed).toBeDefined();
@@ -191,10 +196,11 @@ describe("entity handling (from entities_spec)", () => {
           <!ATTLIST code lang NOTATION (vrml) #REQUIRED>
         ]>
         <code lang="vrml">Some VRML instructions</code>`;
-    // DOCTYPE is preserved as a top-level string
+    // DOCTYPE is preserved as a lossy object
     const result = lossy(xml) as any;
     expect(Array.isArray(result)).toBe(true);
-    expect(result[0]).toMatch(/^!DOCTYPE code/);
+    expect(result[0]["!DOCTYPE"]).toBeDefined();
+    expect(result[0]["!DOCTYPE"]["$code"]).toBe(null);
     expect(result[1].code.$lang).toBe("vrml");
     // eksml uses $$ when attributes + text coexist
     expect(result[1].code.$$).toBeDefined();

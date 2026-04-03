@@ -26,9 +26,10 @@ describe("fixture: xhtml-page.xml", () => {
   it("finds doctype and html root", () => {
     const result = parse(xhtmlPage);
     const doctype = result.find(
-      (n) => typeof n === "string" && n.startsWith("!DOCTYPE"),
-    );
+      (n) => typeof n === "object" && n.tagName === "!DOCTYPE",
+    ) as TNode;
     expect(doctype).toBeDefined();
+    expect(doctype.attributes!.html).toBe(null);
 
     const html = result.find(
       (n) => typeof n === "object" && n.tagName === "html",

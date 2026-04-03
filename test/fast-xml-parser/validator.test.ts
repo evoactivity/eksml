@@ -124,10 +124,11 @@ describe("malformed XML handling (from validator_spec)", () => {
       "<!--close the DOCTYPE declaration-->" +
       "]>" +
       "<foo>Hello World.</foo>";
-    // DOCTYPE is preserved as a top-level string
+    // DOCTYPE is preserved as a lossy object
     const result = lossy(xml) as any;
     expect(Array.isArray(result)).toBe(true);
-    expect(result[0]).toMatch(/^!DOCTYPE foo/);
+    expect(result[0]["!DOCTYPE"]).toBeDefined();
+    expect(result[0]["!DOCTYPE"]["$foo"]).toBe(null);
     expect(result[1].foo).toBe("Hello World.");
   });
 

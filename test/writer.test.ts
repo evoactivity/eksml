@@ -66,6 +66,51 @@ describe("writer", () => {
     ).toBe('<?xml version="1.0"?>');
   });
 
+  // --- DOCTYPE declarations ---
+
+  it("roundtrips simple HTML5 DOCTYPE", () => {
+    const xml = "<!DOCTYPE html><html></html>";
+    expect(writer(parse(xml))).toBe(xml);
+  });
+
+  it("roundtrips DOCTYPE with quoted public and system identifiers", () => {
+    const xml =
+      '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+    expect(writer(parse(xml))).toBe(xml);
+  });
+
+  it("roundtrips DOCTYPE with quoted identifiers in pretty mode", () => {
+    const xml =
+      '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+    expect(writer(parse(xml), { pretty: true })).toBe(xml);
+  });
+
+  it("roundtrips DOCTYPE with quoted identifiers in entities mode", () => {
+    const xml =
+      '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+    expect(writer(parse(xml), { entities: true })).toBe(xml);
+  });
+
+  it("roundtrips DOCTYPE with SYSTEM identifier", () => {
+    const xml = '<!DOCTYPE note SYSTEM "note.dtd">';
+    expect(writer(parse(xml))).toBe(xml);
+  });
+
+  it("writes DOCTYPE as void (no closing tag) in all modes", () => {
+    const node: TNode = {
+      tagName: "!DOCTYPE",
+      attributes: { html: null },
+      children: [],
+    };
+    expect(writer(node)).toBe("<!DOCTYPE html>");
+    expect(writer(node, { pretty: true })).toBe("<!DOCTYPE html>");
+    expect(writer(node, { html: true })).toBe("<!DOCTYPE html>");
+    expect(writer(node, { entities: true })).toBe("<!DOCTYPE html>");
+    expect(writer(node, { html: true, entities: true, pretty: true })).toBe(
+      "<!DOCTYPE html>",
+    );
+  });
+
   it("uses single quotes when value contains double quotes", () => {
     expect(
       writer({

@@ -293,6 +293,15 @@ export function transformStream(
     emitOrAttach(node);
   }
 
+  function defaultOndoctype(tagName: string, attributes: Attributes): void {
+    const node: TNode = {
+      tagName,
+      attributes: Object.keys(attributes).length > 0 ? { ...attributes } : null,
+      children: [],
+    };
+    emitOrAttach(node);
+  }
+
   // -------------------------------------------------------------------------
   // SAX handler: select mode
   // -------------------------------------------------------------------------
@@ -380,6 +389,19 @@ export function transformStream(
     }
   }
 
+  function selectOndoctype(tagName: string, attributes: Attributes): void {
+    if (!insideSelection()) return;
+    const node: TNode = {
+      tagName,
+      attributes: Object.keys(attributes).length > 0 ? { ...attributes } : null,
+      children: [],
+    };
+    const parent = selectParent();
+    if (parent) {
+      parent.children.push(node);
+    }
+  }
+
   // -------------------------------------------------------------------------
   // Wire up the appropriate handler set
   // -------------------------------------------------------------------------
@@ -395,6 +417,7 @@ export function transformStream(
     onprocessinginstruction: selectSet
       ? selectOnprocessinginstruction
       : defaultOnprocessinginstruction,
+    ondoctype: selectSet ? selectOndoctype : defaultOndoctype,
   });
 
   return new TransformStream<string, TNode | string>({

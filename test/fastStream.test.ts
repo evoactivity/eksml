@@ -26,6 +26,7 @@ interface Events {
   cdatas: string[];
   comments: string[];
   pis: { name: string; body: string }[];
+  doctypes: { tagName: string; attrs: Attributes }[];
 }
 
 /** Feed chunks through fastStream and collect all events. */
@@ -43,6 +44,7 @@ function collectEvents(
     cdatas: [],
     comments: [],
     pis: [],
+    doctypes: [],
   };
 
   const parser = fastStream({
@@ -64,6 +66,9 @@ function collectEvents(
     },
     onprocessinginstruction(name, body) {
       events.pis.push({ name, body });
+    },
+    ondoctype(tagName, attrs) {
+      events.doctypes.push({ tagName, attrs });
     },
   });
 
@@ -243,20 +248,67 @@ describe("fastStream", () => {
   // DOCTYPE
   // =========================================================================
   describe("DOCTYPE", () => {
-    it("skips DOCTYPE declarations", () => {
+    it("emits DOCTYPE as ondoctype event with parsed attributes", () => {
       const e = parseEvents(
         '<?xml version="1.0"?><!DOCTYPE tv SYSTEM "xmltv.dtd"><tv/>',
       );
       expect(e.pis).toHaveLength(1);
+      expect(e.doctypes).toHaveLength(1);
+      expect(e.doctypes[0]!.tagName).toBe("!DOCTYPE");
+      expect(e.doctypes[0]!.attrs).toEqual({
+        tv: null,
+        SYSTEM: null,
+        "xmltv.dtd": null,
+      });
       expect(e.opens.map((o) => o.name)).toEqual(["tv"]);
     });
 
-    it("handles DOCTYPE with internal subset", () => {
+    it("handles DOCTYPE with internal subset (discards bracket content)", () => {
       const e = parseEvents(
         "<!DOCTYPE root [<!ELEMENT root (#PCDATA)>]><root>text</root>",
       );
+      expect(e.doctypes).toHaveLength(1);
+      expect(e.doctypes[0]!.tagName).toBe("!DOCTYPE");
+      expect(e.doctypes[0]!.attrs).toEqual({ root: null });
       expect(e.opens.map((o) => o.name)).toEqual(["root"]);
       expect(e.texts).toEqual(["text"]);
+    });
+
+    it("parses simple HTML5 DOCTYPE", () => {
+      const e = parseEvents("<!DOCTYPE html><html></html>");
+      expect(e.doctypes).toHaveLength(1);
+      expect(e.doctypes[0]!.tagName).toBe("!DOCTYPE");
+      expect(e.doctypes[0]!.attrs).toEqual({ html: null });
+      expect(e.opens.map((o) => o.name)).toEqual(["html"]);
+    });
+
+    it("parses DOCTYPE with PUBLIC and SYSTEM identifiers", () => {
+      const e = parseEvents(
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html/>',
+      );
+      expect(e.doctypes).toHaveLength(1);
+      expect(e.doctypes[0]!.tagName).toBe("!DOCTYPE");
+      expect(e.doctypes[0]!.attrs).toEqual({
+        html: null,
+        PUBLIC: null,
+        "-//W3C//DTD XHTML 1.0 Strict//EN": null,
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd": null,
+      });
+    });
+
+    it("parses DOCTYPE split across chunks", () => {
+      const e = collectEvents(["<!DOCT", 'YPE html PUBLIC "-//W3C', '//DTD XHTML 1.0 Strict//EN">', "<html/>"]);
+      expect(e.doctypes).toHaveLength(1);
+      expect(e.doctypes[0]!.tagName).toBe("!DOCTYPE");
+      expect(e.doctypes[0]!.attrs.html).toBe(null);
+      expect(e.doctypes[0]!.attrs.PUBLIC).toBe(null);
+      expect(e.doctypes[0]!.attrs["-//W3C//DTD XHTML 1.0 Strict//EN"]).toBe(null);
+    });
+
+    it("does not emit DOCTYPE through onopentag", () => {
+      const e = parseEvents("<!DOCTYPE html><html></html>");
+      // DOCTYPE should NOT appear in opens — it has its own callback
+      expect(e.opens.map((o) => o.name)).toEqual(["html"]);
     });
   });
 

@@ -217,6 +217,69 @@ describe("transformStream", () => {
     expect(tags).toEqual(["first", "second"]);
   });
 
+  // --- DOCTYPE ---
+
+  it("emits DOCTYPE as a TNode", async () => {
+    const stream = transformStream();
+    const results = await collect(stream, [
+      "<!DOCTYPE html><html></html>",
+    ]);
+    expect(results).toHaveLength(2);
+    const doctype = results[0] as TNode;
+    expect(doctype.tagName).toBe("!DOCTYPE");
+    expect(doctype.attributes).toEqual({ html: null });
+    expect(doctype.children).toEqual([]);
+    const html = results[1] as TNode;
+    expect(html.tagName).toBe("html");
+  });
+
+  it("emits DOCTYPE with quoted identifiers", async () => {
+    const stream = transformStream();
+    const results = await collect(stream, [
+      '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html/>',
+    ]);
+    const doctype = results.find(
+      (r): r is TNode => typeof r === "object" && r.tagName === "!DOCTYPE",
+    )!;
+    expect(doctype).toBeDefined();
+    expect(doctype.attributes).toEqual({
+      html: null,
+      PUBLIC: null,
+      "-//W3C//DTD XHTML 1.0 Strict//EN": null,
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd": null,
+    });
+  });
+
+  it("emits DOCTYPE with internal subset discarded", async () => {
+    const stream = transformStream();
+    const results = await collect(stream, [
+      "<!DOCTYPE root [<!ELEMENT root (#PCDATA)>]><root>text</root>",
+    ]);
+    const doctype = results.find(
+      (r): r is TNode => typeof r === "object" && r.tagName === "!DOCTYPE",
+    )!;
+    expect(doctype).toBeDefined();
+    expect(doctype.attributes).toEqual({ root: null });
+    const root = results.find(
+      (r): r is TNode => typeof r === "object" && r.tagName === "root",
+    )!;
+    expect(root.children).toEqual(["text"]);
+  });
+
+  it("emits DOCTYPE split across chunks", async () => {
+    const stream = transformStream();
+    const results = await collect(stream, [
+      "<!DOCT",
+      "YPE html>",
+      "<html></html>",
+    ]);
+    const doctype = results.find(
+      (r): r is TNode => typeof r === "object" && r.tagName === "!DOCTYPE",
+    )!;
+    expect(doctype).toBeDefined();
+    expect(doctype.attributes).toEqual({ html: null });
+  });
+
   it("flushes a trailing comment when keepComments is true", async () => {
     const stream = transformStream(0, { keepComments: true });
     const results = await collect(stream, ["<a>1</a><!-- trailing -->"]);

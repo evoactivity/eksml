@@ -31,11 +31,12 @@ describe("fixture: html-page.html", () => {
 
   it("finds the DOCTYPE and html root", () => {
     const result = parse(htmlPage, { html: true }) as (TNode | string)[];
-    // DOCTYPE appears as a string
+    // DOCTYPE appears as a TNode
     const doctype = result.find(
-      (n) => typeof n === "string" && n.includes("DOCTYPE"),
-    );
+      (n) => typeof n === "object" && n.tagName === "!DOCTYPE",
+    ) as TNode;
     expect(doctype).toBeDefined();
+    expect(doctype.attributes).toEqual({ html: null });
     const html = result.find(
       (n) => typeof n === "object" && n.tagName === "html",
     ) as TNode;

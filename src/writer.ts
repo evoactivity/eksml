@@ -2,6 +2,7 @@ import { escapeText, escapeAttribute, encodeHTML } from "entities";
 import type { TNode } from "#src/parser.ts";
 import { HTML_VOID_ELEMENTS } from "#src/utilities/htmlConstants.ts";
 // @generated:char-codes:begin
+const BANG = 33; // !
 const QUESTION = 63; // ?
 // @generated:char-codes:end
 
@@ -64,6 +65,13 @@ export function writer(
 // Fast path — compact output, no entities, no HTML mode
 // ---------------------------------------------------------------------------
 
+/**
+ * Test whether a string is a simple keyword that can appear unquoted in a
+ * DOCTYPE declaration (e.g. `html`, `PUBLIC`, `SYSTEM`).
+ * Anything else (URIs, public identifiers) must be double-quoted.
+ */
+const SIMPLE_KEYWORD = /^[A-Za-z][A-Za-z0-9_-]*$/;
+
 function compactWrite(input: TNode | (TNode | string)[]): string {
   let out = "";
 
@@ -81,29 +89,43 @@ function compactWrite(input: TNode | (TNode | string)[]): string {
   function writeNode(node: TNode): void {
     const tag = node.tagName;
     const attributes = node.attributes;
+    const firstChar = tag.charCodeAt(0);
     if (attributes === null) {
       // No attributes — combine open tag into one concat
-      if (tag.charCodeAt(0) === QUESTION) {
+      if (firstChar === QUESTION) {
         out += "<" + tag + "?>";
+        return;
+      }
+      if (firstChar === BANG) {
+        out += "<" + tag + ">";
         return;
       }
       out += "<" + tag + ">";
     } else {
       out += "<" + tag;
+      const isDeclaration = firstChar === BANG;
       const keys = Object.keys(attributes);
       for (let j = 0; j < keys.length; j++) {
         const attributeName = keys[j]!;
         const attributeValue = attributes[attributeName];
         if (attributeValue === null) {
-          out += " " + attributeName;
+          if (isDeclaration && !SIMPLE_KEYWORD.test(attributeName)) {
+            out += ' "' + attributeName + '"';
+          } else {
+            out += " " + attributeName;
+          }
         } else if (attributeValue.indexOf('"') === -1) {
           out += " " + attributeName + '="' + attributeValue + '"';
         } else {
           out += " " + attributeName + "='" + attributeValue + "'";
         }
       }
-      if (tag.charCodeAt(0) === QUESTION) {
+      if (firstChar === QUESTION) {
         out += "?>";
+        return;
+      }
+      if (firstChar === BANG) {
+        out += ">";
         return;
       }
       out += ">";
@@ -167,9 +189,15 @@ function fullWriter(
     function writeNode(node: TNode): void {
       const tag = node.tagName;
       const attributes = node.attributes;
+      const firstChar = tag.charCodeAt(0);
       if (attributes === null) {
-        if (tag.charCodeAt(0) === QUESTION) {
+        if (firstChar === QUESTION) {
           out += "<" + tag + "?>";
+          return;
+        }
+        // Declaration tags (e.g. !DOCTYPE) — void in all modes
+        if (firstChar === BANG) {
+          out += "<" + tag + ">";
           return;
         }
         // HTML void elements self-close without a closing tag
@@ -180,12 +208,17 @@ function fullWriter(
         out += "<" + tag + ">";
       } else {
         out += "<" + tag;
+        const isDeclaration = firstChar === BANG;
         const keys = Object.keys(attributes);
         for (let j = 0; j < keys.length; j++) {
           const attributeName = keys[j]!;
           const attributeValue = attributes[attributeName];
           if (attributeValue === null) {
-            out += " " + attributeName;
+            if (isDeclaration && !SIMPLE_KEYWORD.test(attributeName)) {
+              out += ' "' + attributeName + '"';
+            } else {
+              out += " " + attributeName;
+            }
           } else {
             const encoded = encodeAttributeValue(attributeValue);
             if (encoded.indexOf('"') === -1) {
@@ -195,8 +228,13 @@ function fullWriter(
             }
           }
         }
-        if (tag.charCodeAt(0) === QUESTION) {
+        if (firstChar === QUESTION) {
           out += "?>";
+          return;
+        }
+        // Declaration tags (e.g. !DOCTYPE) — void in all modes
+        if (firstChar === BANG) {
+          out += ">";
           return;
         }
         // HTML void elements self-close without a closing tag
@@ -224,14 +262,18 @@ function fullWriter(
     return false;
   }
 
-  function prettyWriteAttributes(node: TNode): void {
+  function prettyWriteAttributes(node: TNode, isDeclaration = false): void {
     if (node.attributes === null) return;
     const keys = Object.keys(node.attributes);
     for (let j = 0; j < keys.length; j++) {
       const key = keys[j]!;
       const attributeValue = node.attributes[key];
       if (attributeValue === null) {
-        out += " " + key;
+        if (isDeclaration && !SIMPLE_KEYWORD.test(key)) {
+          out += ' "' + key + '"';
+        } else {
+          out += " " + key;
+        }
       } else {
         const encoded = encodeAttributeValue(attributeValue);
         if (encoded.indexOf('"') === -1) {
@@ -247,12 +289,21 @@ function fullWriter(
     if (!node) return;
     const padding = indent.repeat(depth);
     const tag = node.tagName;
+    const firstChar = tag.charCodeAt(0);
 
     // Processing instruction
-    if (tag.charCodeAt(0) === QUESTION) {
+    if (firstChar === QUESTION) {
       out += padding + "<" + tag;
       prettyWriteAttributes(node);
       out += "?>";
+      return;
+    }
+
+    // Declaration tags (e.g. !DOCTYPE) — void in all modes
+    if (firstChar === BANG) {
+      out += padding + "<" + tag;
+      prettyWriteAttributes(node, true);
+      out += ">";
       return;
     }
 
@@ -313,10 +364,17 @@ function fullWriter(
   function inlineWriteNode(node: TNode): void {
     if (!node) return;
     const tag = node.tagName;
+    const firstChar = tag.charCodeAt(0);
     out += "<" + tag;
-    prettyWriteAttributes(node);
-    if (tag.charCodeAt(0) === QUESTION) {
+    const isDeclaration = firstChar === BANG;
+    prettyWriteAttributes(node, isDeclaration);
+    if (firstChar === QUESTION) {
       out += "?>";
+      return;
+    }
+    // Declaration tags (e.g. !DOCTYPE) — void in all modes
+    if (isDeclaration) {
+      out += ">";
       return;
     }
     // HTML void elements self-close without closing tag

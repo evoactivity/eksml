@@ -83,9 +83,13 @@ describe("parse", () => {
     ]);
   });
 
-  it("ignores doctype declaration", () => {
+  it("parses doctype declaration as TNode", () => {
     expect(parse("<!DOCTYPE html><test><cc></cc><cc></cc></test>")).toEqual([
-      "!DOCTYPE html",
+      {
+        tagName: "!DOCTYPE",
+        attributes: { html: null },
+        children: [],
+      },
       {
         tagName: "test",
         attributes: null,
@@ -350,7 +354,9 @@ describe("parse", () => {
     const result = parse(
       "<!DOCTYPE html><html><head><title>Test</title></head><body><h1>Hello</h1></body></html>",
     );
-    expect(result[0]).toBe("!DOCTYPE html");
+    const doctype = result[0] as TNode;
+    expect(doctype.tagName).toBe("!DOCTYPE");
+    expect(doctype.attributes).toEqual({ html: null });
     const html = result.find(
       (el) => typeof el === "object" && el.tagName === "html",
     ) as TNode;

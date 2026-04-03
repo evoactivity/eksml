@@ -20,6 +20,7 @@ const stopBtn = document.getElementById("stop-btn") as HTMLButtonElement;
 
 const DEFAULT_XML = `\
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE catalog SYSTEM "catalog.dtd">
 <catalog>
   <product id="p1" category="electronics">
     <name>Wireless Mouse</name>
@@ -208,6 +209,13 @@ async function run(): Promise<void> {
         "event-pi",
         "pi",
         `&lt;?${escapeHtml(name)} ${escapeHtml(truncate(body))}?&gt;`,
+      );
+    },
+    ondoctype(tagName, attrs) {
+      appendLog(
+        "event-doctype",
+        "doctype",
+        `&lt;${escapeHtml(tagName)}&gt;${formatAttrs(attrs)}`,
       );
     },
   });
