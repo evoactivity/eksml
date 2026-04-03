@@ -109,7 +109,8 @@ function convertNode(node: TNode): LossyValue {
   }
 
   // --- Has attributes or multiple/complex children: build an object ---
-  const obj: LossyObject = {};
+  // Use null-prototype object to prevent __proto__ / constructor pollution
+  const obj: LossyObject = Object.create(null);
 
   // Attributes go first, prefixed with $
   if (hasAttrs) {

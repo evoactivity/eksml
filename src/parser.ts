@@ -154,6 +154,34 @@ export function parse(
   const rawContentSet: Set<string> | null =
     rawContentArr.length > 0 ? new Set(rawContentArr) : null;
 
+  /**
+   * Strip whitespace-only text nodes from a children array when it also
+   * contains element nodes (i.e. "ignorable whitespace" per XML spec).
+   * Mutates the array in-place for performance.
+   */
+  function stripIgnorableWhitespace(children: (TNode | string)[]): void {
+    let hasElement = false;
+    let hasWhitespaceOnlyText = false;
+    for (let i = 0; i < children.length; i++) {
+      const c = children[i]!;
+      if (typeof c !== "string") {
+        hasElement = true;
+      } else if (c.trim().length === 0) {
+        hasWhitespaceOnlyText = true;
+      }
+      if (hasElement && hasWhitespaceOnlyText) break;
+    }
+    if (hasElement && hasWhitespaceOnlyText) {
+      // Remove whitespace-only strings in reverse to avoid index shifting
+      for (let i = children.length - 1; i >= 0; i--) {
+        const c = children[i]!;
+        if (typeof c === "string" && c.trim().length === 0) {
+          children.splice(i, 1);
+        }
+      }
+    }
+  }
+
   function parseChildren(tagName: string): (TNode | string)[] {
     const children: (TNode | string)[] = [];
     while (S[pos]) {
@@ -177,6 +205,7 @@ export function parse(
 
           if (pos + 1) pos += 1;
 
+          stripIgnorableWhitespace(children);
           return children;
         } else if (S.charCodeAt(pos + 1) === exclamationCC) {
           if (S.charCodeAt(pos + 2) === 45 /* - */) {
@@ -210,7 +239,8 @@ export function parse(
             }
             continue;
           } else {
-            // doctype support
+            // doctype / other <!...> declarations: skip to matching '>'
+            // For internal DTD subsets ([...]), skip quoted strings inside
             const startDoctype = pos + 1;
             pos += 2;
             let encapsuled = false;
@@ -225,6 +255,19 @@ export function parse(
                 S.charCodeAt(pos) === closeCornerBracketCC
               ) {
                 encapsuled = false;
+              } else if (encapsuled === true) {
+                // Skip quoted strings inside internal DTD subset
+                const qc = S.charCodeAt(pos);
+                if (qc === singleQuoteCC || qc === doubleQuoteCC) {
+                  pos = S.indexOf(
+                    qc === singleQuoteCC ? "'" : '"',
+                    pos + 1,
+                  );
+                  if (pos === -1) {
+                    pos = S.length;
+                    break;
+                  }
+                }
               }
               pos++;
             }
@@ -254,6 +297,7 @@ export function parse(
         pos++;
       }
     }
+    stripIgnorableWhitespace(children);
     return children;
   }
 
@@ -278,13 +322,21 @@ export function parse(
   function parseNode(): TNode {
     pos++;
     const tagName = parseName();
-    const attributes: Record<string, string | null> = {};
+    // Use null-prototype object to prevent __proto__ / constructor pollution
+    const attributes: Record<string, string | null> = Object.create(null);
     let children: (TNode | string)[] = [];
 
     // parsing attributes
     while (S.charCodeAt(pos) !== closeBracketCC && S[pos]) {
       let c = S.charCodeAt(pos);
-      if ((c > 64 && c < 91) || (c > 96 && c < 123)) {
+      // Valid XML attribute name start: A-Z, a-z, _, :, or non-ASCII
+      if (
+        (c > 64 && c < 91) ||
+        (c > 96 && c < 123) ||
+        c === 95 ||
+        c === 58 ||
+        c > 127
+      ) {
         const name = parseName();
         // search beginning of the string
         let code = S.charCodeAt(pos);
@@ -292,7 +344,13 @@ export function parse(
           code &&
           code !== singleQuoteCC &&
           code !== doubleQuoteCC &&
-          !((code > 64 && code < 91) || (code > 96 && code < 123)) &&
+          !(
+            (code > 64 && code < 91) ||
+            (code > 96 && code < 123) ||
+            code === 95 ||
+            code === 58 ||
+            code > 127
+          ) &&
           code !== closeBracketCC
         ) {
           pos++;
