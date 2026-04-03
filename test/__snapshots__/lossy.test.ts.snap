@@ -1,0 +1,4151 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`HTML mode > img with attributes 1`] = `
+{
+  "div": {
+    "img": {
+      "$alt": "photo",
+      "$src": "x.png",
+    },
+    "span": "caption",
+  },
+}
+`;
+
+exports[`HTML mode > void elements self-close 1`] = `
+{
+  "div": {
+    "br": null,
+    "p": "text",
+  },
+}
+`;
+
+exports[`attributes > attributes prefixed with $ 1`] = `
+{
+  "div": {
+    "$class": "wide",
+    "$id": "main",
+    "p": "text",
+  },
+}
+`;
+
+exports[`attributes > element with attributes and element-only children 1`] = `
+{
+  "root": {
+    "$lang": "en",
+    "a": "1",
+    "b": "2",
+  },
+}
+`;
+
+exports[`attributes > null-valued attribute (boolean) 1`] = `
+{
+  "input": {
+    "$disabled": null,
+  },
+}
+`;
+
+exports[`comments > comments are dropped by default 1`] = `
+{
+  "root": {
+    "a": "1",
+  },
+}
+`;
+
+exports[`comments > comments kept when keepComments is true 1`] = `
+{
+  "root": {
+    "$$": [
+      "<!-- hello -->",
+      {
+        "a": "1",
+      },
+    ],
+  },
+}
+`;
+
+exports[`deep nesting > multiple levels 1`] = `
+{
+  "a": {
+    "b": {
+      "c": {
+        "d": "deep",
+      },
+    },
+  },
+}
+`;
+
+exports[`edge cases > CDATA treated as text 1`] = `
+{
+  "root": "raw <text>",
+}
+`;
+
+exports[`edge cases > attributes with empty string values 1`] = `
+{
+  "input": {
+    "$value": "",
+  },
+}
+`;
+
+exports[`edge cases > element-only children with attributes on parent 1`] = `
+{
+  "root": {
+    "$version": "2",
+    "a": "x",
+    "b": "y",
+  },
+}
+`;
+
+exports[`edge cases > empty root document 1`] = `
+{
+  "root": null,
+}
+`;
+
+exports[`edge cases > mixed repeated elements with different complexity 1`] = `
+{
+  "root": {
+    "x": [
+      "simple",
+      {
+        "y": "nested",
+      },
+    ],
+  },
+}
+`;
+
+exports[`edge cases > repeated empty elements 1`] = `
+{
+  "root": {
+    "br": [
+      null,
+      null,
+      null,
+    ],
+  },
+}
+`;
+
+exports[`empty elements > empty element with attributes becomes object with only $keys 1`] = `
+{
+  "root": {
+    "img": {
+      "$alt": "pic",
+      "$src": "a.png",
+    },
+  },
+}
+`;
+
+exports[`empty elements > empty open/close becomes null 1`] = `
+{
+  "root": {
+    "empty": null,
+  },
+}
+`;
+
+exports[`empty elements > self-closing becomes null 1`] = `
+{
+  "root": {
+    "br": null,
+  },
+}
+`;
+
+exports[`fixture: atom-feed.xml > full output 1`] = `
+{
+  "feed": {
+    "$$": [
+      "
+  ",
+      {
+        "title": {
+          "$$": [
+            "Open Source Project Releases",
+          ],
+          "$type": "text",
+        },
+      },
+      "
+  ",
+      {
+        "subtitle": {
+          "$$": [
+            "&lt;em&gt;Tracking&lt;/em&gt; major open source releases worldwide",
+          ],
+          "$type": "html",
+        },
+      },
+      "
+  ",
+      {
+        "id": "urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6",
+      },
+      "
+  ",
+      {
+        "link": {
+          "$href": "https://releases.example.org/",
+          "$rel": "alternate",
+          "$type": "text/html",
+        },
+      },
+      "
+  ",
+      {
+        "link": {
+          "$href": "https://releases.example.org/feed.atom",
+          "$rel": "self",
+          "$type": "application/atom+xml",
+        },
+      },
+      "
+  ",
+      {
+        "link": {
+          "$href": "https://releases.example.org/feed.atom?page=2",
+          "$rel": "next",
+          "$type": "application/atom+xml",
+        },
+      },
+      "
+  ",
+      {
+        "link": {
+          "$href": "https://pubsubhubbub.example.com/",
+          "$rel": "hub",
+        },
+      },
+      "
+  ",
+      {
+        "updated": "2025-03-31T18:30:00Z",
+      },
+      "
+  ",
+      {
+        "author": {
+          "$$": [
+            "
+    ",
+            {
+              "name": "Release Bot",
+            },
+            "
+    ",
+            {
+              "email": "releases@example.org",
+            },
+            "
+    ",
+            {
+              "uri": "https://example.org/bot",
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+  ",
+      {
+        "contributor": {
+          "$$": [
+            "
+    ",
+            {
+              "name": "Community Maintainers",
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+  ",
+      {
+        "generator": {
+          "$$": [
+            "ReleaseTracker",
+          ],
+          "$uri": "https://example.org/generator",
+          "$version": "3.2.1",
+        },
+      },
+      "
+  ",
+      {
+        "icon": "https://releases.example.org/favicon.ico",
+      },
+      "
+  ",
+      {
+        "logo": "https://releases.example.org/logo.svg",
+      },
+      "
+  ",
+      {
+        "rights": {
+          "$$": [
+            "Copyright (c) 2025, Example Org. CC BY-SA 4.0",
+          ],
+          "$type": "text",
+        },
+      },
+      "
+  ",
+      {
+        "category": {
+          "$label": "Software",
+          "$scheme": "https://example.org/categories",
+          "$term": "software",
+        },
+      },
+      "
+  ",
+      {
+        "category": {
+          "$label": "Open Source",
+          "$term": "open-source",
+        },
+      },
+      "
+
+  ",
+      {
+        "entry": {
+          "$$": [
+            "
+    ",
+            {
+              "title": "TypeScript 6.0 Released",
+            },
+            "
+    ",
+            {
+              "id": "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a",
+            },
+            "
+    ",
+            {
+              "link": {
+                "$href": "https://releases.example.org/typescript/6.0",
+                "$rel": "alternate",
+                "$type": "text/html",
+              },
+            },
+            "
+    ",
+            {
+              "link": {
+                "$href": "https://releases.example.org/typescript/6.0.json",
+                "$rel": "alternate",
+                "$type": "application/json",
+              },
+            },
+            "
+    ",
+            {
+              "link": {
+                "$count": "42",
+                "$href": "https://releases.example.org/typescript/6.0/comments",
+                "$rel": "replies",
+                "$type": "text/html",
+              },
+            },
+            "
+    ",
+            {
+              "updated": "2025-03-31T18:30:00Z",
+            },
+            "
+    ",
+            {
+              "published": "2025-03-31T10:00:00Z",
+            },
+            "
+    ",
+            {
+              "author": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "name": "TypeScript Team",
+                  },
+                  "
+      ",
+                  {
+                    "uri": "https://www.typescriptlang.org",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "category": {
+                "$label": "TypeScript",
+                "$term": "typescript",
+              },
+            },
+            "
+    ",
+            {
+              "category": {
+                "$label": "Programming Languages",
+                "$term": "languages",
+              },
+            },
+            "
+    ",
+            {
+              "summary": {
+                "$$": [
+                  "Major release with isolated declarations, decorator metadata, and more.",
+                ],
+                "$type": "text",
+              },
+            },
+            "
+    ",
+            {
+              "content": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "div": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "h2": "TypeScript 6.0 Highlights",
+                        },
+                        "
+        ",
+                        {
+                          "p": {
+                            "$$": [
+                              "This release brings several ",
+                              {
+                                "strong": "major improvements",
+                              },
+                              ":",
+                            ],
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "ul": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "li": "Isolated declarations for faster builds",
+                              },
+                              "
+          ",
+                              {
+                                "li": "Decorator metadata support",
+                              },
+                              "
+          ",
+                              {
+                                "li": {
+                                  "$$": [
+                                    {
+                                      "code": "using",
+                                    },
+                                    " keyword for resource management",
+                                  ],
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "li": "Improved type narrowing in control flow",
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "figure": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "img": {
+                                  "$alt": "TypeScript 6.0 build benchmarks",
+                                  "$height": "400",
+                                  "$src": "https://releases.example.org/ts6-benchmark.png",
+                                  "$width": "800",
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "figcaption": "Build performance improvements in TS 6.0",
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "details": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "summary": "Breaking Changes",
+                              },
+                              "
+          ",
+                              {
+                                "ul": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "li": "Minimum Node.js version is now 18.0",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "li": {
+                                        "$$": [
+                                          "Removed deprecated ",
+                                          {
+                                            "code": "--out",
+                                          },
+                                          " flag",
+                                        ],
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "li": "Strict null checks are now on by default",
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                      "$xmlns": "http://www.w3.org/1999/xhtml",
+                    },
+                  },
+                  "
+    ",
+                ],
+                "$type": "xhtml",
+              },
+            },
+            "
+    ",
+            {
+              "media:group": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "media:content": {
+                      "$height": "180",
+                      "$medium": "image",
+                      "$type": "image/png",
+                      "$url": "https://releases.example.org/ts6-thumb.png",
+                      "$width": "320",
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "media:description": "TypeScript 6.0 release thumbnail",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "georss:point": "37.4220 -122.0841",
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "entry": {
+          "$$": [
+            "
+    ",
+            {
+              "title": "Rust 1.85 — Stabilizing async closures",
+            },
+            "
+    ",
+            {
+              "id": "urn:uuid:2345d786-efab-5678-bbbb-91eb455ffa7b",
+            },
+            "
+    ",
+            {
+              "link": {
+                "$href": "https://releases.example.org/rust/1.85",
+                "$rel": "alternate",
+              },
+            },
+            "
+    ",
+            {
+              "updated": "2025-03-28T14:00:00Z",
+            },
+            "
+    ",
+            {
+              "published": "2025-03-28T09:00:00Z",
+            },
+            "
+    ",
+            {
+              "author": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "name": "Rust Release Team",
+                  },
+                  "
+      ",
+                  {
+                    "uri": "https://www.rust-lang.org",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "category": {
+                "$term": "rust",
+              },
+            },
+            "
+    ",
+            {
+              "category": {
+                "$term": "systems-programming",
+              },
+            },
+            "
+    ",
+            {
+              "summary": "Async closures, improved borrow checker diagnostics, and new standard library APIs.",
+            },
+            "
+    ",
+            {
+              "content": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "div": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "h2": "What's New in Rust 1.85",
+                        },
+                        "
+        ",
+                        {
+                          "p": {
+                            "$$": [
+                              "The flagship feature of this release is the stabilization of ",
+                              {
+                                "strong": "async closures",
+                              },
+                              ":",
+                            ],
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "pre": {
+                            "code": {
+                              "$$": [
+                                "let fetch = async |url: &amp;str| -&gt; Result&lt;Response, Error&gt; {
+    client.get(url).await
+};",
+                              ],
+                              "$class": "language-rust",
+                            },
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "h3": "Standard Library",
+                        },
+                        "
+        ",
+                        {
+                          "table": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "thead": {
+                                  "tr": {
+                                    "th": [
+                                      "API",
+                                      "Status",
+                                      "Notes",
+                                    ],
+                                  },
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "tbody": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "tr": {
+                                        "td": [
+                                          {
+                                            "code": "AsyncFn",
+                                          },
+                                          "Stable",
+                                          "Core async closure trait",
+                                        ],
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "tr": {
+                                        "td": [
+                                          {
+                                            "code": "Vec::extract_if",
+                                          },
+                                          "Stable",
+                                          {
+                                            "$$": [
+                                              "Replaces ",
+                                              {
+                                                "code": "drain_filter",
+                                              },
+                                            ],
+                                          },
+                                        ],
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "tr": {
+                                        "td": [
+                                          {
+                                            "code": "Cell::update",
+                                          },
+                                          "Stable",
+                                          "In-place cell mutation",
+                                        ],
+                                      },
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                      "$xmlns": "http://www.w3.org/1999/xhtml",
+                    },
+                  },
+                  "
+    ",
+                ],
+                "$type": "xhtml",
+              },
+            },
+            "
+    ",
+            {
+              "georss:where": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "gml:Point": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "gml:pos": "47.6062 -122.3321",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "entry": {
+          "$$": [
+            "
+    ",
+            {
+              "title": "Node.js 24 LTS — "Orinoco"",
+            },
+            "
+    ",
+            {
+              "id": "urn:uuid:3456e897-fabc-6789-cccc-a2fc566ggb8c",
+            },
+            "
+    ",
+            {
+              "link": {
+                "$href": "https://releases.example.org/node/24",
+                "$rel": "alternate",
+              },
+            },
+            "
+    ",
+            {
+              "updated": "2025-03-25T16:00:00Z",
+            },
+            "
+    ",
+            {
+              "published": "2025-03-25T08:00:00Z",
+            },
+            "
+    ",
+            {
+              "author": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "name": "Node.js Release Working Group",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "category": {
+                "$term": "nodejs",
+              },
+            },
+            "
+    ",
+            {
+              "category": {
+                "$term": "runtime",
+              },
+            },
+            "
+    ",
+            {
+              "summary": "V8 13.2, native TypeScript stripping, and Permission Model GA.",
+            },
+            "
+    ",
+            {
+              "content": {
+                "$$": [
+                  "&lt;h2&gt;Node.js 24 LTS&lt;/h2&gt;&lt;p&gt;Key features include:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;V8 engine 13.2&lt;/li&gt;&lt;li&gt;Native &lt;code&gt;.ts&lt;/code&gt; file support (type stripping)&lt;/li&gt;&lt;li&gt;Permission Model is now stable (GA)&lt;/li&gt;&lt;li&gt;WebSocket client is unflagged&lt;/li&gt;&lt;li&gt;&lt;code&gt;URLPattern&lt;/code&gt; global available&lt;/li&gt;&lt;/ul&gt;",
+                ],
+                "$type": "html",
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+",
+    ],
+    "$xml:lang": "en",
+    "$xmlns": "http://www.w3.org/2005/Atom",
+    "$xmlns:georss": "http://www.georss.org/georss",
+    "$xmlns:gml": "http://www.opengis.net/gml",
+    "$xmlns:media": "http://search.yahoo.com/mrss/",
+  },
+}
+`;
+
+exports[`fixture: pom.xml > full output 1`] = `
+{
+  "project": {
+    "$$": [
+      "
+  ",
+      {
+        "modelVersion": "4.0.0",
+      },
+      "
+
+  ",
+      {
+        "parent": {
+          "$$": [
+            "
+    ",
+            {
+              "groupId": "com.example",
+            },
+            "
+    ",
+            {
+              "artifactId": "platform-parent",
+            },
+            "
+    ",
+            {
+              "version": "3.2.1",
+            },
+            "
+    ",
+            {
+              "relativePath": "../pom.xml",
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "groupId": "com.example.services",
+      },
+      "
+  ",
+      {
+        "artifactId": "order-service",
+      },
+      "
+  ",
+      {
+        "version": "2.8.0-SNAPSHOT",
+      },
+      "
+  ",
+      {
+        "packaging": "jar",
+      },
+      "
+
+  ",
+      {
+        "name": "Order Service",
+      },
+      "
+  ",
+      {
+        "description": "Handles order processing, validation, and fulfillment for the e-commerce platform.
+    Supports high-throughput processing with configurable batch sizes and retry policies.",
+      },
+      "
+  ",
+      {
+        "url": "https://github.com/example/order-service",
+      },
+      "
+  ",
+      {
+        "inceptionYear": "2021",
+      },
+      "
+
+  ",
+      {
+        "licenses": {
+          "$$": [
+            "
+    ",
+            {
+              "license": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "name": "Apache License, Version 2.0",
+                  },
+                  "
+      ",
+                  {
+                    "url": "https://www.apache.org/licenses/LICENSE-2.0",
+                  },
+                  "
+      ",
+                  {
+                    "distribution": "repo",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "developers": {
+          "$$": [
+            "
+    ",
+            {
+              "developer": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "id": "alice",
+                  },
+                  "
+      ",
+                  {
+                    "name": "Alice Johnson",
+                  },
+                  "
+      ",
+                  {
+                    "email": "alice@example.com",
+                  },
+                  "
+      ",
+                  {
+                    "organization": "Example Corp",
+                  },
+                  "
+      ",
+                  {
+                    "roles": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "role": "Lead Developer",
+                        },
+                        "
+        ",
+                        {
+                          "role": "Architect",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "timezone": "America/New_York",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "developer": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "id": "bob",
+                  },
+                  "
+      ",
+                  {
+                    "name": "Bob Smith",
+                  },
+                  "
+      ",
+                  {
+                    "email": "bob@example.com",
+                  },
+                  "
+      ",
+                  {
+                    "organization": "Example Corp",
+                  },
+                  "
+      ",
+                  {
+                    "roles": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "role": "Developer",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "timezone": "Europe/London",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "scm": {
+          "$$": [
+            "
+    ",
+            {
+              "connection": "scm:git:git://github.com/example/order-service.git",
+            },
+            "
+    ",
+            {
+              "developerConnection": "scm:git:ssh://github.com/example/order-service.git",
+            },
+            "
+    ",
+            {
+              "url": "https://github.com/example/order-service",
+            },
+            "
+    ",
+            {
+              "tag": "HEAD",
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "issueManagement": {
+          "$$": [
+            "
+    ",
+            {
+              "system": "GitHub Issues",
+            },
+            "
+    ",
+            {
+              "url": "https://github.com/example/order-service/issues",
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "ciManagement": {
+          "$$": [
+            "
+    ",
+            {
+              "system": "GitHub Actions",
+            },
+            "
+    ",
+            {
+              "url": "https://github.com/example/order-service/actions",
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "properties": {
+          "$$": [
+            "
+    ",
+            {
+              "java.version": "21",
+            },
+            "
+    ",
+            {
+              "maven.compiler.source": "\${java.version}",
+            },
+            "
+    ",
+            {
+              "maven.compiler.target": "\${java.version}",
+            },
+            "
+    ",
+            {
+              "project.build.sourceEncoding": "UTF-8",
+            },
+            "
+    ",
+            {
+              "project.reporting.outputEncoding": "UTF-8",
+            },
+            "
+    ",
+            {
+              "spring-boot.version": "3.3.0",
+            },
+            "
+    ",
+            {
+              "spring-cloud.version": "2024.0.0",
+            },
+            "
+    ",
+            {
+              "testcontainers.version": "1.19.7",
+            },
+            "
+    ",
+            {
+              "mapstruct.version": "1.5.5.Final",
+            },
+            "
+    ",
+            {
+              "lombok.version": "1.18.30",
+            },
+            "
+    ",
+            {
+              "jackson.version": "2.17.0",
+            },
+            "
+    ",
+            {
+              "flyway.version": "10.10.0",
+            },
+            "
+    ",
+            {
+              "grpc.version": "1.63.0",
+            },
+            "
+    ",
+            {
+              "protobuf.version": "4.26.0",
+            },
+            "
+    ",
+            {
+              "sonar.projectKey": "example_order-service",
+            },
+            "
+    ",
+            {
+              "sonar.organization": "example",
+            },
+            "
+    ",
+            {
+              "jacoco.version": "0.8.12",
+            },
+            "
+    ",
+            {
+              "min.code.coverage": "0.80",
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "dependencyManagement": {
+          "$$": [
+            "
+    ",
+            {
+              "dependencies": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "dependency": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "groupId": "org.springframework.boot",
+                        },
+                        "
+        ",
+                        {
+                          "artifactId": "spring-boot-dependencies",
+                        },
+                        "
+        ",
+                        {
+                          "version": "\${spring-boot.version}",
+                        },
+                        "
+        ",
+                        {
+                          "type": "pom",
+                        },
+                        "
+        ",
+                        {
+                          "scope": "import",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "dependency": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "groupId": "org.springframework.cloud",
+                        },
+                        "
+        ",
+                        {
+                          "artifactId": "spring-cloud-dependencies",
+                        },
+                        "
+        ",
+                        {
+                          "version": "\${spring-cloud.version}",
+                        },
+                        "
+        ",
+                        {
+                          "type": "pom",
+                        },
+                        "
+        ",
+                        {
+                          "scope": "import",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "dependency": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "groupId": "org.testcontainers",
+                        },
+                        "
+        ",
+                        {
+                          "artifactId": "testcontainers-bom",
+                        },
+                        "
+        ",
+                        {
+                          "version": "\${testcontainers.version}",
+                        },
+                        "
+        ",
+                        {
+                          "type": "pom",
+                        },
+                        "
+        ",
+                        {
+                          "scope": "import",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "dependencies": {
+          "$$": [
+            "
+    ",
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.springframework.boot",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "spring-boot-starter-web",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.springframework.boot",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "spring-boot-starter-data-jpa",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.springframework.boot",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "spring-boot-starter-validation",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.springframework.boot",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "spring-boot-starter-actuator",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.springframework.boot",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "spring-boot-starter-security",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.springframework.boot",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "spring-boot-starter-cache",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+
+    ",
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.springframework.cloud",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "spring-cloud-starter-openfeign",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.springframework.cloud",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "spring-cloud-starter-circuitbreaker-resilience4j",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+
+    ",
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.postgresql",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "postgresql",
+                  },
+                  "
+      ",
+                  {
+                    "scope": "runtime",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.flywaydb",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "flyway-core",
+                  },
+                  "
+      ",
+                  {
+                    "version": "\${flyway.version}",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.flywaydb",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "flyway-database-postgresql",
+                  },
+                  "
+      ",
+                  {
+                    "version": "\${flyway.version}",
+                  },
+                  "
+      ",
+                  {
+                    "scope": "runtime",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+
+    ",
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "com.fasterxml.jackson.core",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "jackson-databind",
+                  },
+                  "
+      ",
+                  {
+                    "version": "\${jackson.version}",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "com.fasterxml.jackson.datatype",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "jackson-datatype-jsr310",
+                  },
+                  "
+      ",
+                  {
+                    "version": "\${jackson.version}",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "com.fasterxml.jackson.module",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "jackson-module-kotlin",
+                  },
+                  "
+      ",
+                  {
+                    "version": "\${jackson.version}",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+
+    ",
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "io.grpc",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "grpc-netty-shaded",
+                  },
+                  "
+      ",
+                  {
+                    "version": "\${grpc.version}",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "io.grpc",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "grpc-protobuf",
+                  },
+                  "
+      ",
+                  {
+                    "version": "\${grpc.version}",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "io.grpc",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "grpc-stub",
+                  },
+                  "
+      ",
+                  {
+                    "version": "\${grpc.version}",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+
+    ",
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.mapstruct",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "mapstruct",
+                  },
+                  "
+      ",
+                  {
+                    "version": "\${mapstruct.version}",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.projectlombok",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "lombok",
+                  },
+                  "
+      ",
+                  {
+                    "version": "\${lombok.version}",
+                  },
+                  "
+      ",
+                  {
+                    "scope": "provided",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+
+    ",
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "io.micrometer",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "micrometer-registry-prometheus",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "io.micrometer",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "micrometer-tracing-bridge-otel",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "io.opentelemetry",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "opentelemetry-exporter-otlp",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+
+    ",
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.springframework.boot",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "spring-boot-starter-test",
+                  },
+                  "
+      ",
+                  {
+                    "scope": "test",
+                  },
+                  "
+      ",
+                  {
+                    "exclusions": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "exclusion": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "groupId": "org.junit.vintage",
+                              },
+                              "
+          ",
+                              {
+                                "artifactId": "junit-vintage-engine",
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.springframework.security",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "spring-security-test",
+                  },
+                  "
+      ",
+                  {
+                    "scope": "test",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.testcontainers",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "postgresql",
+                  },
+                  "
+      ",
+                  {
+                    "scope": "test",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.testcontainers",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "junit-jupiter",
+                  },
+                  "
+      ",
+                  {
+                    "scope": "test",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "io.rest-assured",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "rest-assured",
+                  },
+                  "
+      ",
+                  {
+                    "scope": "test",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "dependency": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "groupId": "org.awaitility",
+                  },
+                  "
+      ",
+                  {
+                    "artifactId": "awaitility",
+                  },
+                  "
+      ",
+                  {
+                    "scope": "test",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "build": {
+          "$$": [
+            "
+    ",
+            {
+              "plugins": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "plugin": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "groupId": "org.springframework.boot",
+                        },
+                        "
+        ",
+                        {
+                          "artifactId": "spring-boot-maven-plugin",
+                        },
+                        "
+        ",
+                        {
+                          "version": "\${spring-boot.version}",
+                        },
+                        "
+        ",
+                        {
+                          "configuration": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "mainClass": "com.example.services.order.OrderServiceApplication",
+                              },
+                              "
+          ",
+                              {
+                                "layers": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "enabled": "true",
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "image": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "name": "ghcr.io/example/order-service:\${project.version}",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "env": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "BP_JVM_VERSION": "\${java.version}",
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "executions": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "execution": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "goals": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "goal": "repackage",
+                                          },
+                                          "
+              ",
+                                          {
+                                            "goal": "build-info",
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "plugin": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "groupId": "org.apache.maven.plugins",
+                        },
+                        "
+        ",
+                        {
+                          "artifactId": "maven-compiler-plugin",
+                        },
+                        "
+        ",
+                        {
+                          "version": "3.13.0",
+                        },
+                        "
+        ",
+                        {
+                          "configuration": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "source": "\${java.version}",
+                              },
+                              "
+          ",
+                              {
+                                "target": "\${java.version}",
+                              },
+                              "
+          ",
+                              {
+                                "annotationProcessorPaths": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "path": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "groupId": "org.mapstruct",
+                                          },
+                                          "
+              ",
+                                          {
+                                            "artifactId": "mapstruct-processor",
+                                          },
+                                          "
+              ",
+                                          {
+                                            "version": "\${mapstruct.version}",
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "path": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "groupId": "org.projectlombok",
+                                          },
+                                          "
+              ",
+                                          {
+                                            "artifactId": "lombok",
+                                          },
+                                          "
+              ",
+                                          {
+                                            "version": "\${lombok.version}",
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "path": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "groupId": "org.projectlombok",
+                                          },
+                                          "
+              ",
+                                          {
+                                            "artifactId": "lombok-mapstruct-binding",
+                                          },
+                                          "
+              ",
+                                          {
+                                            "version": "0.2.0",
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "compilerArgs": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "arg": "-Amapstruct.defaultComponentModel=spring",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "arg": "-Amapstruct.unmappedTargetPolicy=ERROR",
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "plugin": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "groupId": "org.jacoco",
+                        },
+                        "
+        ",
+                        {
+                          "artifactId": "jacoco-maven-plugin",
+                        },
+                        "
+        ",
+                        {
+                          "version": "\${jacoco.version}",
+                        },
+                        "
+        ",
+                        {
+                          "executions": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "execution": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "id": "prepare-agent",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "goals": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "goal": "prepare-agent",
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "execution": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "id": "report",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "phase": "test",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "goals": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "goal": "report",
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "execution": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "id": "check",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "goals": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "goal": "check",
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "configuration": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "rules": {
+                                              "$$": [
+                                                "
+                ",
+                                                {
+                                                  "rule": {
+                                                    "$$": [
+                                                      "
+                  ",
+                                                      {
+                                                        "element": "BUNDLE",
+                                                      },
+                                                      "
+                  ",
+                                                      {
+                                                        "limits": {
+                                                          "$$": [
+                                                            "
+                    ",
+                                                            {
+                                                              "limit": {
+                                                                "$$": [
+                                                                  "
+                      ",
+                                                                  {
+                                                                    "counter": "LINE",
+                                                                  },
+                                                                  "
+                      ",
+                                                                  {
+                                                                    "value": "COVEREDRATIO",
+                                                                  },
+                                                                  "
+                      ",
+                                                                  {
+                                                                    "minimum": "\${min.code.coverage}",
+                                                                  },
+                                                                  "
+                    ",
+                                                                ],
+                                                              },
+                                                            },
+                                                            "
+                    ",
+                                                            {
+                                                              "limit": {
+                                                                "$$": [
+                                                                  "
+                      ",
+                                                                  {
+                                                                    "counter": "BRANCH",
+                                                                  },
+                                                                  "
+                      ",
+                                                                  {
+                                                                    "value": "COVEREDRATIO",
+                                                                  },
+                                                                  "
+                      ",
+                                                                  {
+                                                                    "minimum": "0.70",
+                                                                  },
+                                                                  "
+                    ",
+                                                                ],
+                                                              },
+                                                            },
+                                                            "
+                  ",
+                                                          ],
+                                                        },
+                                                      },
+                                                      "
+                ",
+                                                    ],
+                                                  },
+                                                },
+                                                "
+              ",
+                                              ],
+                                            },
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "plugin": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "groupId": "org.apache.maven.plugins",
+                        },
+                        "
+        ",
+                        {
+                          "artifactId": "maven-surefire-plugin",
+                        },
+                        "
+        ",
+                        {
+                          "version": "3.2.5",
+                        },
+                        "
+        ",
+                        {
+                          "configuration": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "argLine": "@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED",
+                              },
+                              "
+          ",
+                              {
+                                "systemPropertyVariables": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "spring.profiles.active": "test",
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+
+    ",
+            {
+              "resources": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "resource": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "directory": "src/main/resources",
+                        },
+                        "
+        ",
+                        {
+                          "filtering": "true",
+                        },
+                        "
+        ",
+                        {
+                          "includes": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "include": "**/*.properties",
+                              },
+                              "
+          ",
+                              {
+                                "include": "**/*.yml",
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "resource": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "directory": "src/main/resources",
+                        },
+                        "
+        ",
+                        {
+                          "filtering": "false",
+                        },
+                        "
+        ",
+                        {
+                          "excludes": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "exclude": "**/*.properties",
+                              },
+                              "
+          ",
+                              {
+                                "exclude": "**/*.yml",
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "profiles": {
+          "$$": [
+            "
+    ",
+            {
+              "profile": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "id": "docker",
+                  },
+                  "
+      ",
+                  {
+                    "build": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "plugins": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "plugin": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "groupId": "org.springframework.boot",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "artifactId": "spring-boot-maven-plugin",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "executions": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "execution": {
+                                              "$$": [
+                                                "
+                ",
+                                                {
+                                                  "id": "build-image",
+                                                },
+                                                "
+                ",
+                                                {
+                                                  "goals": {
+                                                    "$$": [
+                                                      "
+                  ",
+                                                      {
+                                                        "goal": "build-image",
+                                                      },
+                                                      "
+                ",
+                                                    ],
+                                                  },
+                                                },
+                                                "
+              ",
+                                              ],
+                                            },
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "profile": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "id": "integration-test",
+                  },
+                  "
+      ",
+                  {
+                    "build": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "plugins": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "plugin": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "groupId": "org.apache.maven.plugins",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "artifactId": "maven-failsafe-plugin",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "version": "3.2.5",
+                                    },
+                                    "
+            ",
+                                    {
+                                      "executions": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "execution": {
+                                              "$$": [
+                                                "
+                ",
+                                                {
+                                                  "goals": {
+                                                    "$$": [
+                                                      "
+                  ",
+                                                      {
+                                                        "goal": "integration-test",
+                                                      },
+                                                      "
+                  ",
+                                                      {
+                                                        "goal": "verify",
+                                                      },
+                                                      "
+                ",
+                                                    ],
+                                                  },
+                                                },
+                                                "
+              ",
+                                              ],
+                                            },
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "configuration": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "includes": {
+                                              "$$": [
+                                                "
+                ",
+                                                {
+                                                  "include": "**/*IT.java",
+                                                },
+                                                "
+                ",
+                                                {
+                                                  "include": "**/*IntegrationTest.java",
+                                                },
+                                                "
+              ",
+                                              ],
+                                            },
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+
+  ",
+      {
+        "repositories": {
+          "$$": [
+            "
+    ",
+            {
+              "repository": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "id": "central",
+                  },
+                  "
+      ",
+                  {
+                    "url": "https://repo.maven.apache.org/maven2",
+                  },
+                  "
+      ",
+                  {
+                    "releases": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "enabled": "true",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "snapshots": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "enabled": "false",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "repository": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "id": "spring-milestones",
+                  },
+                  "
+      ",
+                  {
+                    "name": "Spring Milestones",
+                  },
+                  "
+      ",
+                  {
+                    "url": "https://repo.spring.io/milestone",
+                  },
+                  "
+      ",
+                  {
+                    "snapshots": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "enabled": "false",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+",
+    ],
+    "$xmlns": "http://maven.apache.org/POM/4.0.0",
+    "$xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+    "$xsi:schemaLocation": "http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd",
+  },
+}
+`;
+
+exports[`fixture: rss-feed.xml > full output 1`] = `
+{
+  "rss": {
+    "$$": [
+      "
+  ",
+      {
+        "channel": {
+          "$$": [
+            "
+    ",
+            {
+              "title": "Tech Engineering Blog",
+            },
+            "
+    ",
+            {
+              "link": "https://example.com/blog",
+            },
+            "
+    ",
+            {
+              "description": "Latest posts from the engineering team",
+            },
+            "
+    ",
+            {
+              "language": "en-us",
+            },
+            "
+    ",
+            {
+              "lastBuildDate": "Mon, 31 Mar 2025 12:00:00 +0000",
+            },
+            "
+    ",
+            {
+              "atom:link": {
+                "$href": "https://example.com/blog/feed.xml",
+                "$rel": "self",
+                "$type": "application/rss+xml",
+              },
+            },
+            "
+    ",
+            {
+              "image": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "url": "https://example.com/logo.png",
+                  },
+                  "
+      ",
+                  {
+                    "title": "Tech Engineering Blog",
+                  },
+                  "
+      ",
+                  {
+                    "link": "https://example.com/blog",
+                  },
+                  "
+      ",
+                  {
+                    "width": "144",
+                  },
+                  "
+      ",
+                  {
+                    "height": "144",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "item": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "title": "Migrating to Web Streams",
+                  },
+                  "
+      ",
+                  {
+                    "link": "https://example.com/blog/web-streams",
+                  },
+                  "
+      ",
+                  {
+                    "guid": {
+                      "$$": [
+                        "https://example.com/blog/web-streams",
+                      ],
+                      "$isPermaLink": "true",
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "pubDate": "Mon, 31 Mar 2025 12:00:00 +0000",
+                  },
+                  "
+      ",
+                  {
+                    "dc:creator": "Alice",
+                  },
+                  "
+      ",
+                  {
+                    "category": "Streams",
+                  },
+                  "
+      ",
+                  {
+                    "category": "JavaScript",
+                  },
+                  "
+      ",
+                  {
+                    "category": "Performance",
+                  },
+                  "
+      ",
+                  {
+                    "description": "<p>Learn how we <strong>migrated</strong> from Node.js streams to the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Streams_API">Web Streams API</a> for universal compatibility.</p>",
+                  },
+                  "
+      ",
+                  {
+                    "content:encoded": "
+        <article>
+          <h1>Migrating to Web Streams</h1>
+          <p>The <code>TransformStream</code> API provides a universal streaming primitive that works in browsers, Node.js 18+, Deno, and Bun.</p>
+          <pre><code>const stream = new TransformStream({
+  transform(chunk, controller) {
+    controller.enqueue(chunk.toUpperCase());
+  }
+});</code></pre>
+          <h2>Benefits</h2>
+          <ul>
+            <li>Universal runtime support</li>
+            <li>No polyfills needed on modern platforms</li>
+            <li>Built-in backpressure handling</li>
+          </ul>
+          <blockquote>
+            <p>"Web Streams are the future of I/O in JavaScript." — <cite>TC39 Committee</cite></p>
+          </blockquote>
+          <!-- TODO: Add performance benchmarks section -->
+          <h2>Migration Checklist</h2>
+          <ol>
+            <li>Replace <code>require('stream')</code> with <code>TransformStream</code></li>
+            <li>Update transform logic from <code>_transform</code> to <code>transform</code></li>
+            <li>Add <code>flush</code> handler for buffered data</li>
+          </ol>
+        </article>
+      ",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "item": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "title": "XML Parsing at Scale: Lessons Learned",
+                  },
+                  "
+      ",
+                  {
+                    "link": "https://example.com/blog/xml-parsing",
+                  },
+                  "
+      ",
+                  {
+                    "guid": {
+                      "$$": [
+                        "https://example.com/blog/xml-parsing",
+                      ],
+                      "$isPermaLink": "true",
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "pubDate": "Sun, 23 Mar 2025 08:30:00 +0000",
+                  },
+                  "
+      ",
+                  {
+                    "dc:creator": "Bob &amp; Carol",
+                  },
+                  "
+      ",
+                  {
+                    "category": "XML",
+                  },
+                  "
+      ",
+                  {
+                    "category": "Parsing",
+                  },
+                  "
+      ",
+                  {
+                    "description": "<p>We process <em>millions</em> of XML documents daily. Here's what we've learned about incremental parsing &amp; memory efficiency.</p>",
+                  },
+                  "
+      ",
+                  {
+                    "content:encoded": "
+        <article>
+          <h1>XML Parsing at Scale</h1>
+          <p>Processing large XML documents requires careful attention to memory usage. Streaming parsers that emit nodes incrementally can handle documents of arbitrary size with constant memory overhead.</p>
+          <table>
+            <thead>
+              <tr><th>Parser</th><th>Memory (MB)</th><th>Time (ms)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>DOM</td><td>512</td><td>2400</td></tr>
+              <tr><td>SAX</td><td>12</td><td>890</td></tr>
+              <tr><td>Streaming</td><td>8</td><td>650</td></tr>
+            </tbody>
+          </table>
+          <p>Special characters like &lt;, &gt;, &amp;, and "quotes" must be handled correctly in both attributes and text content.</p>
+        </article>
+      ",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+    ",
+            {
+              "item": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "title": "Deep Dive: TypeScript Generics &amp; Conditional Types",
+                  },
+                  "
+      ",
+                  {
+                    "link": "https://example.com/blog/ts-generics",
+                  },
+                  "
+      ",
+                  {
+                    "guid": {
+                      "$$": [
+                        "https://example.com/blog/ts-generics",
+                      ],
+                      "$isPermaLink": "true",
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "pubDate": "Fri, 14 Mar 2025 15:45:00 +0000",
+                  },
+                  "
+      ",
+                  {
+                    "dc:creator": "Diana",
+                  },
+                  "
+      ",
+                  {
+                    "category": "TypeScript",
+                  },
+                  "
+      ",
+                  {
+                    "description": "An advanced guide to TypeScript's type system",
+                  },
+                  "
+      ",
+                  {
+                    "content:encoded": "
+        <article>
+          <h1>Deep Dive: TypeScript Generics</h1>
+          <p>TypeScript's type system is <em>Turing complete</em>, allowing for remarkably expressive type-level programming.</p>
+          <pre><code>type DeepPartial&lt;T&gt; = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial&lt;T[P]&gt; : T[P];
+};</code></pre>
+        </article>
+      ",
+                  },
+                  "
+    ",
+                ],
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+",
+    ],
+    "$version": "2.0",
+    "$xmlns:atom": "http://www.w3.org/2005/Atom",
+    "$xmlns:content": "http://purl.org/rss/1.0/modules/content/",
+    "$xmlns:dc": "http://purl.org/dc/elements/1.1/",
+  },
+}
+`;
+
+exports[`fixture: soap-envelope.xml > full output 1`] = `
+{
+  "soap:Envelope": {
+    "$$": [
+      "
+  ",
+      {
+        "soap:Header": {
+          "$$": [
+            "
+    ",
+            {
+              "wsse:Security": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "wsu:Timestamp": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "wsu:Created": "2025-03-31T12:00:00.000Z",
+                        },
+                        "
+        ",
+                        {
+                          "wsu:Expires": "2025-03-31T12:05:00.000Z",
+                        },
+                        "
+      ",
+                      ],
+                      "$wsu:Id": "TS-1",
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "wsse:UsernameToken": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "wsse:Username": "svc-account",
+                        },
+                        "
+        ",
+                        {
+                          "wsse:Password": {
+                            "$$": [
+                              "dGVzdHBhc3N3b3Jk",
+                            ],
+                            "$Type": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest",
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "wsse:Nonce": {
+                            "$$": [
+                              "YWJjZGVmZw==",
+                            ],
+                            "$EncodingType": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary",
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "wsu:Created": "2025-03-31T12:00:00.000Z",
+                        },
+                        "
+      ",
+                      ],
+                      "$wsu:Id": "UsernameToken-1",
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "ds:Signature": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "ds:SignedInfo": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "ds:CanonicalizationMethod": {
+                                  "$Algorithm": "http://www.w3.org/2001/10/xml-exc-c14n#",
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "ds:SignatureMethod": {
+                                  "$Algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "ds:Reference": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "ds:Transforms": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "ds:Transform": {
+                                              "$Algorithm": "http://www.w3.org/2001/10/xml-exc-c14n#",
+                                            },
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "ds:DigestMethod": {
+                                        "$Algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "ds:DigestValue": "abc123def456==",
+                                    },
+                                    "
+          ",
+                                  ],
+                                  "$URI": "#TS-1",
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "ds:Reference": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "ds:Transforms": {
+                                        "$$": [
+                                          "
+              ",
+                                          {
+                                            "ds:Transform": {
+                                              "$Algorithm": "http://www.w3.org/2001/10/xml-exc-c14n#",
+                                            },
+                                          },
+                                          "
+            ",
+                                        ],
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "ds:DigestMethod": {
+                                        "$Algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
+                                      },
+                                    },
+                                    "
+            ",
+                                    {
+                                      "ds:DigestValue": "xyz789ghi012==",
+                                    },
+                                    "
+          ",
+                                  ],
+                                  "$URI": "#Body-1",
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "ds:SignatureValue": "MIIB4DCCAYagAwIBAgIQfake==",
+                        },
+                        "
+        ",
+                        {
+                          "ds:KeyInfo": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "wsse:SecurityTokenReference": {
+                                  "$$": [
+                                    "
+            ",
+                                    {
+                                      "wsse:Reference": {
+                                        "$URI": "#X509Token-1",
+                                        "$ValueType": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3",
+                                      },
+                                    },
+                                    "
+          ",
+                                  ],
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+                "$soap:mustUnderstand": "1",
+              },
+            },
+            "
+    ",
+            "
+    ",
+            {
+              "CorrelationId": {
+                "$$": [
+                  "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                ],
+                "$xmlns": "http://example.com/correlation",
+              },
+            },
+            "
+  ",
+          ],
+        },
+      },
+      "
+  ",
+      {
+        "soap:Body": {
+          "$$": [
+            "
+    ",
+            {
+              "GetOrderDetailsRequest": {
+                "$$": [
+                  "
+      ",
+                  {
+                    "OrderId": "ORD-2025-0331-00042",
+                  },
+                  "
+      ",
+                  {
+                    "IncludeLineItems": "true",
+                  },
+                  "
+      ",
+                  {
+                    "IncludeShipments": "true",
+                  },
+                  "
+      ",
+                  {
+                    "Options": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "Currency": "USD",
+                        },
+                        "
+        ",
+                        {
+                          "Locale": "en-US",
+                        },
+                        "
+        ",
+                        {
+                          "ExpandReferences": "true",
+                        },
+                        "
+        ",
+                        {
+                          "MaxDepth": "5",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "Filters": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "DateRange": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "From": "2025-01-01T00:00:00Z",
+                              },
+                              "
+          ",
+                              {
+                                "To": "2025-03-31T23:59:59Z",
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "StatusCodes": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "Status": "CONFIRMED",
+                              },
+                              "
+          ",
+                              {
+                                "Status": "SHIPPED",
+                              },
+                              "
+          ",
+                              {
+                                "Status": "DELIVERED",
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+        ",
+                        {
+                          "CustomerSegments": {
+                            "$$": [
+                              "
+          ",
+                              {
+                                "Segment": {
+                                  "$$": [
+                                    "ENTERPRISE",
+                                  ],
+                                  "$priority": "high",
+                                },
+                              },
+                              "
+          ",
+                              {
+                                "Segment": {
+                                  "$$": [
+                                    "PREMIUM",
+                                  ],
+                                  "$priority": "medium",
+                                },
+                              },
+                              "
+        ",
+                            ],
+                          },
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+      ",
+                  {
+                    "Pagination": {
+                      "$$": [
+                        "
+        ",
+                        {
+                          "PageSize": "50",
+                        },
+                        "
+        ",
+                        {
+                          "PageToken": "eyJsYXN0SWQiOiJPUkQtMjAyNS0wMzMwLTk5OTk5In0=",
+                        },
+                        "
+      ",
+                      ],
+                    },
+                  },
+                  "
+    ",
+                ],
+                "$xmlns": "http://example.com/orders/v2",
+              },
+            },
+            "
+  ",
+          ],
+          "$wsu:Id": "Body-1",
+        },
+      },
+      "
+",
+    ],
+    "$xmlns:ds": "http://www.w3.org/2000/09/xmldsig#",
+    "$xmlns:soap": "http://schemas.xmlsoap.org/soap/envelope/",
+    "$xmlns:wsse": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
+    "$xmlns:wsu": "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
+    "$xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
+    "$xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+  },
+}
+`;
+
+exports[`mixed content > interleaved text and elements use $$ array 1`] = `
+{
+  "p": {
+    "$$": [
+      "Hello ",
+      {
+        "b": "world",
+      },
+      " and ",
+      {
+        "i": "goodbye",
+      },
+    ],
+  },
+}
+`;
+
+exports[`mixed content > nested mixed content 1`] = `
+{
+  "div": {
+    "$$": [
+      "before ",
+      {
+        "span": {
+          "$$": [
+            "inner ",
+            {
+              "b": "bold",
+            },
+            " after",
+          ],
+        },
+      },
+      " end",
+    ],
+  },
+}
+`;
+
+exports[`mixed content > single text with attributes uses $$ array 1`] = `
+{
+  "a": {
+    "$$": [
+      "link text",
+    ],
+    "$href": "/",
+  },
+}
+`;
+
+exports[`processing instructions > xml declaration is filtered at top level 1`] = `
+{
+  "root": "text",
+}
+`;
+
+exports[`repeated siblings > mixed repeated and unique siblings 1`] = `
+{
+  "root": {
+    "a": [
+      "1",
+      "2",
+    ],
+    "b": "X",
+  },
+}
+`;
+
+exports[`repeated siblings > repeated complex elements 1`] = `
+{
+  "root": {
+    "x": [
+      {
+        "$id": "1",
+        "y": "a",
+      },
+      {
+        "$id": "2",
+        "y": "b",
+      },
+    ],
+  },
+}
+`;
+
+exports[`repeated siblings > repeated tags become array 1`] = `
+{
+  "list": {
+    "item": [
+      "A",
+      "B",
+      "C",
+    ],
+  },
+}
+`;
+
+exports[`repeated siblings > single tag is not wrapped in array 1`] = `
+{
+  "list": {
+    "item": "only",
+  },
+}
+`;
+
+exports[`text-only elements > collapses to string 1`] = `
+{
+  "name": "Alice",
+}
+`;
+
+exports[`text-only elements > preserves entities as raw text 1`] = `
+{
+  "val": "&amp; &lt;",
+}
+`;
+
+exports[`top-level handling > multiple roots returns array 1`] = `
+[
+  {
+    "a": "1",
+  },
+  {
+    "b": "2",
+  },
+]
+`;
+
+exports[`top-level handling > single root returns object 1`] = `
+{
+  "root": {
+    "a": "1",
+  },
+}
+`;
+
+exports[`top-level handling > strips top-level whitespace text 1`] = `
+{
+  "root": null,
+}
+`;
+
+exports[`user example > matches the expected output 1`] = `
+{
+  "thing": {
+    "$$": [
+      "
+  ",
+      {
+        "second": {
+          "$$": [
+            "Text",
+          ],
+          "$with": "attributes",
+        },
+      },
+      "
+  ",
+      {
+        "third": "More text",
+      },
+      "
+  ",
+      {
+        "second": {
+          "$$": [
+            "Even more text
+    ",
+            {
+              "fourth": "Nested text",
+            },
+            "
+  ",
+          ],
+          "$another": "attribute",
+        },
+      },
+      "
+",
+    ],
+  },
+}
+`;

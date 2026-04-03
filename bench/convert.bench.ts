@@ -1,7 +1,6 @@
 /**
- * Benchmarks comparing tojs (DOM-based) vs tojsevents (SAX-based) XML-to-JS
- * object conversion, and against fast-xml-parser and xml2js which produce
- * similar JS object output.
+ * Benchmarks comparing eksml object converters (lossless, lossy) against
+ * fast-xml-parser and xml2js which produce similar JS object output.
  */
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
@@ -9,9 +8,8 @@ import { fileURLToPath } from "node:url";
 import { bench, describe } from "vitest";
 
 // --- eksml ---
-import { tojs } from "../src/tojs.js";
-import { tojsevents } from "../src/tojsevents.js";
-import { tojson } from "../src/tojson.js";
+import { lossless } from "../src/converters/lossless.ts";
+import { lossy } from "../src/converters/lossy.ts";
 
 // --- competitors ---
 import { XMLParser } from "fast-xml-parser";
@@ -37,17 +35,13 @@ const fxp = new XMLParser({ ignoreAttributes: false });
 // ---------------------------------------------------------------------------
 // Small document — ~100 bytes
 // ---------------------------------------------------------------------------
-describe("tojs: small XML (~100 B)", () => {
-  bench("tojs (DOM)", () => {
-    tojs(small);
+describe("convert: small XML (~100 B)", () => {
+  bench("lossless", () => {
+    lossless(small);
   });
 
-  bench("tojsevents (SAX)", () => {
-    tojsevents(small);
-  });
-
-  bench("tojson (DOM)", () => {
-    tojson(small);
+  bench("lossy", () => {
+    lossy(small);
   });
 
   bench("fast-xml-parser", () => {
@@ -62,17 +56,13 @@ describe("tojs: small XML (~100 B)", () => {
 // ---------------------------------------------------------------------------
 // RSS feed — ~3 KB
 // ---------------------------------------------------------------------------
-describe("tojs: RSS feed (~3 KB)", () => {
-  bench("tojs (DOM)", () => {
-    tojs(rssFeed);
+describe("convert: RSS feed (~3 KB)", () => {
+  bench("lossless", () => {
+    lossless(rssFeed);
   });
 
-  bench("tojsevents (SAX)", () => {
-    tojsevents(rssFeed);
-  });
-
-  bench("tojson (DOM)", () => {
-    tojson(rssFeed);
+  bench("lossy", () => {
+    lossy(rssFeed);
   });
 
   bench("fast-xml-parser", () => {
@@ -87,17 +77,13 @@ describe("tojs: RSS feed (~3 KB)", () => {
 // ---------------------------------------------------------------------------
 // SOAP envelope — ~3 KB
 // ---------------------------------------------------------------------------
-describe("tojs: SOAP envelope (~3 KB)", () => {
-  bench("tojs (DOM)", () => {
-    tojs(soapEnvelope);
+describe("convert: SOAP envelope (~3 KB)", () => {
+  bench("lossless", () => {
+    lossless(soapEnvelope);
   });
 
-  bench("tojsevents (SAX)", () => {
-    tojsevents(soapEnvelope);
-  });
-
-  bench("tojson (DOM)", () => {
-    tojson(soapEnvelope);
+  bench("lossy", () => {
+    lossy(soapEnvelope);
   });
 
   bench("fast-xml-parser", () => {
@@ -112,17 +98,13 @@ describe("tojs: SOAP envelope (~3 KB)", () => {
 // ---------------------------------------------------------------------------
 // Atom feed — ~6 KB
 // ---------------------------------------------------------------------------
-describe("tojs: Atom feed (~6 KB)", () => {
-  bench("tojs (DOM)", () => {
-    tojs(atomFeed);
+describe("convert: Atom feed (~6 KB)", () => {
+  bench("lossless", () => {
+    lossless(atomFeed);
   });
 
-  bench("tojsevents (SAX)", () => {
-    tojsevents(atomFeed);
-  });
-
-  bench("tojson (DOM)", () => {
-    tojson(atomFeed);
+  bench("lossy", () => {
+    lossy(atomFeed);
   });
 
   bench("fast-xml-parser", () => {
@@ -137,17 +119,13 @@ describe("tojs: Atom feed (~6 KB)", () => {
 // ---------------------------------------------------------------------------
 // Maven POM — ~8 KB
 // ---------------------------------------------------------------------------
-describe("tojs: Maven POM (~8 KB)", () => {
-  bench("tojs (DOM)", () => {
-    tojs(pomXml);
+describe("convert: Maven POM (~8 KB)", () => {
+  bench("lossless", () => {
+    lossless(pomXml);
   });
 
-  bench("tojsevents (SAX)", () => {
-    tojsevents(pomXml);
-  });
-
-  bench("tojson (DOM)", () => {
-    tojson(pomXml);
+  bench("lossy", () => {
+    lossy(pomXml);
   });
 
   bench("fast-xml-parser", () => {
@@ -162,17 +140,13 @@ describe("tojs: Maven POM (~8 KB)", () => {
 // ---------------------------------------------------------------------------
 // XMLTV EPG — ~30 KB
 // ---------------------------------------------------------------------------
-describe("tojs: XMLTV EPG (~30 KB)", () => {
-  bench("tojs (DOM)", () => {
-    tojs(xmltvEpg);
+describe("convert: XMLTV EPG (~30 KB)", () => {
+  bench("lossless", () => {
+    lossless(xmltvEpg);
   });
 
-  bench("tojsevents (SAX)", () => {
-    tojsevents(xmltvEpg);
-  });
-
-  bench("tojson (DOM)", () => {
-    tojson(xmltvEpg);
+  bench("lossy", () => {
+    lossy(xmltvEpg);
   });
 
   bench("fast-xml-parser", () => {

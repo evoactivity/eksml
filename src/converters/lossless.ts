@@ -1,42 +1,45 @@
 /**
- * tojson — XML-to-JSON converter producing an order-preserving format.
+ * lossless — XML-to-JSON converter producing an order-preserving format.
  *
  * Each element becomes a single-key object `{ tagName: children[] }`.
- * Text nodes become `{ "#text": "..." }`.
- * Attributes become `{ ":@": { ... } }` as the first entry in the children array.
- * Comments (when kept) become `{ "#comment": "..." }`.
+ * Text nodes become `{ $text: "..." }`.
+ * Attributes become `{ $attr: { ... } }` as the first entry in the children array.
+ * Comments (when kept) become `{ $comment: "..." }`.
+ *
+ * All marker keys are valid JS identifiers so you can use dot notation:
+ * `entry.$attr.id`, `entry.$text`, `entry.$comment`.
  *
  * The format preserves element order, mixed content, and attributes losslessly,
  * and is fully JSON-serializable.
  *
  * @example
  * ```ts
- * import { tojson } from "eksml";
+ * import { lossless } from "eksml";
  *
- * const result = tojson('<root attr="1"><item>hell<b>o</b></item></root>');
+ * const result = lossless('<root attr="1"><item>hell<b>o</b></item></root>');
  * // [
  * //   { "root": [
- * //     { ":@": { "attr": "1" } },
+ * //     { $attr: { "attr": "1" } },
  * //     { "item": [
- * //       { "#text": "hell" },
- * //       { "b": [{ "#text": "o" }] }
+ * //       { $text: "hell" },
+ * //       { "b": [{ $text: "o" }] }
  * //     ]}
  * //   ]}
  * // ]
  * ```
  */
 
-import { parse, type TNode, type ParseOptions } from "./txml.ts";
+import { parse, type TNode, type ParseOptions } from "../txml.ts";
 
 /** A single entry in the JSON output array. */
-export type JsonEntry =
-  | { [tagName: string]: JsonEntry[] }
-  | { "#text": string }
-  | { ":@": Record<string, string | null> }
-  | { "#comment": string };
+export type LosslessEntry =
+  | { [tagName: string]: LosslessEntry[] }
+  | { $text: string }
+  | { $attr: Record<string, string | null> }
+  | { $comment: string };
 
-/** Options for tojson. */
-export interface ToJsonOptions {
+/** Options for lossless. */
+export interface LosslessOptions {
   /**
    * Array of tag names that are self-closing (void elements).
    * Defaults to `[]` in XML mode, HTML void elements in HTML mode.
@@ -49,19 +52,19 @@ export interface ToJsonOptions {
   rawContentTags?: string[];
   /** Enable HTML parsing mode. */
   html?: boolean;
-  /** Keep XML comments in the output as `{ "#comment": "..." }` entries. */
+  /** Keep XML comments in the output as `{ $comment: "..." }` entries. */
   keepComments?: boolean;
   /** Keep whitespace-only text nodes. */
   keepWhitespace?: boolean;
 }
 
-function convertNode(node: TNode): JsonEntry {
-  const children: JsonEntry[] = [];
+function convertNode(node: TNode): LosslessEntry {
+  const children: LosslessEntry[] = [];
 
-  // Attributes go first as { ":@": { ... } }
+  // Attributes go first as { $attr: { ... } }
   const keys = Object.keys(node.attributes);
   if (keys.length > 0) {
-    children.push({ ":@": node.attributes });
+    children.push({ $attr: node.attributes });
   }
 
   // Then child nodes
@@ -77,12 +80,12 @@ function convertNode(node: TNode): JsonEntry {
   return { [node.tagName]: children };
 }
 
-function convertString(s: string): JsonEntry {
+function convertString(s: string): LosslessEntry {
   // Comments from parse() come as "<!-- ... -->"
   if (s.startsWith("<!--") && s.endsWith("-->")) {
-    return { "#comment": s.substring(4, s.length - 3) };
+    return { $comment: s.substring(4, s.length - 3) };
   }
-  return { "#text": s };
+  return { $text: s };
 }
 
 /**
@@ -92,8 +95,15 @@ function convertString(s: string): JsonEntry {
  * @param options - Parsing options
  * @returns Array of top-level JSON entries
  */
-export function tojson(xml: string, options?: ToJsonOptions): JsonEntry[] {
-  const parseOpts: ParseOptions = {};
+export function lossless(
+  xml: string,
+  options?: LosslessOptions,
+): LosslessEntry[] {
+  const parseOpts: ParseOptions = {
+    // Default to preserving whitespace for output.
+    // Can be overridden by the caller.
+    keepWhitespace: true,
+  };
   if (options) {
     if (options.selfClosingTags !== undefined)
       parseOpts.selfClosingTags = options.selfClosingTags;
@@ -107,7 +117,7 @@ export function tojson(xml: string, options?: ToJsonOptions): JsonEntry[] {
   }
 
   const dom = parse(xml, parseOpts) as (TNode | string)[];
-  const result: JsonEntry[] = [];
+  const result: LosslessEntry[] = [];
   for (let i = 0; i < dom.length; i++) {
     const node = dom[i]!;
     if (typeof node === "string") {

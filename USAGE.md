@@ -1,6 +1,6 @@
 # eksml usage guide
 
-eksml exports five main APIs. They all parse XML (and optionally HTML), but they're designed for different situations.
+eksml exports three main APIs plus two object converters. They all parse XML (and optionally HTML), but they're designed for different situations.
 
 ## `parse()` — synchronous, returns a DOM tree
 
@@ -90,75 +90,61 @@ Available callbacks: `onopentag`, `onclosetag`, `ontext`, `oncdata`, `oncomment`
 - You want to build your own data structures directly from events
 - Raw speed is the priority — 1.3-2.7x faster than htmlparser2 and saxes
 
-## `tojs()` — lossless XML-to-JS object conversion
+## `lossless()` — order-preserving XML-to-JSON
 
-Use when you want a plain JS object tree instead of `TNode`. Each element becomes `{ $name, $attrs, $children }` — preserving exact element ordering, mixed content, and all attributes losslessly.
-
-```ts
-import { tojs } from "eksml";
-
-const result = tojs('<root attr="1"><item>hello</item></root>');
-// result[0].$name === "root"
-// result[0].$attrs === { attr: "1" }
-// result[0].$children[0].$name === "item"
-// result[0].$children[0].$children[0] === "hello"
-```
-
-Each element is a `JsNode`:
+Converts XML into a JSON-friendly structure that preserves element order, mixed content, and attributes losslessly. Each element is `{ tagName: children[] }`, text is `{ $text: "..." }`, attributes are `{ $attr: {...} }`. All marker keys are valid JS identifiers — use dot notation: `entry.$attr.id`, `entry.$text`.
 
 ```ts
-interface JsNode {
-  $name: string;
-  $attrs: Record<string, string | null>;
-  $children: (JsNode | string)[];
-}
+import { lossless } from "eksml";
+
+const result = lossless('<root attr="1"><item>hello</item></root>');
+// [{ "root": [{ $attr: { "attr": "1" } }, { "item": [{ $text: "hello" }] }] }]
 ```
 
 **Pick this when:**
 
-- You want a clean JS object tree without the `tagName`/`attributes`/`children` naming of `TNode`
-- You need lossless round-trip fidelity (element order, mixed content, attribute order all preserved)
-- You want to serialize to JSON for storage or IPC
+- You need fully lossless output preserving exact sibling order
+- You want a JSON-serializable format for storage or IPC
 
-## `tojsevents()` — same output, SAX-powered
+## `lossy()` — simplified lossy XML-to-JS objects
 
-Produces the exact same `JsNode` output as `tojs()`, but uses `fastStream` (SAX events) internally instead of building an intermediate `TNode` DOM. Slightly faster for larger documents.
+Produces the most compact JS object representation. Text-only elements collapse to strings, empty elements become `null`, repeated siblings become arrays, attributes are `$`-prefixed keys (e.g. `node.$href`), mixed content uses a `$$` array. All marker keys are valid JS identifiers. Sibling order between different tag names is lost.
 
 ```ts
-import { tojsevents } from "eksml";
+import { lossy } from "eksml";
 
-const result = tojsevents('<root attr="1"><item>hello</item></root>');
-// Identical output to tojs()
+const result = lossy("<root><name>Alice</name><age>30</age></root>");
+// { root: { name: "Alice", age: "30" } }
 ```
-
-> **Note:** `tojsevents()` drops `<!DOCTYPE>` declarations because `fastStream` does not emit doctype events. Use `tojs()` if you need to preserve doctypes.
 
 **Pick this when:**
 
-- Same use cases as `tojs()`, especially for larger documents
-- You don't need DOCTYPE preservation
+- You want the simplest possible object shape for easy property access
+- You don't need to preserve sibling ordering across different tag names
 
 ## HTML mode
 
-All five APIs support HTML via the `html` option. This sets sensible defaults for void elements (`<br>`, `<img>`, etc.) and raw content tags (`<script>`, `<style>`).
+All APIs support HTML via the `html` option. This sets sensible defaults for void elements (`<br>`, `<img>`, etc.) and raw content tags (`<script>`, `<style>`).
 
 ```ts
 parse('<div><br><img src="a.png"><p>text</p></div>', { html: true });
 
 transformStream(0, { html: true });
 
-fastStream({ selfClosingTags: HTML_VOID_ELEMENTS, rawContentTags: HTML_RAW_CONTENT_TAGS });
+fastStream({
+  selfClosingTags: HTML_VOID_ELEMENTS,
+  rawContentTags: HTML_RAW_CONTENT_TAGS,
+});
 
-tojs('<div><br><p>text</p></div>', { html: true });
-tojsevents('<div><br><p>text</p></div>', { html: true });
+lossy("<div><br><p>text</p></div>", { html: true });
 ```
 
 ## Quick reference
 
-| | `parse()` | `transformStream()` | `fastStream()` | `tojs()` | `tojsevents()` |
-|---|---|---|---|---|---|
-| Input | full string | chunked strings | chunked strings | full string | full string |
-| Output | `TNode[]` tree | `TNode` stream | SAX callbacks | `JsNode[]` | `JsNode[]` |
-| Async | no | yes | no | no | no |
-| Tree building | automatic | automatic | manual | automatic | automatic |
-| Best for | full documents, tree walking | streaming with DOM nodes | max throughput, custom processing | lossless JS objects | lossless JS objects (large docs) |
+|          | `parse()`                    | `transformStream()`      | `fastStream()`                    | `lossless()`      | `lossy()`            |
+| -------- | ---------------------------- | ------------------------ | --------------------------------- | ----------------- | -------------------- |
+| Input    | full string                  | chunked strings          | chunked strings                   | full string       | full string          |
+| Output   | `TNode[]` tree               | `TNode` stream           | SAX callbacks                     | `LosslessEntry[]` | keyed objects        |
+| Async    | no                           | yes                      | no                                | no                | no                   |
+| Lossless | yes                          | yes                      | yes                               | yes               | no (sibling order)   |
+| Best for | full documents, tree walking | streaming with DOM nodes | max throughput, custom processing | JSON storage/IPC  | easy property access |
