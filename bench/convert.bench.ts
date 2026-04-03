@@ -50,6 +50,14 @@ describe("convert: small XML (~100 B)", () => {
     lossy(small);
   });
 
+  bench("lossless (strict)", () => {
+    lossless(small, { strict: true });
+  });
+
+  bench("lossy (strict)", () => {
+    lossy(small, { strict: true });
+  });
+
   bench("fast-xml-parser", () => {
     fxp.parse(small);
   });
@@ -77,6 +85,14 @@ describe("convert: RSS feed (~3 KB)", () => {
 
   bench("lossy", () => {
     lossy(rssFeed);
+  });
+
+  bench("lossless (strict)", () => {
+    lossless(rssFeed, { strict: true });
+  });
+
+  bench("lossy (strict)", () => {
+    lossy(rssFeed, { strict: true });
   });
 
   bench("fast-xml-parser", () => {
@@ -108,6 +124,14 @@ describe("convert: SOAP envelope (~3 KB)", () => {
     lossy(soapEnvelope);
   });
 
+  bench("lossless (strict)", () => {
+    lossless(soapEnvelope, { strict: true });
+  });
+
+  bench("lossy (strict)", () => {
+    lossy(soapEnvelope, { strict: true });
+  });
+
   bench("fast-xml-parser", () => {
     fxp.parse(soapEnvelope);
   });
@@ -135,6 +159,14 @@ describe("convert: Atom feed (~6 KB)", () => {
 
   bench("lossy", () => {
     lossy(atomFeed);
+  });
+
+  bench("lossless (strict)", () => {
+    lossless(atomFeed, { strict: true });
+  });
+
+  bench("lossy (strict)", () => {
+    lossy(atomFeed, { strict: true });
   });
 
   bench("fast-xml-parser", () => {
@@ -166,6 +198,14 @@ describe("convert: Maven POM (~8 KB)", () => {
     lossy(pomXml);
   });
 
+  bench("lossless (strict)", () => {
+    lossless(pomXml, { strict: true });
+  });
+
+  bench("lossy (strict)", () => {
+    lossy(pomXml, { strict: true });
+  });
+
   bench("fast-xml-parser", () => {
     fxp.parse(pomXml);
   });
@@ -193,6 +233,14 @@ describe("convert: XMLTV EPG (~30 KB)", () => {
 
   bench("lossy", () => {
     lossy(xmltvEpg);
+  });
+
+  bench("lossless (strict)", () => {
+    lossless(xmltvEpg, { strict: true });
+  });
+
+  bench("lossy (strict)", () => {
+    lossy(xmltvEpg, { strict: true });
   });
 
   bench("fast-xml-parser", () => {

@@ -71,6 +71,10 @@ export interface LossyOptions {
   keepComments?: boolean;
   /** Trim whitespace from text nodes and discard whitespace-only text nodes. */
   trimWhitespace?: boolean;
+  /**
+   * Strict mode: throw on malformed XML instead of recovering silently.
+   */
+  strict?: boolean;
 }
 
 /** The value of a converted element — null (empty), string, or an object with keys. */
@@ -209,6 +213,7 @@ export function lossy(
       parseOpts.keepComments = options.keepComments;
     if (options.trimWhitespace !== undefined)
       parseOpts.trimWhitespace = options.trimWhitespace;
+    if (options.strict !== undefined) parseOpts.strict = options.strict;
   }
 
   const dom = parse(xml, parseOpts);

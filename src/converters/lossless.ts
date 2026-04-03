@@ -56,6 +56,10 @@ export interface LosslessOptions {
   keepComments?: boolean;
   /** Trim whitespace from text nodes and discard whitespace-only text nodes. */
   trimWhitespace?: boolean;
+  /**
+   * Strict mode: throw on malformed XML instead of recovering silently.
+   */
+  strict?: boolean;
 }
 
 function hasKeys(obj: Record<string, unknown>): boolean {
@@ -114,6 +118,7 @@ export function lossless(
       parseOpts.keepComments = options.keepComments;
     if (options.trimWhitespace !== undefined)
       parseOpts.trimWhitespace = options.trimWhitespace;
+    if (options.strict !== undefined) parseOpts.strict = options.strict;
   }
 
   const dom = parse(xml, parseOpts);

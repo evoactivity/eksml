@@ -274,7 +274,7 @@ describe("core parsing (from xmlParser_spec)", () => {
   it("should throw on unclosed tag", () => {
     const xmlData = "<tag>" + "    <subtag2>subtag text</subtag2>" + "</tag";
     expect(() => {
-      lossy(xmlData);
+      lossy(xmlData, { strict: true });
     }).toThrow();
   });
 });

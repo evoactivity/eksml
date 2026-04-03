@@ -58,22 +58,22 @@ describe("mixed data (from data_spec)", () => {
   // ─── Error handling: unclosed tag ──────────────────────────────────
   it("should error when closing tag is not closed", () => {
     const xmlData = `<?xml version="1.0"?><tag></tag`;
-    expect(() => lossy(xmlData)).toThrow();
+    expect(() => lossy(xmlData, { strict: true })).toThrow();
   });
 
   it("should error for unclosed comment", () => {
     const xmlData = `<?xml version="1.0"?><!-- bad `;
-    expect(() => lossy(xmlData)).toThrow();
+    expect(() => lossy(xmlData, { strict: true })).toThrow();
   });
 
   it("should error for unclosed CDATA", () => {
     const xmlData = `<?xml version="1.0"?><![CDATA ]`;
-    expect(() => lossy(xmlData)).toThrow();
+    expect(() => lossy(xmlData, { strict: true })).toThrow();
   });
 
   it("should error for unclosed PI tag", () => {
     const xmlData = `<?xml version="1.0"?><?pi  `;
-    expect(() => lossy(xmlData)).toThrow();
+    expect(() => lossy(xmlData, { strict: true })).toThrow();
   });
 
   // ─── "should parse XML when there is a space after tagname" ────────

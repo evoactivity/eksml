@@ -61,6 +61,12 @@ export interface ParseOptions {
   keepComments?: boolean;
   /** Trim whitespace from text nodes and discard whitespace-only text nodes */
   trimWhitespace?: boolean;
+  /**
+   * Strict mode: throw on malformed XML instead of recovering silently.
+   * Catches unclosed comments, CDATA sections, processing instructions,
+   * close tags, and open tags that reach end-of-input without closing.
+   */
+  strict?: boolean;
   /** Attribute name to search for (used with attrValue) */
   attrName?: string;
   /** Attribute value to search for (regex pattern) */
@@ -141,6 +147,7 @@ export function parse(
   let pos = opts.pos || 0;
   const keepComments = !!opts.keepComments;
   const trimWhitespace = !!opts.trimWhitespace;
+  const strict = !!opts.strict;
   const htmlMode = !!opts.html;
 
   const selfClosingArr: string[] =
@@ -153,6 +160,15 @@ export function parse(
     selfClosingArr.length > 0 ? new Set(selfClosingArr) : null;
   const rawContentSet: Set<string> | null =
     rawContentArr.length > 0 ? new Set(rawContentArr) : null;
+
+  /** Build an error with line/column info for strict mode. */
+  function strictError(message: string): Error {
+    const before = S.substring(0, pos);
+    const lines = before.split("\n");
+    const line = lines.length;
+    const col = lines[lines.length - 1]!.length + 1;
+    return new Error(`${message} at line ${line}, column ${col}`);
+  }
 
   /**
    * Strip whitespace-only text nodes from a children array when it also
@@ -190,6 +206,13 @@ export function parse(
           const closeStart = pos + 2;
           pos = S.indexOf(">", pos);
 
+          if (pos === -1) {
+            if (strict) throw strictError("Unclosed close tag");
+            pos = S.length;
+            stripIgnorableWhitespace(children);
+            return children;
+          }
+
           const closeTag = S.substring(closeStart, pos);
           if (closeTag.indexOf(tagName) === -1) {
             const parsedText = S.substring(0, pos).split("\n");
@@ -213,6 +236,7 @@ export function parse(
             const startCommentPos = pos;
             pos = S.indexOf("-->", pos + 3);
             if (pos === -1) {
+              if (strict) throw strictError("Unclosed comment");
               pos = S.length;
               if (keepComments) {
                 children.push(S.substring(startCommentPos));
@@ -231,6 +255,7 @@ export function parse(
             // cdata
             const cdataEndIndex = S.indexOf("]]>", pos);
             if (cdataEndIndex === -1) {
+              if (strict) throw strictError("Unclosed CDATA section");
               children.push(S.substring(pos + 9));
               pos = S.length;
             } else {
@@ -271,6 +296,7 @@ export function parse(
               }
               pos++;
             }
+            if (strict && !S[pos]) throw strictError("Unclosed declaration");
             children.push(S.substring(startDoctype, pos));
           }
           pos++;
@@ -296,6 +322,10 @@ export function parse(
         }
         pos++;
       }
+    }
+    // If we exit the loop for a named tag, input ended without a close tag
+    if (strict && tagName !== "") {
+      throw strictError(`Unclosed tag <${tagName}>`);
     }
     stripIgnorableWhitespace(children);
     return children;
@@ -370,6 +400,9 @@ export function parse(
       }
       pos++;
     }
+    if (strict && !S[pos]) {
+      throw strictError(`Unclosed tag <${tagName}>`);
+    }
     // optional parsing of children
     // Self-closing: explicit />, processing instruction ?>, or declaration <!...>
     if (
@@ -383,6 +416,7 @@ export function parse(
         const start = pos + 1;
         pos = S.indexOf(closeTag, start);
         if (pos === -1) {
+          if (strict) throw strictError(`Unclosed tag <${tagName}>`);
           // Unclosed raw content tag: consume the rest of the string
           children = [S.substring(start)];
           pos = S.length;
