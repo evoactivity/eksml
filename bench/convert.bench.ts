@@ -15,7 +15,11 @@ import { lossy } from "../src/converters/lossy.ts";
 import { XMLParser } from "fast-xml-parser";
 import { parseStringPromise } from "xml2js";
 // @ts-expect-error — txml's package.json exports don't include types
-import { parse as txmlParse, simplify as txmlSimplify } from "txml";
+import {
+  parse as txmlParse,
+  simplify as txmlSimplify,
+  simplifyLostLess as txmlSimplifyLossless,
+} from "txml";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -57,6 +61,10 @@ describe("convert: small XML (~100 B)", () => {
   bench("txml (simplify)", () => {
     txmlSimplify(txmlParse(small));
   });
+
+  bench("txml (simplifyLossless)", () => {
+    txmlSimplifyLossless(txmlParse(small));
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -81,6 +89,10 @@ describe("convert: RSS feed (~3 KB)", () => {
 
   bench("txml (simplify)", () => {
     txmlSimplify(txmlParse(rssFeed));
+  });
+
+  bench("txml (simplifyLossless)", () => {
+    txmlSimplifyLossless(txmlParse(rssFeed));
   });
 });
 
@@ -107,6 +119,10 @@ describe("convert: SOAP envelope (~3 KB)", () => {
   bench("txml (simplify)", () => {
     txmlSimplify(txmlParse(soapEnvelope));
   });
+
+  bench("txml (simplifyLossless)", () => {
+    txmlSimplifyLossless(txmlParse(soapEnvelope));
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -131,6 +147,10 @@ describe("convert: Atom feed (~6 KB)", () => {
 
   bench("txml (simplify)", () => {
     txmlSimplify(txmlParse(atomFeed));
+  });
+
+  bench("txml (simplifyLossless)", () => {
+    txmlSimplifyLossless(txmlParse(atomFeed));
   });
 });
 
@@ -157,6 +177,10 @@ describe("convert: Maven POM (~8 KB)", () => {
   bench("txml (simplify)", () => {
     txmlSimplify(txmlParse(pomXml));
   });
+
+  bench("txml (simplifyLossless)", () => {
+    txmlSimplifyLossless(txmlParse(pomXml));
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -181,5 +205,9 @@ describe("convert: XMLTV EPG (~30 KB)", () => {
 
   bench("txml (simplify)", () => {
     txmlSimplify(txmlParse(xmltvEpg));
+  });
+
+  bench("txml (simplifyLossless)", () => {
+    txmlSimplifyLossless(txmlParse(xmltvEpg));
   });
 });
