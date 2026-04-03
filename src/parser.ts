@@ -1,9 +1,3 @@
-/**
- * @author: Tobias Nickel
- * @created: 06.04.2015
- * I needed a small xmlparser that can be used in a worker.
- */
-
 import { decodeXML, decodeHTML } from "entities";
 import { filter } from "./utilities/filter.ts";
 import {
