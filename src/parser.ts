@@ -169,23 +169,30 @@ export function parse(
   }
 
   /**
-   * Strip whitespace-only text nodes from a children array when it also
-   * contains element nodes (i.e. "ignorable whitespace" per XML spec).
+   * Strip whitespace-only text nodes from a children array when it
+   * contains only element nodes and whitespace-only text (i.e. "ignorable
+   * whitespace" per XML spec). Mixed-content elements — those with at
+   * least one non-whitespace text child — are left untouched so that
+   * whitespace formatting is preserved.
    * Mutates the array in-place for performance.
    */
   function stripIgnorableWhitespace(children: (TNode | string)[]): void {
     let hasElement = false;
     let hasWhitespaceOnlyText = false;
+    let hasNonWhitespaceText = false;
     for (let i = 0; i < children.length; i++) {
       const child = children[i]!;
       if (typeof child !== "string") {
         hasElement = true;
       } else if (child.trim().length === 0) {
         hasWhitespaceOnlyText = true;
+      } else {
+        hasNonWhitespaceText = true;
       }
-      if (hasElement && hasWhitespaceOnlyText) break;
     }
-    if (hasElement && hasWhitespaceOnlyText) {
+    // Only strip when children are exclusively elements + whitespace-only
+    // text (pure element containers). Mixed content is left intact.
+    if (hasElement && hasWhitespaceOnlyText && !hasNonWhitespaceText) {
       // Compact in-place with a write pointer (avoids O(n) splice per removal)
       let writeIndex = 0;
       for (let i = 0; i < children.length; i++) {

@@ -1412,6 +1412,8 @@ exports[`user example > matches the expected output 1`] = `
           {
             "fourth": "Nested text",
           },
+          "
+  ",
         ],
         "$another": "attribute",
       },

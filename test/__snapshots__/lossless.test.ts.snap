@@ -3826,7 +3826,15 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
       {
         "dependencies": [
           {
+            "$text": "
+    ",
+          },
+          {
             "$comment": " Spring Boot Starters ",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -3847,6 +3855,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -3863,6 +3875,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
                 ],
               },
             ],
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -3883,6 +3899,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -3899,6 +3919,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
                 ],
               },
             ],
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -3919,6 +3943,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -3937,7 +3965,16 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+
+    ",
+          },
+          {
             "$comment": " Spring Cloud ",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -3958,6 +3995,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -3976,7 +4017,16 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+
+    ",
+          },
+          {
             "$comment": " Database ",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4004,6 +4054,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -4027,6 +4081,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
                 ],
               },
             ],
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4061,7 +4119,16 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+
+    ",
+          },
+          {
             "$comment": " Serialization ",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4089,6 +4156,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -4112,6 +4183,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
                 ],
               },
             ],
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4139,7 +4214,16 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+
+    ",
+          },
+          {
             "$comment": " gRPC ",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4167,6 +4251,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -4190,6 +4278,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
                 ],
               },
             ],
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4217,7 +4309,16 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+
+    ",
+          },
+          {
             "$comment": " Code Generation ",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4243,6 +4344,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
                 ],
               },
             ],
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4277,7 +4382,16 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+
+    ",
+          },
+          {
             "$comment": " Observability ",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4298,6 +4412,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -4314,6 +4432,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
                 ],
               },
             ],
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4334,7 +4456,16 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+
+    ",
+          },
+          {
             "$comment": " Testing ",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4384,6 +4515,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -4407,6 +4542,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
                 ],
               },
             ],
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4434,6 +4573,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -4457,6 +4600,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
                 ],
               },
             ],
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "dependency": [
@@ -4484,6 +4631,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
             ],
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "dependency": [
               {
                 "groupId": [
@@ -4507,6 +4658,10 @@ exports[`fixtures > preserves comments in POM with keepComments 1`] = `
                 ],
               },
             ],
+          },
+          {
+            "$text": "
+  ",
           },
         ],
       },

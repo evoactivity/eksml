@@ -179,12 +179,14 @@ describe("entity handling (from entities_spec)", () => {
     expect(result[0]["!DOCTYPE"]).toBeDefined();
     expect(result[0]["!DOCTYPE"]["$x"]).toBe(null);
     // Y is inside the $$ mixed-content array as { Y: null }
+    // Leading whitespace is preserved because this is mixed content (has CDATA text)
     const mixed = result[1].X.$$;
     expect(mixed).toBeDefined();
-    expect(mixed[0]).toEqual({ Y: null });
+    expect(mixed[0].trim()).toBe("");
+    expect(mixed[1]).toEqual({ Y: null });
     // CDATA content and trailing text (may include whitespace before closing tag)
-    expect(mixed[1]).toBe("--><X><Z/><!--");
-    expect(mixed[2]).toContain("-->");
+    expect(mixed[2]).toBe("--><X><Z/><!--");
+    expect(mixed[3]).toContain("-->");
   });
 
   it("should allow !ATTLIST & !NOTATION in DOCTYPE", () => {

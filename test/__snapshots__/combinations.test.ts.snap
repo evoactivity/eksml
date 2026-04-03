@@ -312,7 +312,15 @@ exports[`option combinations > (defaults) > nested with multiple features > loss
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -334,7 +342,11 @@ exports[`option combinations > (defaults) > nested with multiple features > loss
   "doc": {
     "header": {
       "$$": [
+        "
+    ",
         "raw",
+        "
+    ",
         {
           "meta": null,
         },
@@ -358,7 +370,11 @@ exports[`option combinations > (defaults) > nested with multiple features > pars
           "title": "a&amp;b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -730,7 +746,15 @@ exports[`option combinations > entities > nested with multiple features > lossle
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -752,7 +776,11 @@ exports[`option combinations > entities > nested with multiple features > lossy 
   "doc": {
     "header": {
       "$$": [
+        "
+    ",
         "raw",
+        "
+    ",
         {
           "meta": null,
         },
@@ -776,7 +804,11 @@ exports[`option combinations > entities > nested with multiple features > parse 
           "title": "a&b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -1227,7 +1259,15 @@ exports[`option combinations > html > nested with multiple features > lossless 1
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -1249,7 +1289,11 @@ exports[`option combinations > html > nested with multiple features > lossy 1`] 
   "doc": {
     "header": {
       "$$": [
+        "
+    ",
         "raw",
+        "
+    ",
         {
           "meta": null,
         },
@@ -1273,7 +1317,11 @@ exports[`option combinations > html > nested with multiple features > parse 1`] 
           "title": "a&amp;b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -1724,7 +1772,15 @@ exports[`option combinations > html, entities > nested with multiple features > 
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -1746,7 +1802,11 @@ exports[`option combinations > html, entities > nested with multiple features > 
   "doc": {
     "header": {
       "$$": [
+        "
+    ",
         "raw",
+        "
+    ",
         {
           "meta": null,
         },
@@ -1770,7 +1830,11 @@ exports[`option combinations > html, entities > nested with multiple features > 
           "title": "a&b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -2062,7 +2126,15 @@ exports[`option combinations > html, keepComments > comments and whitespace > lo
   {
     "root": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " a comment ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "child": [
@@ -2072,7 +2144,15 @@ exports[`option combinations > html, keepComments > comments and whitespace > lo
         ],
       },
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " another ",
+      },
+      {
+        "$text": "
+",
       },
     ],
   },
@@ -2083,11 +2163,19 @@ exports[`option combinations > html, keepComments > comments and whitespace > lo
 {
   "root": {
     "$$": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "child": "  spaced  ",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
   },
 }
@@ -2098,7 +2186,11 @@ exports[`option combinations > html, keepComments > comments and whitespace > pa
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "attributes": null,
         "children": [
@@ -2106,7 +2198,11 @@ exports[`option combinations > html, keepComments > comments and whitespace > pa
         ],
         "tagName": "child",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
     "tagName": "root",
   },
@@ -2228,7 +2324,15 @@ exports[`option combinations > html, keepComments > nested with multiple feature
   {
     "doc": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " header ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "header": [
@@ -2238,7 +2342,15 @@ exports[`option combinations > html, keepComments > nested with multiple feature
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -2250,6 +2362,10 @@ exports[`option combinations > html, keepComments > nested with multiple feature
           },
         ],
       },
+      {
+        "$text": "
+",
+      },
     ],
   },
 ]
@@ -2259,11 +2375,19 @@ exports[`option combinations > html, keepComments > nested with multiple feature
 {
   "doc": {
     "$$": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "header": {
           "$$": [
+            "
+    ",
             "raw",
+            "
+    ",
             {
               "meta": null,
             },
@@ -2274,6 +2398,8 @@ exports[`option combinations > html, keepComments > nested with multiple feature
           "$title": "a&amp;b",
         },
       },
+      "
+",
     ],
   },
 }
@@ -2284,13 +2410,21 @@ exports[`option combinations > html, keepComments > nested with multiple feature
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "attributes": {
           "title": "a&amp;b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -2302,6 +2436,8 @@ exports[`option combinations > html, keepComments > nested with multiple feature
         ],
         "tagName": "header",
       },
+      "
+",
     ],
     "tagName": "doc",
   },
@@ -2582,7 +2718,15 @@ exports[`option combinations > html, keepComments, entities > comments and white
   {
     "root": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " a comment ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "child": [
@@ -2592,7 +2736,15 @@ exports[`option combinations > html, keepComments, entities > comments and white
         ],
       },
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " another ",
+      },
+      {
+        "$text": "
+",
       },
     ],
   },
@@ -2603,11 +2755,19 @@ exports[`option combinations > html, keepComments, entities > comments and white
 {
   "root": {
     "$$": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "child": "  spaced  ",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
   },
 }
@@ -2618,7 +2778,11 @@ exports[`option combinations > html, keepComments, entities > comments and white
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "attributes": null,
         "children": [
@@ -2626,7 +2790,11 @@ exports[`option combinations > html, keepComments, entities > comments and white
         ],
         "tagName": "child",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
     "tagName": "root",
   },
@@ -2748,7 +2916,15 @@ exports[`option combinations > html, keepComments, entities > nested with multip
   {
     "doc": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " header ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "header": [
@@ -2758,7 +2934,15 @@ exports[`option combinations > html, keepComments, entities > nested with multip
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -2770,6 +2954,10 @@ exports[`option combinations > html, keepComments, entities > nested with multip
           },
         ],
       },
+      {
+        "$text": "
+",
+      },
     ],
   },
 ]
@@ -2779,11 +2967,19 @@ exports[`option combinations > html, keepComments, entities > nested with multip
 {
   "doc": {
     "$$": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "header": {
           "$$": [
+            "
+    ",
             "raw",
+            "
+    ",
             {
               "meta": null,
             },
@@ -2794,6 +2990,8 @@ exports[`option combinations > html, keepComments, entities > nested with multip
           "$title": "a&b",
         },
       },
+      "
+",
     ],
   },
 }
@@ -2804,13 +3002,21 @@ exports[`option combinations > html, keepComments, entities > nested with multip
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "attributes": {
           "title": "a&b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -2822,6 +3028,8 @@ exports[`option combinations > html, keepComments, entities > nested with multip
         ],
         "tagName": "header",
       },
+      "
+",
     ],
     "tagName": "doc",
   },
@@ -3102,7 +3310,15 @@ exports[`option combinations > html, keepComments, strict > comments and whitesp
   {
     "root": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " a comment ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "child": [
@@ -3112,7 +3328,15 @@ exports[`option combinations > html, keepComments, strict > comments and whitesp
         ],
       },
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " another ",
+      },
+      {
+        "$text": "
+",
       },
     ],
   },
@@ -3123,11 +3347,19 @@ exports[`option combinations > html, keepComments, strict > comments and whitesp
 {
   "root": {
     "$$": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "child": "  spaced  ",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
   },
 }
@@ -3138,7 +3370,11 @@ exports[`option combinations > html, keepComments, strict > comments and whitesp
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "attributes": null,
         "children": [
@@ -3146,7 +3382,11 @@ exports[`option combinations > html, keepComments, strict > comments and whitesp
         ],
         "tagName": "child",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
     "tagName": "root",
   },
@@ -3268,7 +3508,15 @@ exports[`option combinations > html, keepComments, strict > nested with multiple
   {
     "doc": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " header ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "header": [
@@ -3278,7 +3526,15 @@ exports[`option combinations > html, keepComments, strict > nested with multiple
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -3290,6 +3546,10 @@ exports[`option combinations > html, keepComments, strict > nested with multiple
           },
         ],
       },
+      {
+        "$text": "
+",
+      },
     ],
   },
 ]
@@ -3299,11 +3559,19 @@ exports[`option combinations > html, keepComments, strict > nested with multiple
 {
   "doc": {
     "$$": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "header": {
           "$$": [
+            "
+    ",
             "raw",
+            "
+    ",
             {
               "meta": null,
             },
@@ -3314,6 +3582,8 @@ exports[`option combinations > html, keepComments, strict > nested with multiple
           "$title": "a&amp;b",
         },
       },
+      "
+",
     ],
   },
 }
@@ -3324,13 +3594,21 @@ exports[`option combinations > html, keepComments, strict > nested with multiple
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "attributes": {
           "title": "a&amp;b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -3342,6 +3620,8 @@ exports[`option combinations > html, keepComments, strict > nested with multiple
         ],
         "tagName": "header",
       },
+      "
+",
     ],
     "tagName": "doc",
   },
@@ -3580,7 +3860,15 @@ exports[`option combinations > html, keepComments, strict, entities > comments a
   {
     "root": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " a comment ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "child": [
@@ -3590,7 +3878,15 @@ exports[`option combinations > html, keepComments, strict, entities > comments a
         ],
       },
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " another ",
+      },
+      {
+        "$text": "
+",
       },
     ],
   },
@@ -3601,11 +3897,19 @@ exports[`option combinations > html, keepComments, strict, entities > comments a
 {
   "root": {
     "$$": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "child": "  spaced  ",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
   },
 }
@@ -3616,7 +3920,11 @@ exports[`option combinations > html, keepComments, strict, entities > comments a
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "attributes": null,
         "children": [
@@ -3624,7 +3932,11 @@ exports[`option combinations > html, keepComments, strict, entities > comments a
         ],
         "tagName": "child",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
     "tagName": "root",
   },
@@ -3746,7 +4058,15 @@ exports[`option combinations > html, keepComments, strict, entities > nested wit
   {
     "doc": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " header ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "header": [
@@ -3756,7 +4076,15 @@ exports[`option combinations > html, keepComments, strict, entities > nested wit
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -3768,6 +4096,10 @@ exports[`option combinations > html, keepComments, strict, entities > nested wit
           },
         ],
       },
+      {
+        "$text": "
+",
+      },
     ],
   },
 ]
@@ -3777,11 +4109,19 @@ exports[`option combinations > html, keepComments, strict, entities > nested wit
 {
   "doc": {
     "$$": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "header": {
           "$$": [
+            "
+    ",
             "raw",
+            "
+    ",
             {
               "meta": null,
             },
@@ -3792,6 +4132,8 @@ exports[`option combinations > html, keepComments, strict, entities > nested wit
           "$title": "a&b",
         },
       },
+      "
+",
     ],
   },
 }
@@ -3802,13 +4144,21 @@ exports[`option combinations > html, keepComments, strict, entities > nested wit
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "attributes": {
           "title": "a&b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -3820,6 +4170,8 @@ exports[`option combinations > html, keepComments, strict, entities > nested wit
         ],
         "tagName": "header",
       },
+      "
+",
     ],
     "tagName": "doc",
   },
@@ -6189,7 +6541,15 @@ exports[`option combinations > html, strict > nested with multiple features > lo
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -6211,7 +6571,11 @@ exports[`option combinations > html, strict > nested with multiple features > lo
   "doc": {
     "header": {
       "$$": [
+        "
+    ",
         "raw",
+        "
+    ",
         {
           "meta": null,
         },
@@ -6235,7 +6599,11 @@ exports[`option combinations > html, strict > nested with multiple features > pa
           "title": "a&amp;b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -6644,7 +7012,15 @@ exports[`option combinations > html, strict, entities > nested with multiple fea
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -6666,7 +7042,11 @@ exports[`option combinations > html, strict, entities > nested with multiple fea
   "doc": {
     "header": {
       "$$": [
+        "
+    ",
         "raw",
+        "
+    ",
         {
           "meta": null,
         },
@@ -6690,7 +7070,11 @@ exports[`option combinations > html, strict, entities > nested with multiple fea
           "title": "a&b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -8741,7 +9125,15 @@ exports[`option combinations > keepComments > comments and whitespace > lossless
   {
     "root": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " a comment ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "child": [
@@ -8751,7 +9143,15 @@ exports[`option combinations > keepComments > comments and whitespace > lossless
         ],
       },
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " another ",
+      },
+      {
+        "$text": "
+",
       },
     ],
   },
@@ -8762,11 +9162,19 @@ exports[`option combinations > keepComments > comments and whitespace > lossy 1`
 {
   "root": {
     "$$": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "child": "  spaced  ",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
   },
 }
@@ -8777,7 +9185,11 @@ exports[`option combinations > keepComments > comments and whitespace > parse 1`
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "attributes": null,
         "children": [
@@ -8785,7 +9197,11 @@ exports[`option combinations > keepComments > comments and whitespace > parse 1`
         ],
         "tagName": "child",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
     "tagName": "root",
   },
@@ -8907,7 +9323,15 @@ exports[`option combinations > keepComments > nested with multiple features > lo
   {
     "doc": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " header ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "header": [
@@ -8917,7 +9341,15 @@ exports[`option combinations > keepComments > nested with multiple features > lo
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -8929,6 +9361,10 @@ exports[`option combinations > keepComments > nested with multiple features > lo
           },
         ],
       },
+      {
+        "$text": "
+",
+      },
     ],
   },
 ]
@@ -8938,11 +9374,19 @@ exports[`option combinations > keepComments > nested with multiple features > lo
 {
   "doc": {
     "$$": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "header": {
           "$$": [
+            "
+    ",
             "raw",
+            "
+    ",
             {
               "meta": null,
             },
@@ -8953,6 +9397,8 @@ exports[`option combinations > keepComments > nested with multiple features > lo
           "$title": "a&amp;b",
         },
       },
+      "
+",
     ],
   },
 }
@@ -8963,13 +9409,21 @@ exports[`option combinations > keepComments > nested with multiple features > pa
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "attributes": {
           "title": "a&amp;b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -8981,6 +9435,8 @@ exports[`option combinations > keepComments > nested with multiple features > pa
         ],
         "tagName": "header",
       },
+      "
+",
     ],
     "tagName": "doc",
   },
@@ -9182,7 +9638,15 @@ exports[`option combinations > keepComments, entities > comments and whitespace 
   {
     "root": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " a comment ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "child": [
@@ -9192,7 +9656,15 @@ exports[`option combinations > keepComments, entities > comments and whitespace 
         ],
       },
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " another ",
+      },
+      {
+        "$text": "
+",
       },
     ],
   },
@@ -9203,11 +9675,19 @@ exports[`option combinations > keepComments, entities > comments and whitespace 
 {
   "root": {
     "$$": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "child": "  spaced  ",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
   },
 }
@@ -9218,7 +9698,11 @@ exports[`option combinations > keepComments, entities > comments and whitespace 
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "attributes": null,
         "children": [
@@ -9226,7 +9710,11 @@ exports[`option combinations > keepComments, entities > comments and whitespace 
         ],
         "tagName": "child",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
     "tagName": "root",
   },
@@ -9348,7 +9836,15 @@ exports[`option combinations > keepComments, entities > nested with multiple fea
   {
     "doc": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " header ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "header": [
@@ -9358,7 +9854,15 @@ exports[`option combinations > keepComments, entities > nested with multiple fea
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -9370,6 +9874,10 @@ exports[`option combinations > keepComments, entities > nested with multiple fea
           },
         ],
       },
+      {
+        "$text": "
+",
+      },
     ],
   },
 ]
@@ -9379,11 +9887,19 @@ exports[`option combinations > keepComments, entities > nested with multiple fea
 {
   "doc": {
     "$$": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "header": {
           "$$": [
+            "
+    ",
             "raw",
+            "
+    ",
             {
               "meta": null,
             },
@@ -9394,6 +9910,8 @@ exports[`option combinations > keepComments, entities > nested with multiple fea
           "$title": "a&b",
         },
       },
+      "
+",
     ],
   },
 }
@@ -9404,13 +9922,21 @@ exports[`option combinations > keepComments, entities > nested with multiple fea
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "attributes": {
           "title": "a&b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -9422,6 +9948,8 @@ exports[`option combinations > keepComments, entities > nested with multiple fea
         ],
         "tagName": "header",
       },
+      "
+",
     ],
     "tagName": "doc",
   },
@@ -9623,7 +10151,15 @@ exports[`option combinations > keepComments, strict > comments and whitespace > 
   {
     "root": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " a comment ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "child": [
@@ -9633,7 +10169,15 @@ exports[`option combinations > keepComments, strict > comments and whitespace > 
         ],
       },
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " another ",
+      },
+      {
+        "$text": "
+",
       },
     ],
   },
@@ -9644,11 +10188,19 @@ exports[`option combinations > keepComments, strict > comments and whitespace > 
 {
   "root": {
     "$$": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "child": "  spaced  ",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
   },
 }
@@ -9659,7 +10211,11 @@ exports[`option combinations > keepComments, strict > comments and whitespace > 
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "attributes": null,
         "children": [
@@ -9667,7 +10223,11 @@ exports[`option combinations > keepComments, strict > comments and whitespace > 
         ],
         "tagName": "child",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
     "tagName": "root",
   },
@@ -9789,7 +10349,15 @@ exports[`option combinations > keepComments, strict > nested with multiple featu
   {
     "doc": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " header ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "header": [
@@ -9799,7 +10367,15 @@ exports[`option combinations > keepComments, strict > nested with multiple featu
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -9811,6 +10387,10 @@ exports[`option combinations > keepComments, strict > nested with multiple featu
           },
         ],
       },
+      {
+        "$text": "
+",
+      },
     ],
   },
 ]
@@ -9820,11 +10400,19 @@ exports[`option combinations > keepComments, strict > nested with multiple featu
 {
   "doc": {
     "$$": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "header": {
           "$$": [
+            "
+    ",
             "raw",
+            "
+    ",
             {
               "meta": null,
             },
@@ -9835,6 +10423,8 @@ exports[`option combinations > keepComments, strict > nested with multiple featu
           "$title": "a&amp;b",
         },
       },
+      "
+",
     ],
   },
 }
@@ -9845,13 +10435,21 @@ exports[`option combinations > keepComments, strict > nested with multiple featu
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "attributes": {
           "title": "a&amp;b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -9863,6 +10461,8 @@ exports[`option combinations > keepComments, strict > nested with multiple featu
         ],
         "tagName": "header",
       },
+      "
+",
     ],
     "tagName": "doc",
   },
@@ -10022,7 +10622,15 @@ exports[`option combinations > keepComments, strict, entities > comments and whi
   {
     "root": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " a comment ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "child": [
@@ -10032,7 +10640,15 @@ exports[`option combinations > keepComments, strict, entities > comments and whi
         ],
       },
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " another ",
+      },
+      {
+        "$text": "
+",
       },
     ],
   },
@@ -10043,11 +10659,19 @@ exports[`option combinations > keepComments, strict, entities > comments and whi
 {
   "root": {
     "$$": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "child": "  spaced  ",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
   },
 }
@@ -10058,7 +10682,11 @@ exports[`option combinations > keepComments, strict, entities > comments and whi
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- a comment -->",
+      "
+  ",
       {
         "attributes": null,
         "children": [
@@ -10066,7 +10694,11 @@ exports[`option combinations > keepComments, strict, entities > comments and whi
         ],
         "tagName": "child",
       },
+      "
+  ",
       "<!-- another -->",
+      "
+",
     ],
     "tagName": "root",
   },
@@ -10188,7 +10820,15 @@ exports[`option combinations > keepComments, strict, entities > nested with mult
   {
     "doc": [
       {
+        "$text": "
+  ",
+      },
+      {
         "$comment": " header ",
+      },
+      {
+        "$text": "
+  ",
       },
       {
         "header": [
@@ -10198,7 +10838,15 @@ exports[`option combinations > keepComments, strict, entities > nested with mult
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -10210,6 +10858,10 @@ exports[`option combinations > keepComments, strict, entities > nested with mult
           },
         ],
       },
+      {
+        "$text": "
+",
+      },
     ],
   },
 ]
@@ -10219,11 +10871,19 @@ exports[`option combinations > keepComments, strict, entities > nested with mult
 {
   "doc": {
     "$$": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "header": {
           "$$": [
+            "
+    ",
             "raw",
+            "
+    ",
             {
               "meta": null,
             },
@@ -10234,6 +10894,8 @@ exports[`option combinations > keepComments, strict, entities > nested with mult
           "$title": "a&b",
         },
       },
+      "
+",
     ],
   },
 }
@@ -10244,13 +10906,21 @@ exports[`option combinations > keepComments, strict, entities > nested with mult
   {
     "attributes": null,
     "children": [
+      "
+  ",
       "<!-- header -->",
+      "
+  ",
       {
         "attributes": {
           "title": "a&b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -10262,6 +10932,8 @@ exports[`option combinations > keepComments, strict, entities > nested with mult
         ],
         "tagName": "header",
       },
+      "
+",
     ],
     "tagName": "doc",
   },
@@ -12236,7 +12908,15 @@ exports[`option combinations > strict > nested with multiple features > lossless
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -12258,7 +12938,11 @@ exports[`option combinations > strict > nested with multiple features > lossy 1`
   "doc": {
     "header": {
       "$$": [
+        "
+    ",
         "raw",
+        "
+    ",
         {
           "meta": null,
         },
@@ -12282,7 +12966,11 @@ exports[`option combinations > strict > nested with multiple features > parse 1`
           "title": "a&amp;b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
@@ -12612,7 +13300,15 @@ exports[`option combinations > strict, entities > nested with multiple features 
             },
           },
           {
+            "$text": "
+    ",
+          },
+          {
             "$text": "raw",
+          },
+          {
+            "$text": "
+    ",
           },
           {
             "meta": [],
@@ -12634,7 +13330,11 @@ exports[`option combinations > strict, entities > nested with multiple features 
   "doc": {
     "header": {
       "$$": [
+        "
+    ",
         "raw",
+        "
+    ",
         {
           "meta": null,
         },
@@ -12658,7 +13358,11 @@ exports[`option combinations > strict, entities > nested with multiple features 
           "title": "a&b",
         },
         "children": [
+          "
+    ",
           "raw",
+          "
+    ",
           {
             "attributes": null,
             "children": [],
