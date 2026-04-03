@@ -2,7 +2,7 @@ import { defineConfig } from 'tsdown'
 
 export default defineConfig({
   entry: [
-    'src/index.ts',
+    'src/eksml.ts',
     'src/parser.ts',
     'src/writer.ts',
     'src/fastStream.ts',

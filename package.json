@@ -9,8 +9,8 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
+      "types": "./dist/eksml.d.mts",
+      "import": "./dist/eksml.mjs"
     },
     "./parser": {
       "types": "./dist/parser.d.mts",
@@ -41,8 +41,8 @@
       "import": "./dist/utilities/index.mjs"
     }
   },
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
+  "main": "./dist/eksml.mjs",
+  "types": "./dist/eksml.d.mts",
   "files": [
     "dist"
   ],

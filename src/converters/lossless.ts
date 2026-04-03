@@ -71,17 +71,20 @@ function convertString(text: string): LosslessEntry {
 }
 
 /**
- * Parse an XML/HTML string into an order-preserving JSON-friendly structure.
+ * Parse an XML/HTML string or convert a pre-parsed DOM tree into an
+ * order-preserving JSON-friendly structure.
  *
- * @param xml - The XML/HTML string to convert
- * @param options - Parsing options
+ * @param input - An XML/HTML string, or a pre-parsed `(TNode | string)[]` DOM array
+ * @param options - Parsing options (only used when `input` is a string)
  * @returns Array of top-level JSON entries
  */
+export function lossless(input: string, options?: LosslessOptions): LosslessEntry[];
+export function lossless(input: (TNode | string)[]): LosslessEntry[];
 export function lossless(
-  xml: string,
+  input: string | (TNode | string)[],
   options?: LosslessOptions,
 ): LosslessEntry[] {
-  const dom = parse(xml, { ...options });
+  const dom = typeof input === "string" ? parse(input, { ...options }) : input;
   const result: LosslessEntry[] = [];
   for (let i = 0; i < dom.length; i++) {
     const node = dom[i]!;

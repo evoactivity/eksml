@@ -189,19 +189,22 @@ function convertNode(node: TNode): LossyValue {
 }
 
 /**
- * Parse an XML/HTML string into the most simplified lossy JS object format.
+ * Parse an XML/HTML string or convert a pre-parsed DOM tree into the most
+ * simplified lossy JS object format.
  *
- * @param xml - The XML/HTML string to convert
- * @param options - Parsing options
+ * @param input - An XML/HTML string, or a pre-parsed `(TNode | string)[]` DOM array
+ * @param options - Parsing options (only used when `input` is a string)
  * @returns A LossyValue representing the document. For a single root element
  *          this is typically `{ rootTag: ... }`. For multiple top-level nodes
  *          an array is returned.
  */
+export function lossy(input: string, options?: LossyOptions): LossyValue | LossyValue[];
+export function lossy(input: (TNode | string)[]): LossyValue | LossyValue[];
 export function lossy(
-  xml: string,
+  input: string | (TNode | string)[],
   options?: LossyOptions,
 ): LossyValue | LossyValue[] {
-  const dom = parse(xml, { ...options });
+  const dom = typeof input === "string" ? parse(input, { ...options }) : input;
 
   // Filter out whitespace-only top-level text and processing instructions
   // (e.g. <?xml version="1.0"?>) which are metadata, not content.
