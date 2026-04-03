@@ -1,6 +1,6 @@
 # eksml usage guide
 
-eksml exports three parsing APIs. They all parse XML (and optionally HTML), but they're designed for different situations.
+eksml exports five main APIs. They all parse XML (and optionally HTML), but they're designed for different situations.
 
 ## `parse()` — synchronous, returns a DOM tree
 
@@ -90,9 +90,57 @@ Available callbacks: `onopentag`, `onclosetag`, `ontext`, `oncdata`, `oncomment`
 - You want to build your own data structures directly from events
 - Raw speed is the priority — 1.3-2.7x faster than htmlparser2 and saxes
 
+## `tojs()` — lossless XML-to-JS object conversion
+
+Use when you want a plain JS object tree instead of `TNode`. Each element becomes `{ $name, $attrs, $children }` — preserving exact element ordering, mixed content, and all attributes losslessly.
+
+```ts
+import { tojs } from "eksml";
+
+const result = tojs('<root attr="1"><item>hello</item></root>');
+// result[0].$name === "root"
+// result[0].$attrs === { attr: "1" }
+// result[0].$children[0].$name === "item"
+// result[0].$children[0].$children[0] === "hello"
+```
+
+Each element is a `JsNode`:
+
+```ts
+interface JsNode {
+  $name: string;
+  $attrs: Record<string, string | null>;
+  $children: (JsNode | string)[];
+}
+```
+
+**Pick this when:**
+
+- You want a clean JS object tree without the `tagName`/`attributes`/`children` naming of `TNode`
+- You need lossless round-trip fidelity (element order, mixed content, attribute order all preserved)
+- You want to serialize to JSON for storage or IPC
+
+## `tojsevents()` — same output, SAX-powered
+
+Produces the exact same `JsNode` output as `tojs()`, but uses `fastStream` (SAX events) internally instead of building an intermediate `TNode` DOM. Slightly faster for larger documents.
+
+```ts
+import { tojsevents } from "eksml";
+
+const result = tojsevents('<root attr="1"><item>hello</item></root>');
+// Identical output to tojs()
+```
+
+> **Note:** `tojsevents()` drops `<!DOCTYPE>` declarations because `fastStream` does not emit doctype events. Use `tojs()` if you need to preserve doctypes.
+
+**Pick this when:**
+
+- Same use cases as `tojs()`, especially for larger documents
+- You don't need DOCTYPE preservation
+
 ## HTML mode
 
-All three APIs support HTML via the `html` option. This sets sensible defaults for void elements (`<br>`, `<img>`, etc.) and raw content tags (`<script>`, `<style>`).
+All five APIs support HTML via the `html` option. This sets sensible defaults for void elements (`<br>`, `<img>`, etc.) and raw content tags (`<script>`, `<style>`).
 
 ```ts
 parse('<div><br><img src="a.png"><p>text</p></div>', { html: true });
@@ -100,14 +148,17 @@ parse('<div><br><img src="a.png"><p>text</p></div>', { html: true });
 transformStream(0, { html: true });
 
 fastStream({ selfClosingTags: HTML_VOID_ELEMENTS, rawContentTags: HTML_RAW_CONTENT_TAGS });
+
+tojs('<div><br><p>text</p></div>', { html: true });
+tojsevents('<div><br><p>text</p></div>', { html: true });
 ```
 
 ## Quick reference
 
-| | `parse()` | `transformStream()` | `fastStream()` |
-|---|---|---|---|
-| Input | full string | chunked strings | chunked strings |
-| Output | `TNode[]` tree | `TNode` stream | SAX callbacks |
-| Async | no | yes | no |
-| Tree building | automatic | automatic | manual |
-| Best for | full documents in memory | streaming with DOM nodes | max throughput, custom processing |
+| | `parse()` | `transformStream()` | `fastStream()` | `tojs()` | `tojsevents()` |
+|---|---|---|---|---|---|
+| Input | full string | chunked strings | chunked strings | full string | full string |
+| Output | `TNode[]` tree | `TNode` stream | SAX callbacks | `JsNode[]` | `JsNode[]` |
+| Async | no | yes | no | no | no |
+| Tree building | automatic | automatic | manual | automatic | automatic |
+| Best for | full documents, tree walking | streaming with DOM nodes | max throughput, custom processing | lossless JS objects | lossless JS objects (large docs) |

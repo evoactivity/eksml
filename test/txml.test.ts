@@ -4,8 +4,6 @@ import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import {
   parse,
-  simplify,
-  simplifyLostLess,
   filter,
   stringify,
   toContentString,
@@ -232,13 +230,6 @@ describe("parse", () => {
     }).toThrow();
   });
 
-  it("simplify option with parse", () => {
-    // Should run without error (Issue #24)
-    parse('<?xml version="1.0"?><methodCall>TEST</methodCall>', {
-      simplify: true,
-    });
-  });
-
   it("SVG with comment", () => {
     expect(parse(commentedSvg)).toEqual([
       {
@@ -427,88 +418,6 @@ describe("parse", () => {
 });
 
 // =================================================================
-// simplify
-// =================================================================
-describe("simplify", () => {
-  it("simplifies a DOM tree", () => {
-    expect(
-      JSON.stringify(
-        simplify(
-          asNodes(
-            parse(
-              '<test><cc>one</cc>test<cc f="test"><sub>3</sub>two</cc><dd></dd></test>',
-            ),
-          ),
-        ),
-      ),
-    ).toBe(
-      JSON.stringify({
-        test: {
-          cc: ["one", { sub: "3", _attributes: { f: "test" } }],
-          dd: "",
-        },
-      }),
-    );
-  });
-
-  it("returns empty string for empty array", () => {
-    expect(simplify([])).toBe("");
-  });
-
-  it("returns string for single text child", () => {
-    expect(simplify(["hello"])).toBe("hello");
-  });
-
-  it("collapses single-element arrays", () => {
-    const dom = asNodes(parse("<root><a>1</a><b>2</b></root>"));
-    const result = simplify(dom) as Record<string, any>;
-    expect(result.root.a).toBe("1");
-    expect(result.root.b).toBe("2");
-  });
-
-  it("keeps arrays for repeated tags", () => {
-    const result = simplify(
-      asNodes(
-        parse(
-          "<list><item>First</item><item>Second</item><item>Third</item></list>",
-        ),
-      ),
-    ) as Record<string, any>;
-    expect(result.list.item).toEqual(["First", "Second", "Third"]);
-  });
-
-  it("attaches _attributes to simplified objects", () => {
-    const dom = asNodes(parse('<root><a id="1"><b>text</b></a></root>'));
-    const result = simplify(dom) as Record<string, any>;
-    expect(result.root.a._attributes).toEqual({ id: "1" });
-  });
-});
-
-// =================================================================
-// simplifyLostLess
-// =================================================================
-describe("simplifyLostLess", () => {
-  it("returns empty object for empty array", () => {
-    expect(simplifyLostLess([])).toEqual({});
-  });
-
-  it("returns string for single text child", () => {
-    expect(simplifyLostLess(["3"])).toBe("3");
-  });
-
-  it("ignores non-objects", () => {
-    expect(simplifyLostLess(["1", 2 as any])).toEqual({});
-  });
-
-  it("returns value + _attributes when parent has attributes", () => {
-    expect(simplifyLostLess(["hello"], { id: "1" })).toEqual({
-      _attributes: { id: "1" },
-      value: "hello",
-    });
-  });
-});
-
-// =================================================================
 // filter
 // =================================================================
 describe("filter", () => {
@@ -687,15 +596,6 @@ describe("getElementById", () => {
     });
   });
 
-  it("returns simplified output when requested", () => {
-    const result = getElementById(
-      '<div><span id="target">found</span></div>',
-      "target",
-      true,
-    );
-    expect(result).toEqual({ span: "found" });
-  });
-
   it("returns undefined when id not found", () => {
     expect(getElementById("<div><span>no id</span></div>", "missing")).toBeUndefined();
   });
@@ -732,14 +632,6 @@ describe("getElementsByClassName", () => {
     ).toBe(2);
   });
 
-  it("returns simplified output when requested", () => {
-    const result = getElementsByClassName(
-      '<div><span class="foo">text</span></div>',
-      "foo",
-      true,
-    );
-    expect(result).toEqual({ span: "text" });
-  });
 });
 
 // =================================================================
@@ -864,14 +756,6 @@ describe("fixture: rss-feed.xml", () => {
     const originalItems = filter(result, (n) => n.tagName === "item");
     const reparsedItems = filter(reparsed, (n) => n.tagName === "item");
     expect(reparsedItems).toHaveLength(originalItems.length);
-  });
-
-  it("simplifies the feed structure", () => {
-    const result = asNodes(parse(rssFeed));
-    const simplified = simplify(result) as Record<string, any>;
-    expect(simplified.rss).toBeDefined();
-    expect(simplified.rss.channel).toBeDefined();
-    expect(simplified.rss.channel.title).toBe("Tech Engineering Blog");
   });
 
   it("extracts text content from the entire feed", () => {
@@ -1104,14 +988,6 @@ describe("fixture: atom-feed.xml", () => {
     expect(text).toContain("Node.js 24 LTS");
   });
 
-  it("simplifies the feed", () => {
-    const simplified = simplify(asNodes(parse(atomFeed))) as Record<
-      string,
-      any
-    >;
-    expect(simplified.feed).toBeDefined();
-    expect(simplified.feed.title).toBeDefined();
-  });
 });
 
 // =================================================================
@@ -1469,16 +1345,6 @@ describe("fixture: pom.xml", () => {
     const roles = filter(alice!.children, (n) => n.tagName === "role");
     expect(roles).toHaveLength(2);
     expect(roles[0]!.children[0]).toBe("Lead Developer");
-  });
-
-  it("simplifies the POM structure", () => {
-    const simplified = simplify(asNodes(parse(pomXml))) as Record<
-      string,
-      any
-    >;
-    expect(simplified.project).toBeDefined();
-    expect(simplified.project.name).toBe("Order Service");
-    expect(simplified.project.packaging).toBe("jar");
   });
 
   it("preserves comments about dependency sections", () => {
@@ -1913,14 +1779,6 @@ describe("fixture: html-page.html", () => {
     expect(
       allComments.some((c) => c.includes("More rows loaded dynamically")),
     ).toBe(true);
-  });
-
-  it("simplifies the document structure", () => {
-    const result = asNodes(parse(htmlPage, { html: true }));
-    const simplified = simplify(result) as Record<string, any>;
-    expect(simplified.html).toBeDefined();
-    expect(simplified.html.head).toBeDefined();
-    expect(simplified.html.body).toBeDefined();
   });
 
   it("extracts text content from the entire document", () => {

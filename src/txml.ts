@@ -63,8 +63,6 @@ export interface ParseOptions {
   keepComments?: boolean;
   /** Keep whitespace text nodes */
   keepWhitespace?: boolean;
-  /** Automatically simplify the output */
-  simplify?: boolean;
   /** Parse a single node instead of a list of nodes */
   parseNode?: boolean;
   /** Attribute name to search for (used with attrValue) */
@@ -389,101 +387,9 @@ export function parse(
     out = filter(out, opts.filter);
   }
 
-  if (opts.simplify) {
-    const arrOut = Array.isArray(out) ? out : [out];
-    return simplify(arrOut);
-  }
-
   if (opts.setPos && typeof out === "object" && !Array.isArray(out)) {
     (out as TNodeWithPos).pos = pos;
   }
-
-  return out;
-}
-
-/**
- * Transform the DOM object to a simpler format like PHP's SimpleXML.
- * Note: The order of elements is not preserved, and the original XML cannot be reproduced.
- * @param children - Array of nodes to simplify
- * @returns Simplified object structure
- */
-export function simplify(
-  children: (TNode | string)[],
-): Record<string, any> | string {
-  const out: Record<string, any> = {};
-
-  if (!children.length) {
-    return "";
-  }
-
-  if (children.length === 1 && typeof children[0] === "string") {
-    return children[0];
-  }
-
-  // map each object
-  children.forEach(function (child) {
-    if (typeof child !== "object") {
-      return;
-    }
-    if (!out[child.tagName]) out[child.tagName] = [];
-    const kids = simplify(child.children);
-    out[child.tagName].push(kids);
-    if (
-      Object.keys(child.attributes).length &&
-      typeof kids === "object" &&
-      !Array.isArray(kids)
-    ) {
-      kids._attributes = child.attributes;
-    }
-  });
-
-  for (const i in out) {
-    if (out[i].length === 1) {
-      out[i] = out[i][0];
-    }
-  }
-
-  return out;
-}
-
-/**
- * Similar to simplify, but preserves more information
- * @param children - Array of nodes to simplify
- * @param parentAttributes - Parent node attributes
- * @returns Simplified object structure with less data loss
- */
-export function simplifyLostLess(
-  children: (TNode | string)[],
-  parentAttributes: Record<string, string | null> = {},
-): Record<string, any> | string | { _attributes: Record<string, string | null>; value: string } {
-  const out: Record<string, any> = {};
-
-  if (!children.length) {
-    return out;
-  }
-
-  if (children.length === 1 && typeof children[0] === "string") {
-    return Object.keys(parentAttributes).length
-      ? { _attributes: parentAttributes, value: children[0] }
-      : children[0];
-  }
-
-  // map each object
-  children.forEach(function (child) {
-    if (typeof child !== "object") {
-      return;
-    }
-    if (!out[child.tagName]) out[child.tagName] = [];
-    const kids = simplifyLostLess(child.children || [], child.attributes);
-    out[child.tagName].push(kids);
-    if (
-      Object.keys(child.attributes).length &&
-      typeof kids === "object" &&
-      !Array.isArray(kids)
-    ) {
-      (kids as Record<string, any>)._attributes = child.attributes;
-    }
-  });
 
   return out;
 }
@@ -598,35 +504,31 @@ export function toContentString(
  * Find an element by ID attribute
  * @param S - XML string to search
  * @param id - ID value to find
- * @param simplified - Whether to return simplified output
- * @returns Found node(s)
+ * @returns Found node, or undefined if not found
  */
 export function getElementById(
   S: string,
   id: string,
-  simplified?: boolean,
-): TNode | Record<string, any> | string | undefined {
+): TNode | undefined {
   const out = parse(S, { attrValue: id }) as (TNode | string)[];
-  return simplified ? simplify(out) : out[0];
+  return out[0] as TNode | undefined;
 }
 
 /**
  * Find elements by class name
  * @param S - XML string to search
  * @param classname - Class name to find
- * @param simplified - Whether to return simplified output
  * @returns Found nodes
  */
 export function getElementsByClassName(
   S: string,
   classname: string,
-  simplified?: boolean,
-): (TNode | string)[] | Record<string, any> | string {
+): (TNode | string)[] {
   const out = parse(S, {
     attrName: "class",
     attrValue: "[a-zA-Z0-9- ]*" + classname + "[a-zA-Z0-9- ]*",
   }) as (TNode | string)[];
-  return simplified ? simplify(out) : out;
+  return out;
 }
 
 /**
