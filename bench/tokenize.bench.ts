@@ -11,7 +11,6 @@ import { fileURLToPath } from "node:url";
 import { bench, describe } from "vitest";
 
 // --- eksml ---
-import { transformStream } from "../src/transformStream.js";
 import { fastStream } from "../src/fastStream.js";
 
 // --- competitors ---
@@ -43,29 +42,6 @@ function chunkString(str: string, size: number): string[] {
 
 // No-op function used as callback
 const noop = () => {};
-
-// ---------------------------------------------------------------------------
-// eksml transformStream — async, emits TNode trees
-// ---------------------------------------------------------------------------
-async function eksmlTransformStream(xml: string, chunkSize: number): Promise<void> {
-  const chunks = chunkString(xml, chunkSize);
-  const stream = transformStream();
-  const writer = stream.writable.getWriter();
-  const reader = stream.readable.getReader();
-
-  const drain = (async () => {
-    while (true) {
-      const { done } = await reader.read();
-      if (done) break;
-    }
-  })();
-
-  for (const chunk of chunks) {
-    await writer.write(chunk);
-  }
-  await writer.close();
-  await drain;
-}
 
 // ---------------------------------------------------------------------------
 // eksml fastStream — no-op callbacks
@@ -151,10 +127,6 @@ function htmlparser2Stream(xml: string, chunkSize: number): void {
 describe("tokenize: RSS feed (256 B chunks)", () => {
   const size = 256;
 
-  bench("eksml (transformStream)", async () => {
-    await eksmlTransformStream(rssFeed, size);
-  });
-
   bench("eksml (fastStream)", () => {
     eksmlFastStream(rssFeed, size);
   });
@@ -177,10 +149,6 @@ describe("tokenize: RSS feed (256 B chunks)", () => {
 // ---------------------------------------------------------------------------
 describe("tokenize: XMLTV EPG (256 B chunks)", () => {
   const size = 256;
-
-  bench("eksml (transformStream)", async () => {
-    await eksmlTransformStream(xmltvEpg, size);
-  });
 
   bench("eksml (fastStream)", () => {
     eksmlFastStream(xmltvEpg, size);
@@ -205,10 +173,6 @@ describe("tokenize: XMLTV EPG (256 B chunks)", () => {
 describe("tokenize: Maven POM (256 B chunks)", () => {
   const size = 256;
 
-  bench("eksml (transformStream)", async () => {
-    await eksmlTransformStream(pomXml, size);
-  });
-
   bench("eksml (fastStream)", () => {
     eksmlFastStream(pomXml, size);
   });
@@ -231,10 +195,6 @@ describe("tokenize: Maven POM (256 B chunks)", () => {
 // ---------------------------------------------------------------------------
 describe("tokenize: XMLTV EPG (64 B chunks — stress)", () => {
   const size = 64;
-
-  bench("eksml (transformStream)", async () => {
-    await eksmlTransformStream(xmltvEpg, size);
-  });
 
   bench("eksml (fastStream)", () => {
     eksmlFastStream(xmltvEpg, size);
