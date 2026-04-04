@@ -1,14 +1,14 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./logo-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="./logo.svg">
-  <img alt="eksml" src="./logo.svg">
+  <img alt="Eksml" src="./logo.svg">
 </picture>
 
 # Eksml
 
 A fast, lightweight XML/HTML parser, serializer, and streaming toolkit for JavaScript and TypeScript. Eksml provides both a convenient class-based API and individual function exports for tree parsing, SAX streaming, object conversion, and serialization.
 
-Built on the same core parsing architecture as [tXml](https://github.com/tobiasNickel/tXml) by Tobias Nickel, Eksml improves the performances and extends it with more features.
+Built on the same core parsing architecture as [tXml](https://github.com/tobiasNickel/tXml) by Tobias Nickel, Eksml improves the performance and extends it with additional features.
 
 ## Installation
 
@@ -161,93 +161,64 @@ parser.close();
 
 ### SAX Events
 
-<table>
-  <tr>
-    <th>Event</th>
-    <th>Callback Signature</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td>
-      <code>opentag</code>
-    </td>
-    <td>
-      ```ts
-      (tagName: string, attributes: Record&lt;string, string | null&gt;)
-      => void
-      ```
-    </td>
-    <td>Opening tag with parsed attributes</td>
-  </tr>
-  <tr>
-    <td>
-      <code>closetag</code>
-    </td>
-    <td>
-      ```ts
-      (tagName: string) => void
-      ```
-    </td>
-    <td>Closing tag</td>
-  </tr>
-  <tr>
-    <td>
-      <code>text</code>
-    </td>
-    <td>
-      ```ts
-      (text: string) => void
-      ```
-    </td>
-    <td>Text content between tags</td>
-  </tr>
-  <tr>
-    <td>
-      <code>cdata</code>
-    </td>
-    <td>
-      ```ts
-      (data: string) => void
-      ```
-    </td>
-    <td>CDATA section content</td>
-  </tr>
-  <tr>
-    <td>
-      <code>comment</code>
-    </td>
-    <td>
-      ```ts
-      (comment: string) => void
-      ```
-    </td>
-    <td>Comment content</td>
-  </tr>
-  <tr>
-    <td>
-      <code>processinginstruction</code>
-    </td>
-    <td>
-      ```ts
-      (name: string, body: string) => void
-      ```
-    </td>
-    <td>
-      Processing instruction (<code>&lt;?xml ...?&gt;</code>)
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <code>doctype</code>
-    </td>
-    <td>
-      ```ts
-      (tagName: string, attributes: Record&lt;string, string | null&gt;) => void
-      ```
-    </td>
-    <td>DOCTYPE declaration</td>
-  </tr>
-</table>
+#### `opentag`
+
+Opening tag with parsed attributes
+
+```ts
+(
+  tagName: string,
+  attributes: Record<string, string | null>
+) => void
+```
+
+#### `closetag`
+
+Closing tag
+
+```ts
+(tagName: string) => void
+```
+
+#### `text`
+
+Text content between tags
+
+```ts
+(text: string) => void
+```
+
+#### `cdata`
+
+CDATA section content
+
+```ts
+(data: string) => void
+```
+
+#### `comment`
+
+Comment (full `<!-- ... -->` string including delimiters)
+
+```ts
+(comment: string) => void
+```
+
+#### `processinginstruction`
+
+Processing instruction (`<?xml ...?>`)
+
+```ts
+(name: string, body: string) => void
+```
+
+#### `doctype`
+
+DOCTYPE declaration
+
+```ts
+(tagName: string, attributes: Record<string, string | null>) => void
+```
 
 ---
 
@@ -370,13 +341,13 @@ const html = writer(dom, { html: true, entities: true });
 
 // Lossy input — converted to DOM automatically
 const fromObj = writer({ user: { name: 'Alice', age: 30 } });
-// → '<user><name>Alice</name><age>30</age></user>'
+// -> '<user><name>Alice</name><age>30</age></user>'
 
 // Lossless input — converted to DOM automatically
 const fromEntries = writer([
   { user: [{ name: ['Alice'] }, { role: ['admin'] }] },
 ]);
-// → '<user><name>Alice</name><role>admin</role></user>'
+// -> '<user><name>Alice</name><role>admin</role></user>'
 ```
 
 #### `WriterOptions`
@@ -502,7 +473,7 @@ parser.close();
     <td><code>oncomment</code></td>
     <td><code>(comment) =&gt; void</code></td>
     <td>--</td>
-    <td>Comment handler</td>
+    <td>Comment handler (receives full <code>&lt;!-- ... --&gt;</code> string)</td>
   </tr>
   <tr>
     <td><code>onprocessinginstruction</code></td>
@@ -523,6 +494,8 @@ parser.close();
 ### `transformStream(offset?, options?)`
 
 A Web Streams `TransformStream` that parses XML chunks into `TNode` subtrees. Works in browsers, Node.js 18+, Deno, and Bun.
+
+`offset` is `number | string` — when a string is passed, its `.length` is used as the byte offset to skip.
 
 ```ts
 import { transformStream } from 'eksml/transform-stream';
@@ -594,6 +567,8 @@ const ts = transformStream(undefined, { select: 'item' });
 
 Convert XML into compact JavaScript objects. Ideal when you need a simple JS representation and don't care about preserving document order between mixed siblings.
 
+`input` is `string | (TNode | string)[]` — pass a raw XML string, or a pre-parsed DOM array (from `parse()` or `stream()`).
+
 ```ts
 import { lossy } from 'eksml/lossy';
 
@@ -607,11 +582,16 @@ lossy('<user><name>Alice</name><age>30</age></user>');
 - Repeated same-name siblings become arrays
 - Mixed content (text interleaved with elements) is stored in a `$$` array
 
+> [!note]
+> Accepts the same ParseOptions as parse().
+
 ---
 
 ### `lossless(input, options?)`
 
 Convert XML into an order-preserving JSON-friendly structure. Every node, attribute, text segment, and comment is represented in document order.
+
+`input` is `string | (TNode | string)[]` — pass a raw XML string, or a pre-parsed DOM array (from `parse()` or `stream()`).
 
 ```ts
 import { lossless } from 'eksml/lossless';
@@ -626,6 +606,9 @@ Each entry type:
 - Text: `{ $text: "..." }`
 - Attributes: `{ $attr: { ... } }` (first child of its element)
 - Comment: `{ $comment: "..." }`
+
+> [!note]
+> Accepts the same ParseOptions as parse().
 
 ---
 
@@ -727,7 +710,7 @@ Parse an XML string into a tree structure.
     <th align="right">EPG (~9 KB)</th>
   </tr>
   <tr>
-    <td><strong>eksml</strong></td>
+    <td><strong>Eksml</strong></td>
     <td align="right"><strong>1,361,164 op/s</strong></td>
     <td align="right"><strong>86,551 op/s</strong></td>
     <td align="right"><strong>61,091 op/s</strong></td>
@@ -782,7 +765,10 @@ Parse an XML string into a tree structure.
   </tr>
 </table>
 
-eksml is **1.2-1.5x faster than tXml**, **3-4x faster than htmlparser2**, **7-10x faster than fast-xml-parser**, and **8-15x faster than xmldom**.
+Eksml is **1.2-1.5x faster than tXml**, **3-4x faster than htmlparser2**, **7-10x faster than fast-xml-parser**, and **8-15x faster than xmldom**.
+
+> [!note]
+> tXml crashed on the RSS fixture
 
 ### SAX Streaming (256 B chunks, with tree building)
 
@@ -797,14 +783,14 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
     <th align="right">EPG 64 B stress</th>
   </tr>
   <tr>
-    <td><strong>eksml (fastStream)</strong></td>
+    <td><strong>Eksml (fastStream)</strong></td>
     <td align="right"><strong>73,744 op/s</strong></td>
     <td align="right"><strong>12,385 op/s</strong></td>
     <td align="right"><strong>8,313 op/s</strong></td>
     <td align="right"><strong>11,452 op/s</strong></td>
   </tr>
   <tr>
-    <td>eksml (transformStream)</td>
+    <td>Eksml (transformStream)</td>
     <td align="right">31,459 op/s</td>
     <td align="right">7,764 op/s</td>
     <td align="right">5,967 op/s</td>
@@ -833,7 +819,7 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
   </tr>
 </table>
 
-eksml's SAX engine is **1.6-2.5x faster than htmlparser2/saxes** and **3-6x faster than sax**.
+Eksml's SAX engine is **1.6-2.5x faster than htmlparser2/saxes** and **3-6x faster than sax**.
 
 ### Raw Tokenization (no-op callbacks)
 
@@ -848,7 +834,7 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
     <th align="right">EPG 64 B stress</th>
   </tr>
   <tr>
-    <td><strong>eksml (fastStream)</strong></td>
+    <td><strong>Eksml (fastStream)</strong></td>
     <td align="right"><strong>85,798 op/s</strong></td>
     <td align="right"><strong>16,367 op/s</strong></td>
     <td align="right"><strong>13,465 op/s</strong></td>
@@ -877,6 +863,8 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
   </tr>
 </table>
 
+Eksml's raw tokenizer is **2-2.5x faster than saxes**, **2-3x faster than htmlparser2**, and **4-6x faster than sax**.
+
 ### XML Serialization (tree to string)
 
 Serialize a pre-parsed in-memory tree back to XML.
@@ -892,7 +880,7 @@ Serialize a pre-parsed in-memory tree back to XML.
     <th align="right">EPG (~30 KB)</th>
   </tr>
   <tr>
-    <td><strong>eksml</strong></td>
+    <td><strong>Eksml</strong></td>
     <td align="right"><strong>1,885,288 op/s</strong></td>
     <td align="right"><strong>308,059 op/s</strong></td>
     <td align="right">195,102 op/s</td>
@@ -947,15 +935,18 @@ Serialize a pre-parsed in-memory tree back to XML.
   </tr>
 </table>
 
-eksml and tXml trade top position depending on document size and shape. Both are **3-7x faster than @xmldom/xmldom** and **7-13x faster than fast-xml-parser/xml2js** at serialization.
+Eksml and tXml trade top position depending on document size and shape. Both are **3-7x faster than @xmldom/xmldom** and **7-13x faster than fast-xml-parser/xml2js** at serialization.
+
+> [!note]
+> tXml crashed on the RSS fixture
 
 ---
 
 ## Acknowledgments
 
-eksml's DOM parser is built on the work of **[Tobias Nickel](https://github.com/nickel-org)** and his [tXml](https://github.com/tobiasNickel/tXml) library. The core parsing architecture, a single-pass, position-tracking string scanner that builds the tree as it goes, is what makes both libraries so fast. tXml demonstrated that you don't need a separate tokenizer-then-tree-builder pipeline to parse XML at high speed, and eksml carries that insight forward.
+Eksml's DOM parser is built on the work of **[Tobias Nickel](https://github.com/nickel-org)** and his [tXml](https://github.com/tobiasNickel/tXml) library. The core parsing architecture, a single-pass, position-tracking string scanner that builds the tree as it goes, is what makes both libraries so fast. tXml demonstrated that you don't need a separate tokenizer-then-tree-builder pipeline to parse XML at high speed, and Eksml carries that insight forward.
 
-eksml extends tXml's foundation with:
+Eksml extends tXml's foundation with:
 
 - A high-performance SAX streaming engine (`fastStream`)
 - A Web Streams `TransformStream` for incremental parsing
@@ -971,9 +962,9 @@ Thank you, Tobias, for the elegant approach that made all of this possible.
 
 ## Limitations
 
-eksml optimizes for speed and simplicity, which means it intentionally does not cover every XML use case:
+Eksml optimizes for speed and simplicity, which means it intentionally does not cover every XML use case:
 
-- **Not a validating parser.** eksml does not validate against DTDs or XML Schema. It parses structure, not semantics.
+- **Not a validating parser.** Eksml does not validate against DTDs or XML Schema. It parses structure, not semantics.
 - **No namespace support.** Namespace prefixes are preserved in tag and attribute names (e.g. `soap:Envelope`) but not resolved to URIs. There is no namespace-aware API.
 - **No XPath or CSS selectors.** Querying uses simple functions like `filter()`, `getElementById()`, and `getElementsByClassName()`. For complex queries, use the DOM output with a dedicated query library.
 - **Entity decoding is opt-in.** By default, entities like `&amp;` and `&#x20;` are left as-is in text and attribute values. Pass `entities: true` to decode them.
