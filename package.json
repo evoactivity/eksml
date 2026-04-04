@@ -10,7 +10,8 @@
     "build": "pnpm --filter eksml build",
     "build:demo": "pnpm --filter demo build",
     "dev:demo": "pnpm --filter demo dev",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "demo": "pnpm --filter demo dev"
   },
   "keywords": [],
   "author": "Liam Potter",
