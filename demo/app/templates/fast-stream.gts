@@ -8,7 +8,7 @@ import { fastStream } from 'eksml/stream';
 import LogArea from '#components/log-area.gts';
 import MonacoEditor from '#components/monaco-editor.gts';
 import ProgressBar from '#components/progress-bar.gts';
-import RunDuration, { formatMs } from '#components/run-duration.gts';
+import { formatMs } from '#components/run-duration.gts';
 import TwoPaneLayout from '#components/two-pane-layout.gts';
 
 import type { FastStreamModel } from '../routes/fast-stream';
@@ -65,7 +65,6 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
   @tracked throttle = '100';
   @tracked chunkSize = '64';
   @tracked stats = '';
-  @tracked elapsedMs: number | null = null;
   @tracked progress = 0;
   @tracked entries: LogEntry[] = [];
   @tracked running = false;
@@ -137,7 +136,6 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
     // Reset
     this.entries = [];
     this.stats = '';
-    this.elapsedMs = null;
     this.progress = 0;
     this.eventCount = 0;
     this.running = true;
@@ -238,7 +236,6 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
       );
       this.progress = 100;
       this.stats = `${this.eventCount} events`;
-      this.elapsedMs = elapsed;
     }
 
     this.running = false;
@@ -309,7 +306,6 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
         <div class='pane-header'>
           <span>Events</span>
           <span class='stats'>{{this.stats}}</span>
-          <RunDuration @ms={{this.elapsedMs}} />
         </div>
         {{#if this.showEmptyState}}
           <div class='bench-empty'>
