@@ -215,8 +215,6 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
         />
         HTML mode
       </label>
-
-      <button class='primary' {{on 'click' this.run}}>Parse</button>
     </div>
 
     <TwoPaneLayout>

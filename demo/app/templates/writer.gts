@@ -214,8 +214,6 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
         />
         HTML mode
       </label>
-
-      <button class='primary' {{on 'click' this.run}}>Write</button>
     </div>
 
     <TwoPaneLayout>
