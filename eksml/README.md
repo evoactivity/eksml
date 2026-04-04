@@ -207,7 +207,7 @@ import { createSaxParser } from 'eksml/sax';
 
 const parser = createSaxParser();
 
-parser.on('opentag', (tagName, attributes) => {
+parser.on('openTag', (tagName, attributes) => {
   console.log('opened:', tagName, attributes);
 });
 parser.on('text', (text) => {
@@ -219,7 +219,7 @@ parser.write('<item>2</item></root>');
 parser.close();
 
 // Remove a handler
-parser.off('opentag', myHandler);
+parser.off('openTag', myHandler);
 ```
 
 #### `SaxParserOptions`
@@ -260,12 +260,12 @@ parser.off('opentag', myHandler);
     <th>Description</th>
   </tr>
   <tr>
-    <td><code>opentag</code></td>
+    <td><code>openTag</code></td>
     <td><code>(tagName, attributes) =&gt; void</code></td>
     <td>Opening tag with parsed attributes</td>
   </tr>
   <tr>
-    <td><code>closetag</code></td>
+    <td><code>closeTag</code></td>
     <td><code>(tagName) =&gt; void</code></td>
     <td>Closing tag</td>
   </tr>
@@ -285,7 +285,7 @@ parser.off('opentag', myHandler);
     <td>Comment (full <code>&lt;!-- ... --&gt;</code> string including delimiters)</td>
   </tr>
   <tr>
-    <td><code>processinginstruction</code></td>
+    <td><code>processingInstruction</code></td>
     <td><code>(name, body) =&gt; void</code></td>
     <td>Processing instruction</td>
   </tr>
