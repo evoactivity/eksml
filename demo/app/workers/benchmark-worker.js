@@ -70,12 +70,12 @@ const PARSERS = {
   'eksml-stream': (xml) => {
     const p = createSaxParser();
 
-    p.on('opentag', noop);
-    p.on('closetag', noop);
+    p.on('openTag', noop);
+    p.on('closeTag', noop);
     p.on('text', noop);
     p.on('cdata', noop);
     p.on('comment', noop);
-    p.on('processinginstruction', noop);
+    p.on('processingInstruction', noop);
     p.on('doctype', noop);
 
     p.write(xml);

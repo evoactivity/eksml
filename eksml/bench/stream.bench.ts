@@ -245,7 +245,7 @@ function eksmlSaxEngine(xml: string, chunkSize: number): Node[] {
   const stack: Node[] = [];
 
   const parser = saxEngine({
-    onopentag(tagName, attributes) {
+    onOpenTag(tagName, attributes) {
       const el: Node = {
         tagName,
         attributes: attributes as Record<string, string>,
@@ -258,21 +258,21 @@ function eksmlSaxEngine(xml: string, chunkSize: number): Node[] {
       }
       stack.push(el);
     },
-    ontext(text) {
+    onText(text) {
       if (stack.length > 0) {
         stack[stack.length - 1]!.children.push(text);
       } else {
         roots.push(text);
       }
     },
-    oncdata(cdata) {
+    onCdata(cdata) {
       if (stack.length > 0) {
         stack[stack.length - 1]!.children.push(cdata);
       } else {
         roots.push(cdata);
       }
     },
-    onclosetag() {
+    onCloseTag() {
       stack.pop();
     },
   });

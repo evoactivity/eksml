@@ -983,19 +983,23 @@ describe('XmlParseStream with select', () => {
     expect(tags).toEqual(['item', 'entry']);
   });
 
-  it('emits nested selected elements as part of the outermost match', async () => {
-    // Nested <item> inside an <item> — the outer one is the selected match;
-    // the inner one is just a child in its subtree.
+  it('emits nested selected elements independently and as children', async () => {
+    // Nested <item> inside an <item> — both are emitted. The inner one
+    // is emitted first (when it closes), and the outer one is emitted
+    // second with the inner one still present as a child in its subtree.
     const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, [
       '<root><item><item>inner</item></item></root>',
     ]);
-    expect(results).toHaveLength(1);
-    const outer = results[0] as TNode;
-    expect(outer.tagName).toBe('item');
-    const inner = outer.children[0] as TNode;
+    expect(results).toHaveLength(2);
+    const inner = results[0] as TNode;
     expect(inner.tagName).toBe('item');
     expect(inner.children).toEqual(['inner']);
+    const outer = results[1] as TNode;
+    expect(outer.tagName).toBe('item');
+    const outerChild = outer.children[0] as TNode;
+    expect(outerChild.tagName).toBe('item');
+    expect(outerChild.children).toEqual(['inner']);
   });
 
   it('handles deeply nested selected elements', async () => {
@@ -1110,6 +1114,73 @@ describe('XmlParseStream with select', () => {
     const results = await collect(stream, ['<root><item>1</item></root>']);
     expect(results).toHaveLength(1);
     expect((results[0] as TNode).tagName).toBe('root');
+  });
+
+  it('emits both parent and child when both are selected', async () => {
+    // Selecting both "book" and "author" should emit each author as it
+    // closes AND each book (which still contains the authors as children).
+    const xml = `<library>
+      <book isbn="978-1"><title>Book One</title>
+        <authors><author>Alice</author><author>Bob</author></authors>
+      </book>
+      <book isbn="978-2"><title>Book Two</title>
+        <authors><author>Carol</author></authors>
+      </book>
+    </library>`;
+    const stream = new XmlParseStream({ select: ['book', 'author'] });
+    const results = await collect(stream, [xml]);
+    const tags = results
+      .filter((r): r is TNode => typeof r === 'object')
+      .map((r) => r.tagName);
+    // Alice, Bob, then book 1; Carol, then book 2
+    expect(tags).toEqual(['author', 'author', 'book', 'author', 'book']);
+    // The book nodes still contain their author children
+    const books = results.filter(
+      (r): r is TNode => typeof r === 'object' && r.tagName === 'book',
+    );
+    const authorsInBook1 = books[0]!.children
+      .filter((c): c is TNode => typeof c === 'object')
+      .flatMap((c) =>
+        c.tagName === 'authors'
+          ? c.children.filter((gc): gc is TNode => typeof gc === 'object')
+          : [],
+      );
+    expect(authorsInBook1.map((a) => a.children[0])).toEqual(['Alice', 'Bob']);
+  });
+
+  it('emits deeply nested selected descendants', async () => {
+    // Three levels of nesting: root > a > b > c, selecting a and c.
+    const stream = new XmlParseStream({ select: ['a', 'c'] });
+    const results = await collect(stream, [
+      '<root><a><b><c>deep</c></b></a></root>',
+    ]);
+    const tags = results
+      .filter((r): r is TNode => typeof r === 'object')
+      .map((r) => r.tagName);
+    expect(tags).toEqual(['c', 'a']);
+    // The <a> node contains <b> which contains <c>
+    const aNode = results[1] as TNode;
+    const bNode = aNode.children[0] as TNode;
+    expect(bNode.tagName).toBe('b');
+    const cNode = bNode.children[0] as TNode;
+    expect(cNode.tagName).toBe('c');
+    expect(cNode.children).toEqual(['deep']);
+  });
+
+  it('emits multiple nested selected levels in document order', async () => {
+    // select: ['section', 'book', 'author']
+    const xml = `<library>
+      <section><book><author>A</author></book></section>
+    </library>`;
+    const stream = new XmlParseStream({
+      select: ['section', 'book', 'author'],
+    });
+    const results = await collect(stream, [xml]);
+    const tags = results
+      .filter((r): r is TNode => typeof r === 'object')
+      .map((r) => r.tagName);
+    // author closes first, then book, then section
+    expect(tags).toEqual(['author', 'book', 'section']);
   });
 
   it('emits selected elements from RSS feed (channel/item)', async () => {

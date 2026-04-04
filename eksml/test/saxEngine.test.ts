@@ -49,25 +49,25 @@ function collectEvents(
 
   const parser = saxEngine({
     ...options,
-    onopentag(name, attrs) {
+    onOpenTag(name, attrs) {
       events.opens.push({ name, attrs });
     },
-    onclosetag(name) {
+    onCloseTag(name) {
       events.closes.push(name);
     },
-    ontext(text) {
+    onText(text) {
       events.texts.push(text);
     },
-    oncdata(data) {
+    onCdata(data) {
       events.cdatas.push(data);
     },
-    oncomment(comment) {
+    onComment(comment) {
       events.comments.push(comment);
     },
-    onprocessinginstruction(name, body) {
+    onProcessingInstruction(name, body) {
       events.pis.push({ name, body });
     },
-    ondoctype(tagName, attrs) {
+    onDoctype(tagName, attrs) {
       events.doctypes.push({ tagName, attrs });
     },
   });
@@ -248,7 +248,7 @@ describe('saxEngine', () => {
   // DOCTYPE
   // =========================================================================
   describe('DOCTYPE', () => {
-    it('emits DOCTYPE as ondoctype event with parsed attributes', () => {
+    it('emits DOCTYPE as onDoctype event with parsed attributes', () => {
       const e = parseEvents(
         '<?xml version="1.0"?><!DOCTYPE tv SYSTEM "xmltv.dtd"><tv/>',
       );
@@ -312,7 +312,7 @@ describe('saxEngine', () => {
       );
     });
 
-    it('does not emit DOCTYPE through onopentag', () => {
+    it('does not emit DOCTYPE through onOpenTag', () => {
       const e = parseEvents('<!DOCTYPE html><html></html>');
       // DOCTYPE should NOT appear in opens — it has its own callback
       expect(e.opens.map((o) => o.name)).toEqual(['html']);
@@ -469,7 +469,7 @@ describe('saxEngine', () => {
 
       const parser = saxEngine({
         ...options,
-        onopentag(name, attrs) {
+        onOpenTag(name, attrs) {
           const el: Node = {
             tagName: name,
             attributes: { ...attrs },
@@ -482,17 +482,17 @@ describe('saxEngine', () => {
           }
           stack.push(el);
         },
-        onclosetag() {
+        onCloseTag() {
           stack.pop();
         },
-        ontext(text) {
+        onText(text) {
           if (stack.length > 0) {
             stack[stack.length - 1]!.children.push(text);
           } else {
             roots.push(text);
           }
         },
-        oncdata(data) {
+        onCdata(data) {
           if (stack.length > 0) {
             stack[stack.length - 1]!.children.push(data);
           } else {
@@ -734,10 +734,10 @@ describe('saxEngine', () => {
   // Selective callbacks — only register what you need
   // =========================================================================
   describe('selective callbacks', () => {
-    it('works with only onopentag', () => {
+    it('works with only onOpenTag', () => {
       const tags: string[] = [];
       const parser = saxEngine({
-        onopentag(name) {
+        onOpenTag(name) {
           tags.push(name);
         },
       });

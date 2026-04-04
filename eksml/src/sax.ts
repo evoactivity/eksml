@@ -19,7 +19,6 @@
  */
 
 import type { SaxEngineHandlers, Attributes } from '#src/saxEngine.ts';
-import type { ParseOptions } from '#src/parser.ts';
 import { saxEngine } from '#src/saxEngine.ts';
 import {
   HTML_VOID_ELEMENTS,
@@ -32,12 +31,12 @@ import {
 
 /** Event name → handler signature map for the SAX parser. */
 export interface SaxEventMap {
-  opentag: (tagName: string, attributes: Attributes) => void;
-  closetag: (tagName: string) => void;
+  openTag: (tagName: string, attributes: Attributes) => void;
+  closeTag: (tagName: string) => void;
   text: (text: string) => void;
   cdata: (data: string) => void;
   comment: (comment: string) => void;
-  processinginstruction: (name: string, body: string) => void;
+  processingInstruction: (name: string, body: string) => void;
   doctype: (tagName: string, attributes: Attributes) => void;
 }
 
@@ -100,37 +99,37 @@ export function createSaxParser(options?: SaxParserOptions): SaxParser {
   const listeners: {
     [E in SaxEventName]: Set<SaxEventMap[E]>;
   } = {
-    opentag: new Set(),
-    closetag: new Set(),
+    openTag: new Set(),
+    closeTag: new Set(),
     text: new Set(),
     cdata: new Set(),
     comment: new Set(),
-    processinginstruction: new Set(),
+    processingInstruction: new Set(),
     doctype: new Set(),
   };
 
   // Bridge handlers: call all registered listeners for each event
   const handlers: SaxEngineHandlers = {
-    onopentag(tagName: string, attributes: Attributes) {
-      for (const handler of listeners.opentag) handler(tagName, attributes);
+    onOpenTag(tagName: string, attributes: Attributes) {
+      for (const handler of listeners.openTag) handler(tagName, attributes);
     },
-    onclosetag(tagName: string) {
-      for (const handler of listeners.closetag) handler(tagName);
+    onCloseTag(tagName: string) {
+      for (const handler of listeners.closeTag) handler(tagName);
     },
-    ontext(text: string) {
+    onText(text: string) {
       for (const handler of listeners.text) handler(text);
     },
-    oncdata(data: string) {
+    onCdata(data: string) {
       for (const handler of listeners.cdata) handler(data);
     },
-    oncomment(comment: string) {
+    onComment(comment: string) {
       for (const handler of listeners.comment) handler(comment);
     },
-    onprocessinginstruction(name: string, body: string) {
-      for (const handler of listeners.processinginstruction)
+    onProcessingInstruction(name: string, body: string) {
+      for (const handler of listeners.processingInstruction)
         handler(name, body);
     },
-    ondoctype(tagName: string, attributes: Attributes) {
+    onDoctype(tagName: string, attributes: Attributes) {
       for (const handler of listeners.doctype) handler(tagName, attributes);
     },
   };

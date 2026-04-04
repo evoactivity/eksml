@@ -41,19 +41,19 @@ export type Attributes = Record<string, string | null>;
 /** Event handlers for the SAX engine. All callbacks are optional. */
 export interface SaxEngineHandlers {
   /** Fired when an opening tag and its attributes have been fully parsed. */
-  onopentag?: (tagName: string, attributes: Attributes) => void;
+  onOpenTag?: (tagName: string, attributes: Attributes) => void;
   /** Fired when a closing tag is encountered. */
-  onclosetag?: (tagName: string) => void;
+  onCloseTag?: (tagName: string) => void;
   /** Fired for text content between tags (trimmed; not fired for whitespace-only text). */
-  ontext?: (text: string) => void;
+  onText?: (text: string) => void;
   /** Fired for CDATA sections. */
-  oncdata?: (data: string) => void;
+  onCdata?: (data: string) => void;
   /** Fired for comments (the full `<!-- ... -->` string). */
-  oncomment?: (comment: string) => void;
+  onComment?: (comment: string) => void;
   /** Fired for processing instructions (`<?xml ... ?>`). */
-  onprocessinginstruction?: (name: string, body: string) => void;
+  onProcessingInstruction?: (name: string, body: string) => void;
   /** Fired for DOCTYPE declarations (`<!DOCTYPE html>`, `<!DOCTYPE svg PUBLIC "..." "...">`). */
-  ondoctype?: (tagName: string, attributes: Attributes) => void;
+  onDoctype?: (tagName: string, attributes: Attributes) => void;
 }
 
 /** Options for the SAX engine. */
@@ -118,13 +118,13 @@ const enum State {
 
 export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
   const {
-    onopentag,
-    onclosetag,
-    ontext,
-    oncdata,
-    oncomment,
-    onprocessinginstruction,
-    ondoctype,
+    onOpenTag,
+    onCloseTag,
+    onText,
+    onCdata,
+    onComment,
+    onProcessingInstruction,
+    onDoctype,
     selfClosingTags = [],
     rawContentTags = [],
   } = options;
@@ -179,16 +179,16 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
 
   function emitText(): void {
     if (text.length === 0) return;
-    if (ontext) {
+    if (onText) {
       const trimmed = trimWhitespace(text);
-      if (trimmed.length > 0) ontext(trimmed);
+      if (trimmed.length > 0) onText(trimmed);
     }
     text = '';
   }
 
   /**
    * Parse the accumulated DOCTYPE body (everything between `<!` and `>`,
-   * excluding internal DTD subsets) and emit an ondoctype event.
+   * excluding internal DTD subsets) and emit an onDoctype event.
    *
    * The body string starts with the declaration keyword (e.g. "DOCTYPE html ...")
    * after the `!`. We prepend `!` to form the tagName (e.g. "!DOCTYPE"), then
@@ -256,14 +256,14 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
       attributes[body.substring(tokenStart, i)] = null;
     }
 
-    ondoctype!(tagName, attributes);
+    onDoctype!(tagName, attributes);
   }
 
   /** After we finish parsing an open tag's `>`, handle void/raw transitions. */
   function finishOpenTag(): void {
-    if (onopentag) onopentag(tagName, attributes);
+    if (onOpenTag) onOpenTag(tagName, attributes);
     if (voidSet !== null && voidSet.has(tagName)) {
-      if (onclosetag) onclosetag(tagName);
+      if (onCloseTag) onCloseTag(tagName);
     } else if (rawSet !== null && rawSet.has(tagName)) {
       rawTag = tagName;
       rawText = '';
@@ -601,7 +601,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           } else {
             if (greaterThanIndex > i)
               tagName += chunk.substring(i, greaterThanIndex);
-            if (onclosetag) onclosetag(trimWhitespace(tagName));
+            if (onCloseTag) onCloseTag(trimWhitespace(tagName));
             state = State.TEXT;
             i = greaterThanIndex + 1;
           }
@@ -616,8 +616,8 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           if (charCode === GT) {
             state = State.TEXT;
             i++;
-            if (onopentag) onopentag(tagName, attributes);
-            if (onclosetag) onclosetag(tagName);
+            if (onOpenTag) onOpenTag(tagName, attributes);
+            if (onCloseTag) onCloseTag(tagName);
           } else {
             state = State.OPEN_TAG_BODY;
           }
@@ -705,7 +705,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           const charCode = chunk.charCodeAt(i);
           if (charCode === GT) {
             special += '>';
-            if (oncomment) oncomment(special);
+            if (onComment) onComment(special);
             special = '';
             state = State.TEXT;
             i++;
@@ -831,7 +831,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         case State.CDATA_END2: {
           const charCode = chunk.charCodeAt(i);
           if (charCode === GT) {
-            if (oncdata) oncdata(special);
+            if (onCdata) onCdata(special);
             special = '';
             state = State.TEXT;
             i++;
@@ -869,7 +869,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         case State.PI_END: {
           const charCode = chunk.charCodeAt(i);
           if (charCode === GT) {
-            if (onprocessinginstruction) {
+            if (onProcessingInstruction) {
               const inner = special;
               let whitespaceIndex = -1;
               for (let j = 0; j < inner.length; j++) {
@@ -885,7 +885,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                 }
               }
               if (whitespaceIndex === -1) {
-                onprocessinginstruction(inner, '');
+                onProcessingInstruction(inner, '');
               } else {
                 const instructionName = inner.substring(0, whitespaceIndex);
                 let bodyStartIndex = whitespaceIndex + 1;
@@ -912,7 +912,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                     break;
                   bodyEndIndex--;
                 }
-                onprocessinginstruction(
+                onProcessingInstruction(
                   instructionName,
                   bodyStartIndex <= bodyEndIndex
                     ? inner.substring(bodyStartIndex, bodyEndIndex + 1)
@@ -937,7 +937,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         case State.DOCTYPE: {
           const charCode = chunk.charCodeAt(i);
           if (charCode === GT) {
-            if (ondoctype) {
+            if (onDoctype) {
               emitDoctype(special);
             }
             special = '';
@@ -1024,8 +1024,8 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           } else {
             const charCode = chunk.charCodeAt(i);
             if (charCode === GT) {
-              if (ontext && rawText.length > 0) ontext(rawText);
-              if (onclosetag) onclosetag(rawTag);
+              if (onText && rawText.length > 0) onText(rawText);
+              if (onCloseTag) onCloseTag(rawTag);
               rawText = '';
               rawTag = '';
               state = State.TEXT;
@@ -1053,8 +1053,8 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         case State.RAW_END_3: {
           const charCode = chunk.charCodeAt(i);
           if (charCode === GT) {
-            if (ontext && rawText.length > 0) ontext(rawText);
-            if (onclosetag) onclosetag(rawTag);
+            if (onText && rawText.length > 0) onText(rawText);
+            if (onCloseTag) onCloseTag(rawTag);
             rawText = '';
             rawTag = '';
             state = State.TEXT;
@@ -1101,8 +1101,8 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         } else if (state === State.RAW_END_2) {
           rawText += '</' + rawTag.substring(0, rawCloseTagMatchIndex);
         }
-        if (ontext && rawText.length > 0) ontext(rawText);
-        if (onclosetag) onclosetag(rawTag);
+        if (onText && rawText.length > 0) onText(rawText);
+        if (onCloseTag) onCloseTag(rawTag);
         rawText = '';
         rawTag = '';
         state = State.TEXT;

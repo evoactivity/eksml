@@ -51,14 +51,32 @@ export interface XmlParseStreamOptions {
    * Non-matching ancestor elements are **not** built or emitted — the stream
    * only produces the selected subtrees.
    *
+   * When multiple selected tags are nested (e.g. selecting both `item` and
+   * `sub` where `<sub>` appears inside `<item>`), each matching element
+   * is emitted independently as it closes. The inner element appears both as a
+   * separate emission **and** as a child within its ancestor's subtree.
+   *
    * Accepts a single tag name or an array of tag names.
    *
    * @example
    * ```ts
-   * // Given: <root><item>1</item><item>2</item></root>
+   * // Given:
+   * // <root>
+   * //   <item>
+   * //     <sub>1</sub><box>a</box>
+   * //   </item>
+   * //   <item>
+   * //     <sub>2</sub><box>b</box>
+   * //   </item>
+   * // </root>
+   * //
    * // Without select: emits one big <root> TNode after </root>
    * // With select: "item": emits two <item> TNodes as each closes
    * const stream = new XmlParseStream({ select: 'item' });
+   *
+   * // Nested selection: emits each <sub> as it closes, then the
+   * // containing <item> (which still includes the <sub> as a child).
+   * const stream2 = new XmlParseStream({ select: ['item', 'sub'] });
    * ```
    */
   select?: string | string[];
@@ -319,11 +337,13 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
     //
     // When `select` is set: `depth` tracks total nesting depth (for all
     // elements, including non-selected ancestors). `stack` only holds nodes
-    // within a selected subtree. `selectDepth` records the depth at which the
-    // outermost selected element was opened (-1 = not inside a selection).
+    // within a selected subtree. `selectDepths` is a stack of depths at which
+    // selected elements were opened — this allows nested selections (e.g.
+    // selecting both `item` and `sub` where `sub` is a child of `item`).
+    // Each entry records the depth at which a matching element was opened.
     const stack: TNode[] = [];
     let depth = 0;
-    let selectDepth = -1;
+    const selectDepths: number[] = [];
 
     // -----------------------------------------------------------------------
     // Default mode helpers (no select — original behavior)
@@ -348,7 +368,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
 
     /** Whether we are currently inside a selected subtree. */
     function insideSelection(): boolean {
-      return selectDepth >= 0;
+      return selectDepths.length > 0;
     }
 
     /** The TNode at the top of the stack, or null. */
@@ -360,7 +380,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
     // SAX handler: default mode (no select)
     // -----------------------------------------------------------------------
 
-    function defaultOnopentag(tagName: string, attributes: Attributes): void {
+    function defaultOnOpenTag(tagName: string, attributes: Attributes): void {
       const node: TNode = {
         tagName,
         attributes: toNodeAttributes(attributes),
@@ -373,7 +393,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
       stack.push(node);
     }
 
-    function defaultOnclosetag(_tagName: string): void {
+    function defaultOnCloseTag(_tagName: string): void {
       const node = stack.pop();
       if (!node) return;
       if (stack.length === 0 && streamController) {
@@ -381,21 +401,21 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
       }
     }
 
-    function defaultOntext(text: string): void {
+    function defaultOnText(text: string): void {
       const parent = currentParent();
       if (parent) {
         parent.children.push(text);
       }
     }
 
-    function defaultOncdata(data: string): void {
+    function defaultOnCdata(data: string): void {
       const parent = currentParent();
       if (parent) {
         parent.children.push(data);
       }
     }
 
-    function defaultOncomment(comment: string): void {
+    function defaultOnComment(comment: string): void {
       if (!keepComments) return;
       const parent = currentParent();
       if (parent) {
@@ -405,7 +425,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
       }
     }
 
-    function defaultOnprocessinginstruction(name: string, body: string): void {
+    function defaultOnProcessingInstruction(name: string, body: string): void {
       const node: TNode = {
         tagName: '?' + name,
         attributes: parsePIAttributes(body),
@@ -414,7 +434,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
       emitOrAttach(node);
     }
 
-    function defaultOndoctype(tagName: string, attributes: Attributes): void {
+    function defaultOnDoctype(tagName: string, attributes: Attributes): void {
       const node: TNode = {
         tagName,
         attributes: toNodeAttributes(attributes),
@@ -427,7 +447,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
     // SAX handler: select mode
     // -----------------------------------------------------------------------
 
-    function selectOnopentag(tagName: string, attributes: Attributes): void {
+    function selectOnOpenTag(tagName: string, attributes: Attributes): void {
       depth++;
       if (insideSelection()) {
         // Inside a selected subtree — build the TNode and attach to parent.
@@ -441,9 +461,15 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
           parent.children.push(node);
         }
         stack.push(node);
+        // If this tag also matches the selector, record it so it will be
+        // emitted independently when it closes (in addition to being part
+        // of its ancestor's subtree).
+        if (selectSet!.has(tagName)) {
+          selectDepths.push(depth);
+        }
       } else if (selectSet!.has(tagName)) {
         // This element matches the selector — start a new selected subtree.
-        selectDepth = depth;
+        selectDepths.push(depth);
         const node: TNode = {
           tagName,
           attributes: toNodeAttributes(attributes),
@@ -454,25 +480,26 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
       // Otherwise: non-selected ancestor — no allocation, just depth tracking.
     }
 
-    function selectOnclosetag(_tagName: string): void {
+    function selectOnCloseTag(_tagName: string): void {
       if (insideSelection()) {
-        if (depth === selectDepth) {
-          // The selected element itself is closing — emit it.
+        const topSelectDepth = selectDepths[selectDepths.length - 1]!;
+        if (depth === topSelectDepth) {
+          // A selected element is closing — emit it independently.
           const node = stack.pop();
           if (node && streamController) {
             streamController.enqueue(convert(node));
           }
-          selectDepth = -1;
+          selectDepths.pop();
         } else {
           // A descendant of the selected element is closing — already
-          // attached to its parent via onopentag, just pop from stack.
+          // attached to its parent via onOpenTag, just pop from stack.
           stack.pop();
         }
       }
       depth--;
     }
 
-    function selectOntext(text: string): void {
+    function selectOnText(text: string): void {
       if (!insideSelection()) return;
       const parent = selectParent();
       if (parent) {
@@ -480,7 +507,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
       }
     }
 
-    function selectOncdata(data: string): void {
+    function selectOnCdata(data: string): void {
       if (!insideSelection()) return;
       const parent = selectParent();
       if (parent) {
@@ -488,7 +515,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
       }
     }
 
-    function selectOncomment(comment: string): void {
+    function selectOnComment(comment: string): void {
       if (!keepComments) return;
       if (!insideSelection()) return;
       const parent = selectParent();
@@ -497,7 +524,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
       }
     }
 
-    function selectOnprocessinginstruction(name: string, body: string): void {
+    function selectOnProcessingInstruction(name: string, body: string): void {
       if (!insideSelection()) return;
       const node: TNode = {
         tagName: '?' + name,
@@ -510,7 +537,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
       }
     }
 
-    function selectOndoctype(tagName: string, attributes: Attributes): void {
+    function selectOnDoctype(tagName: string, attributes: Attributes): void {
       if (!insideSelection()) return;
       const node: TNode = {
         tagName,
@@ -530,15 +557,15 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
     const parser = saxEngine({
       selfClosingTags,
       rawContentTags,
-      onopentag: selectSet ? selectOnopentag : defaultOnopentag,
-      onclosetag: selectSet ? selectOnclosetag : defaultOnclosetag,
-      ontext: selectSet ? selectOntext : defaultOntext,
-      oncdata: selectSet ? selectOncdata : defaultOncdata,
-      oncomment: selectSet ? selectOncomment : defaultOncomment,
-      onprocessinginstruction: selectSet
-        ? selectOnprocessinginstruction
-        : defaultOnprocessinginstruction,
-      ondoctype: selectSet ? selectOndoctype : defaultOndoctype,
+      onOpenTag: selectSet ? selectOnOpenTag : defaultOnOpenTag,
+      onCloseTag: selectSet ? selectOnCloseTag : defaultOnCloseTag,
+      onText: selectSet ? selectOnText : defaultOnText,
+      onCdata: selectSet ? selectOnCdata : defaultOnCdata,
+      onComment: selectSet ? selectOnComment : defaultOnComment,
+      onProcessingInstruction: selectSet
+        ? selectOnProcessingInstruction
+        : defaultOnProcessingInstruction,
+      onDoctype: selectSet ? selectOnDoctype : defaultOnDoctype,
     });
 
     super({

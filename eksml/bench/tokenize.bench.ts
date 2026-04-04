@@ -49,12 +49,12 @@ const noop = () => {};
 function eksmlSaxEngine(xml: string, chunkSize: number): void {
   const chunks = chunkString(xml, chunkSize);
   const parser = saxEngine({
-    onopentag: noop,
-    onclosetag: noop,
-    ontext: noop,
-    oncdata: noop,
-    oncomment: noop,
-    onprocessinginstruction: noop,
+    onOpenTag: noop,
+    onCloseTag: noop,
+    onText: noop,
+    onCdata: noop,
+    onComment: noop,
+    onProcessingInstruction: noop,
   });
   for (const chunk of chunks) {
     parser.write(chunk);
