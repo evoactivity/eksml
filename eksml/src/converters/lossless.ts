@@ -71,6 +71,21 @@ function convertString(text: string): LosslessEntry {
 }
 
 /**
+ * Convert a single `TNode | string` item into its lossless representation.
+ *
+ * - `TNode` → `{ tagName: [ ...children ] }`
+ * - `string` → `{ $text: "..." }` or `{ $comment: "..." }`
+ *
+ * Used internally by `XmlParseStream` when `output: 'lossless'` is set.
+ *
+ * @internal
+ */
+export function convertItemToLossless(item: TNode | string): LosslessEntry {
+  if (typeof item === 'string') return convertString(item);
+  return convertNode(item);
+}
+
+/**
  * Parse an XML/HTML string or convert a pre-parsed DOM tree into an
  * order-preserving JSON-friendly structure.
  *

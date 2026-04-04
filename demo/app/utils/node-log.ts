@@ -1,7 +1,7 @@
 import { tracked } from '@glimmer/tracking';
 
 /**
- * Tracked model for an expandable node entry in the transform-stream log.
+ * Tracked model for an expandable node entry in the stream log.
  *
  * `expanded` and `colorizedJson` are @tracked so Glimmer re-renders
  * when they change (e.g. user clicks to expand, or async colorization

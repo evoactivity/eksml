@@ -33,12 +33,12 @@ const DEFAULT_XML = `\
   <!-- More sections to come -->
 </library>`;
 
-export interface TransformStreamModel {
+export interface StreamModel {
   defaultXml: string;
 }
 
-export default class TransformStreamRoute extends Route {
-  model(): TransformStreamModel {
+export default class StreamRoute extends Route {
+  model(): StreamModel {
     return {
       defaultXml: DEFAULT_XML,
     };

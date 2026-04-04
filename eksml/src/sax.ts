@@ -89,7 +89,7 @@ export interface SaxParserOptions {
 export function createSaxParser(options?: SaxParserOptions): SaxParser {
   const opts = options ?? {};
 
-  // Resolve HTML-mode defaults (same logic as parse() and transformStream)
+  // Resolve HTML-mode defaults (same logic as parse() and XmlParseStream)
   const isHtml = opts.html === true;
   const selfClosingTags =
     opts.selfClosingTags ?? (isHtml ? HTML_VOID_ELEMENTS : []);

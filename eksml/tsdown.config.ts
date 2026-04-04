@@ -5,7 +5,7 @@ export default defineConfig({
     'src/parser.ts',
     'src/writer.ts',
     'src/sax.ts',
-    'src/transformStream.ts',
+    'src/xmlParseStream.ts',
     'src/converters/lossy.ts',
     'src/converters/lossless.ts',
     'src/converters/fromLossy.ts',

@@ -3,7 +3,8 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { trackedArray } from '@ember/reactive/collections';
 
-import { transformStream } from 'eksml/transform-stream';
+import { XmlParseStream } from 'eksml/stream';
+import type { XmlParseStreamOptions } from 'eksml/stream';
 import pageTitle from 'ember-page-title/helpers/page-title';
 import { init } from 'modern-monaco';
 
@@ -14,7 +15,7 @@ import { formatMs } from '#components/run-duration.gts';
 import TwoPaneLayout from '#components/two-pane-layout.gts';
 import { NodeEntry } from '#utils/node-log.ts';
 
-import type { TransformStreamModel } from '../routes/transform-stream';
+import type { StreamModel } from '../routes/stream';
 import type { LogItem } from '#utils/node-log.ts';
 
 // ---------------------------------------------------------------------------
@@ -62,6 +63,24 @@ function formatNode(node: TNode): string {
   return html;
 }
 
+function formatConverted(value: unknown): string {
+  if (value === null) return `<span class="node-text-val">null</span>`;
+  if (typeof value === 'string')
+    return `<span class="node-text-val">string</span> "${escapeHtml(
+      value.length > 60 ? value.slice(0, 60) + '...' : value,
+    )}"`;
+
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj);
+  const tag = keys.find((k) => !k.startsWith('$'));
+  const label = tag
+    ? `<span class="node-tag">${escapeHtml(tag)}</span>`
+    : `<span class="node-tag">object</span>`;
+  const keyCount = keys.length;
+
+  return `${label} <span class="node-children">${keyCount} ${keyCount === 1 ? 'key' : 'keys'}</span>`;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -86,18 +105,19 @@ async function getMonaco(): Promise<Awaited<ReturnType<typeof init>>> {
 // Route template component
 // ---------------------------------------------------------------------------
 
-interface TransformStreamTemplateSignature {
+interface StreamTemplateSignature {
   Args: {
-    model: TransformStreamModel;
+    model: StreamModel;
   };
 }
 
 let nextEntryId = 0;
 
-class TransformStreamTemplate extends Component<TransformStreamTemplateSignature> {
+class StreamTemplate extends Component<StreamTemplateSignature> {
   @tracked throttle = '100';
   @tracked chunkSize = '64';
   @tracked selectTags = '';
+  @tracked outputMode: 'dom' | 'lossy' | 'lossless' = 'dom';
   @tracked stats = '';
   @tracked progress = 0;
   @tracked logItems: LogItem[] = trackedArray([]);
@@ -116,13 +136,22 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
 
   // ------- Helpers -------
 
-  private appendNode(node: TNode | string): void {
-    const isText = typeof node === 'string';
-    const summary = isText
-      ? `<span class="node-text-val">text</span> "${escapeHtml(
-          node.length > 80 ? node.slice(0, 80) + '...' : node,
-        )}"`
-      : formatNode(node);
+  private appendNode(node: unknown): void {
+    const isDom = this.outputMode === 'dom';
+    let summary: string;
+
+    if (isDom) {
+      const isText = typeof node === 'string';
+      summary = isText
+        ? `<span class="node-text-val">text</span> "${escapeHtml(
+            (node as string).length > 80
+              ? (node as string).slice(0, 80) + '...'
+              : (node as string),
+          )}"`
+        : formatNode(node as TNode);
+    } else {
+      summary = formatConverted(node);
+    }
 
     const jsonRaw = JSON.stringify(node, null, 2);
     const entry = new NodeEntry(nextEntryId++, node, summary, jsonRaw);
@@ -156,8 +185,8 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
   // ------- Actions -------
 
   onInputReady = (
-    editor: TransformStreamTemplate['inputEditorInstance'],
-    monaco: TransformStreamTemplate['monacoApi'],
+    editor: StreamTemplate['inputEditorInstance'],
+    monaco: StreamTemplate['monacoApi'],
   ): void => {
     this.inputEditorInstance = editor;
     this.monacoApi = monaco;
@@ -181,6 +210,13 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
     this.selectTags = (event.target as HTMLInputElement).value;
   };
 
+  setOutputMode = (event: Event): void => {
+    this.outputMode = (event.target as HTMLSelectElement).value as
+      | 'dom'
+      | 'lossy'
+      | 'lossless';
+  };
+
   run = async (): Promise<void> => {
     const xml = this.inputEditorInstance
       ? ((
@@ -196,10 +232,14 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
 
-    const options: { select?: string[] } = {};
+    const options: XmlParseStreamOptions = {};
 
     if (selectRaw.length > 0) {
       options.select = selectRaw;
+    }
+
+    if (this.outputMode !== 'dom') {
+      options.output = this.outputMode;
     }
 
     // Reset
@@ -223,8 +263,8 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
     const startTime = performance.now();
     let nodeCount = 0;
 
-    // Create the transform stream
-    const stream = transformStream(undefined, options);
+    // Create the stream
+    const stream = new XmlParseStream(options);
     const streamWriter = stream.writable.getWriter();
     const reader = stream.readable.getReader();
 
@@ -235,7 +275,7 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
 
         if (done) break;
         nodeCount++;
-        this.appendNode(value as TNode | string);
+        this.appendNode(value);
         this.stats = `${nodeCount} nodes`;
       }
     })();
@@ -295,11 +335,13 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
 
   isThrottle = (value: string): boolean => this.throttle === value;
 
+  isOutputMode = (value: string): boolean => this.outputMode === value;
+
   <template>
-    {{pageTitle 'Transform Stream'}}
-    <h1>Transform Stream</h1>
+    {{pageTitle 'Stream'}}
+    <h1>Stream</h1>
     <p class='subtitle'>
-      Feeds XML chunks through a Web TransformStream, emitting complete TNode
+      Feeds XML chunks through an XmlParseStream, emitting complete TNode
       subtrees as they close.
     </p>
 
@@ -335,6 +377,19 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
         value={{this.selectTags}}
         {{on 'input' this.setSelectTags}}
       />
+
+      <label for='output-mode'>Output</label>
+      <select id='output-mode' {{on 'change' this.setOutputMode}}>
+        <option value='dom' selected={{this.isOutputMode 'dom'}}>DOM (TNode)</option>
+        <option
+          value='lossy'
+          selected={{this.isOutputMode 'lossy'}}
+        >Lossy</option>
+        <option
+          value='lossless'
+          selected={{this.isOutputMode 'lossless'}}
+        >Lossless</option>
+      </select>
 
       <button
         class='primary'
@@ -376,4 +431,4 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
   </template>
 }
 
-export default TransformStreamTemplate;
+export default StreamTemplate;

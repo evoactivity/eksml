@@ -6,7 +6,7 @@
 
 # Eksml
 
-A fast, lightweight XML/HTML parser, serializer, and streaming toolkit for JavaScript and TypeScript. Import only what you need — tree parsing, SAX streaming, object conversion, or serialization — each as a standalone function export.
+A fast, lightweight XML/HTML parser, serializer, and streaming toolkit for JavaScript and TypeScript. Import only what you need — tree parsing, SAX streaming, object conversion, or serialization — each as a standalone export.
 
 Built on the same core parsing architecture as [tXml](https://github.com/tobiasNickel/tXml) by Tobias Nickel, Eksml improves the performance and extends it with additional features.
 
@@ -298,19 +298,17 @@ parser.off('opentag', myHandler);
 
 ---
 
-### `transformStream(offset?, options?)`
+### `new XmlParseStream(options?)`
 
-A Web Streams `TransformStream` that parses XML chunks into `TNode` subtrees. Works in browsers, Node.js 18+, Deno, and Bun.
-
-`offset` is `number | string` — when a string is passed, its `.length` is used as the byte offset to skip.
+A Web Streams `TransformStream` that parses XML chunks into `TNode` subtrees. Works in browsers, Node.js 18+, Deno, and Bun. Follows the platform stream class convention (`TextDecoderStream`, `DecompressionStream`, etc.).
 
 ```ts
-import { transformStream } from 'eksml/transform-stream';
+import { XmlParseStream } from 'eksml/stream';
 
 const response = await fetch('/feed.xml');
 const reader = response.body
   .pipeThrough(new TextDecoderStream())
-  .pipeThrough(transformStream())
+  .pipeThrough(new XmlParseStream())
   .getReader();
 
 while (true) {
@@ -320,7 +318,7 @@ while (true) {
 }
 ```
 
-#### `TransformStreamOptions`
+#### `XmlParseStreamOptions`
 
 <table>
   <tr>
@@ -328,6 +326,12 @@ while (true) {
     <th>Type</th>
     <th>Default</th>
     <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>offset</code></td>
+    <td><code>number | string</code></td>
+    <td><code>0</code></td>
+    <td>Starting byte offset — skip this many leading characters. When a string is passed, its <code>.length</code> is used.</td>
   </tr>
   <tr>
     <td><code>html</code></td>
@@ -359,13 +363,19 @@ while (true) {
     <td>--</td>
     <td>Emit only elements matching these tag names as they close, regardless of nesting depth</td>
   </tr>
+  <tr>
+    <td><code>output</code></td>
+    <td><code>'dom' | 'lossy' | 'lossless'</code></td>
+    <td><code>'dom'</code></td>
+    <td>Output format — <code>'dom'</code> emits <code>TNode | string</code>, <code>'lossy'</code> emits <code>LossyValue</code>, <code>'lossless'</code> emits <code>LosslessEntry</code></td>
+  </tr>
 </table>
 
 The `select` option is particularly useful for large feeds:
 
 ```ts
 // Emit each <item> independently instead of waiting for the root to close
-const ts = transformStream(undefined, { select: 'item' });
+const stream = new XmlParseStream({ select: 'item' });
 ```
 
 ---
@@ -597,7 +607,7 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
     <td align="right"><strong>11,452 op/s</strong></td>
   </tr>
   <tr>
-    <td>Eksml (transformStream)</td>
+    <td>Eksml (XmlParseStream)</td>
     <td align="right">31,459 op/s</td>
     <td align="right">7,764 op/s</td>
     <td align="right">5,967 op/s</td>
@@ -756,7 +766,7 @@ Eksml's DOM parser is built on the work of **[Tobias Nickel](https://github.com/
 Eksml extends tXml's foundation with:
 
 - A high-performance SAX streaming engine with an EventEmitter-style API (`createSaxParser`)
-- A Web Streams `TransformStream` for incremental parsing
+- A Web Streams `TransformStream` for incremental parsing (`XmlParseStream`)
 - Lossy and lossless JSON converters with round-trip support
 - HTML-aware parsing and serialization (void elements, raw content tags, entity encoding)
 - Strict mode validation
@@ -774,7 +784,7 @@ Eksml optimizes for speed and simplicity, which means it intentionally does not 
 - **No namespace support.** Namespace prefixes are preserved in tag and attribute names (e.g. `soap:Envelope`) but not resolved to URIs. There is no namespace-aware API.
 - **No XPath or CSS selectors.** Querying uses simple functions like `filter()`, `getElementById()`, and `getElementsByClassName()`. For complex queries, use the DOM output with a dedicated query library.
 - **Entity decoding is opt-in.** By default, entities like `&amp;` and `&#x20;` are left as-is in text and attribute values. Pass `entities: true` to decode them.
-- **Streaming always emits DOM nodes.** `transformStream` emits `TNode` subtrees. Convert after receiving if you need lossy/lossless format.
+- **Streaming emits DOM nodes by default.** `XmlParseStream` emits `TNode` subtrees unless you set `output: 'lossy'` or `output: 'lossless'`.
 - **Not a drop-in replacement for the W3C DOM.** `TNode` is a plain object with `tagName`, `attributes`, and `children` -- not a `Node`/`Element`/`Document` with methods like `querySelector`, `parentNode`, etc.
 - **Single-threaded.** Parsing runs synchronously on the calling thread. For CPU-bound workloads with very large documents, consider offloading to a Web Worker.
 

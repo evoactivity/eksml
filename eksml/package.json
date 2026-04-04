@@ -20,9 +20,9 @@
       "types": "./dist/sax.d.mts",
       "import": "./dist/sax.mjs"
     },
-    "./transform-stream": {
-      "types": "./dist/transformStream.d.mts",
-      "import": "./dist/transformStream.mjs"
+    "./stream": {
+      "types": "./dist/xmlParseStream.d.mts",
+      "import": "./dist/xmlParseStream.mjs"
     },
     "./lossy": {
       "types": "./dist/converters/lossy.d.mts",

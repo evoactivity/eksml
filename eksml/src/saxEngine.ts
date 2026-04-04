@@ -1,7 +1,7 @@
 /**
  * saxEngine — a high-performance, synchronous, event-based streaming XML parser.
  *
- * This is an internal module used by `createSaxParser` and `transformStream`.
+ * This is an internal module used by `createSaxParser` and `XmlParseStream`.
  * It is not part of the public API.
  *
  * Architecture: single-pass state machine with batch scanning. Each character is

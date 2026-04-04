@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { bench, describe } from 'vitest';
 
 // --- eksml ---
-import { transformStream } from '#src/transformStream.ts';
+import { XmlParseStream } from '#src/xmlParseStream.ts';
 import { saxEngine } from '#src/saxEngine.ts';
 
 // --- competitors ---
@@ -59,7 +59,7 @@ function chunkString(str: string, size: number): string[] {
 // ---------------------------------------------------------------------------
 async function eksmlStream(xml: string, chunkSize: number): Promise<void> {
   const chunks = chunkString(xml, chunkSize);
-  const stream = transformStream();
+  const stream = new XmlParseStream();
   const writer = stream.writable.getWriter();
   const reader = stream.readable.getReader();
 
@@ -302,7 +302,7 @@ function fxpSync(xml: string): void {
 describe('stream: RSS feed (256 B chunks)', () => {
   const size = 256;
 
-  bench('eksml (transformStream)', async () => {
+  bench('eksml (XmlParseStream)', async () => {
     await eksmlStream(rssFeed, size);
   });
 
@@ -333,7 +333,7 @@ describe('stream: RSS feed (256 B chunks)', () => {
 describe('stream: XMLTV EPG (256 B chunks)', () => {
   const size = 256;
 
-  bench('eksml (transformStream)', async () => {
+  bench('eksml (XmlParseStream)', async () => {
     await eksmlStream(xmltvEpg, size);
   });
 
@@ -364,7 +364,7 @@ describe('stream: XMLTV EPG (256 B chunks)', () => {
 describe('stream: Maven POM (256 B chunks)', () => {
   const size = 256;
 
-  bench('eksml (transformStream)', async () => {
+  bench('eksml (XmlParseStream)', async () => {
     await eksmlStream(pomXml, size);
   });
 
@@ -395,7 +395,7 @@ describe('stream: Maven POM (256 B chunks)', () => {
 describe('stream: XMLTV EPG (64 B chunks — stress)', () => {
   const size = 64;
 
-  bench('eksml (transformStream)', async () => {
+  bench('eksml (XmlParseStream)', async () => {
     await eksmlStream(xmltvEpg, size);
   });
 

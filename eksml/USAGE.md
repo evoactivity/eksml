@@ -31,14 +31,14 @@ interface TNode {
 - You want a tree structure you can walk, query, or transform
 - Performance matters — this is the fastest way to get a DOM tree (2-17x faster than fast-xml-parser, xml2js, xmldom)
 
-## `transformStream()` — async streaming, emits DOM subtrees
+## `new XmlParseStream()` — async streaming, emits DOM subtrees
 
 Use when XML arrives in chunks (network response, file stream) and you want `TNode` trees as they complete.
 
 ```ts
-import { transformStream } from 'eksml';
+import { XmlParseStream } from 'eksml/stream';
 
-const stream = transformStream();
+const stream = new XmlParseStream();
 const response = await fetch('https://example.com/feed.xml');
 const nodes = [];
 
@@ -52,11 +52,22 @@ for await (const node of response.body
 
 Returns a standard `TransformStream<string, TNode | string>` — works in browsers, Node.js 18+, Deno, and Bun.
 
+Set `output` to get lossy or lossless objects directly from the stream:
+
+```ts
+// Lossy output — each item is a LossyValue
+const lossy = new XmlParseStream({ output: 'lossy' });
+
+// Lossless output — each item is a LosslessEntry
+const lossless = new XmlParseStream({ output: 'lossless' });
+```
+
 **Pick this when:**
 
 - XML arrives incrementally (HTTP responses, WebSockets, file reads)
 - You want complete `TNode` subtrees without building them yourself
 - You need backpressure handling via the Web Streams API
+- You want lossy/lossless conversion without a separate post-processing step
 
 ## `createSaxParser()` — EventEmitter-style SAX parser, fires callbacks
 
@@ -129,7 +140,7 @@ All APIs support HTML via the `html` option. This sets sensible defaults for voi
 ```ts
 parse('<div><br><img src="a.png"><p>text</p></div>', { html: true });
 
-transformStream(0, { html: true });
+new XmlParseStream({ html: true });
 
 createSaxParser({ html: true });
 
@@ -138,10 +149,10 @@ lossy('<div><br><p>text</p></div>', { html: true });
 
 ## Quick reference
 
-|          | `parse()`                    | `transformStream()`      | `createSaxParser()`               | `lossless()`      | `lossy()`            |
-| -------- | ---------------------------- | ------------------------ | --------------------------------- | ----------------- | -------------------- |
-| Input    | full string                  | chunked strings          | chunked strings                   | full string       | full string          |
-| Output   | `TNode[]` tree               | `TNode` stream           | SAX events via `.on()`            | `LosslessEntry[]` | keyed objects        |
-| Async    | no                           | yes                      | no                                | no                | no                   |
-| Lossless | yes                          | yes                      | yes                               | yes               | no (sibling order)   |
-| Best for | full documents, tree walking | streaming with DOM nodes | max throughput, custom processing | JSON storage/IPC  | easy property access |
+|          | `parse()`                    | `new XmlParseStream()`     | `createSaxParser()`               | `lossless()`      | `lossy()`            |
+| -------- | ---------------------------- | -------------------------- | --------------------------------- | ----------------- | -------------------- |
+| Input    | full string                  | chunked strings            | chunked strings                   | full string       | full string          |
+| Output   | `TNode[]` tree               | `TNode` / lossy / lossless | SAX events via `.on()`            | `LosslessEntry[]` | keyed objects        |
+| Async    | no                           | yes                        | no                                | no                | no                   |
+| Lossless | yes                          | yes                        | yes                               | yes               | no (sibling order)   |
+| Best for | full documents, tree walking | streaming with any format  | max throughput, custom processing | JSON storage/IPC  | easy property access |

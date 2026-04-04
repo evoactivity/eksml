@@ -11,7 +11,7 @@ Router.map(function () {
   this.route('parse');
   this.route('writer');
   this.route('sax');
-  this.route('transform-stream');
+  this.route('stream');
   this.route('benchmark');
 });
 

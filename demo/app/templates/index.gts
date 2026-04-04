@@ -41,14 +41,14 @@ import Card from '#components/card.gts';
         <:tag><span class='tag tag-stream'>createSaxParser</span></:tag>
       </Card>
 
-      <Card @route='transform-stream'>
-        <:title>Transform Stream</:title>
+      <Card @route='stream'>
+        <:title>Stream</:title>
         <:content>
-          Pipe XML through a Web TransformStream. Complete TNode subtrees are
+          Pipe XML through an XmlParseStream. Complete TNode subtrees are
           emitted as each top-level element closes. Click nodes to expand their
           full JSON.
         </:content>
-        <:tag><span class='tag tag-stream'>transformStream</span></:tag>
+        <:tag><span class='tag tag-stream'>XmlParseStream</span></:tag>
       </Card>
 
       <Card @route='benchmark' style='{{htmlSafe "grid-column: 1 / span 2;"}}'>

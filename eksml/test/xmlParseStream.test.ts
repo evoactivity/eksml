@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
-import { transformStream } from '#src/transformStream.ts';
+import { XmlParseStream } from '#src/xmlParseStream.ts';
 import { type TNode } from '#src/parser.ts';
 import { isElementNode } from '#src/utilities/isElementNode.ts';
 import assert from 'node:assert';
@@ -36,9 +36,9 @@ async function collect(
   return results;
 }
 
-describe('transformStream', () => {
+describe('XmlParseStream', () => {
   it('parses all nodes from a single chunk', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, ['<a>1</a><b>2</b><c>3</c>']);
     const tags = results
       .filter((r): r is TNode => typeof r === 'object')
@@ -47,7 +47,7 @@ describe('transformStream', () => {
   });
 
   it('parses a complete XML document in a single chunk', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, ['<root><item>hello</item></root>']);
     expect(results).toHaveLength(1);
     const root = results[0] as TNode;
@@ -58,7 +58,7 @@ describe('transformStream', () => {
   });
 
   it('parses XML split across multiple chunks', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, ['<a>1</a><b>he', 'llo</b><c>3</c>']);
     const tags = results
       .filter((r): r is TNode => typeof r === 'object')
@@ -72,7 +72,7 @@ describe('transformStream', () => {
 
   it('accepts a numeric offset', async () => {
     const prefix = 'JUNK';
-    const stream = transformStream(prefix.length);
+    const stream = new XmlParseStream({ offset: prefix.length });
     const results = await collect(stream, [prefix + '<a>text</a>']);
     const a = results.find(
       (r) => typeof r === 'object' && r.tagName === 'a',
@@ -83,7 +83,7 @@ describe('transformStream', () => {
 
   it('accepts a string offset (uses its length)', async () => {
     const prefix = 'PREFIX';
-    const stream = transformStream(prefix);
+    const stream = new XmlParseStream({ offset: prefix });
     const results = await collect(stream, [prefix + '<a>ok</a>']);
     const a = results.find(
       (r) => typeof r === 'object' && r.tagName === 'a',
@@ -93,7 +93,7 @@ describe('transformStream', () => {
   });
 
   it('skips comments by default', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, ['<!-- comment --><a>val</a>']);
     const strings = results.filter(
       (r) => typeof r === 'string' && r.startsWith('<!--'),
@@ -107,7 +107,7 @@ describe('transformStream', () => {
   });
 
   it('emits comments when keepComments is true', async () => {
-    const stream = transformStream(0, { keepComments: true });
+    const stream = new XmlParseStream({ keepComments: true });
     const results = await collect(stream, ['<!-- hello --><a>val</a>']);
     const comments = results.filter(
       (r) => typeof r === 'string' && r.startsWith('<!--'),
@@ -117,7 +117,7 @@ describe('transformStream', () => {
   });
 
   it('handles an incomplete element across chunks', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, [
       '<item id="1">fir',
       'st</item><item id="2">second</item>',
@@ -133,7 +133,7 @@ describe('transformStream', () => {
   });
 
   it('parses attributes correctly in streamed XML', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, [
       '<item id="test" class="foo">content</item>',
     ]);
@@ -147,7 +147,7 @@ describe('transformStream', () => {
   });
 
   it('handles self-closing tags', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, ['<br/><hr/>']);
     const tags = results
       .filter((r): r is TNode => typeof r === 'object')
@@ -157,13 +157,13 @@ describe('transformStream', () => {
   });
 
   it('handles empty input', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, ['']);
     expect(results).toEqual([]);
   });
 
   it('handles comment split across chunks', async () => {
-    const stream = transformStream(0, { keepComments: true });
+    const stream = new XmlParseStream({ keepComments: true });
     const results = await collect(stream, [
       '<!-- com',
       'ment --><item>ok</item>',
@@ -176,7 +176,7 @@ describe('transformStream', () => {
   });
 
   it('passes through parseOptions to the parser', async () => {
-    const stream = transformStream(0, {
+    const stream = new XmlParseStream({
       selfClosingTags: ['custom'],
     });
     const results = await collect(stream, ['<custom><a>text</a>']);
@@ -192,7 +192,7 @@ describe('transformStream', () => {
   });
 
   it('handles multiple comments interleaved with elements', async () => {
-    const stream = transformStream(0, { keepComments: true });
+    const stream = new XmlParseStream({ keepComments: true });
     const results = await collect(stream, [
       '<!-- c1 --><a>1</a><!-- c2 --><b>2</b><c>3</c>',
     ]);
@@ -209,7 +209,7 @@ describe('transformStream', () => {
   });
 
   it('emits both nodes for two sibling elements', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, ['<first/><second/>']);
     const tags = results
       .filter((r): r is TNode => typeof r === 'object')
@@ -220,7 +220,7 @@ describe('transformStream', () => {
   // --- DOCTYPE ---
 
   it('emits DOCTYPE as a TNode', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, ['<!DOCTYPE html><html></html>']);
     expect(results).toHaveLength(2);
     const doctype = results[0] as TNode;
@@ -232,7 +232,7 @@ describe('transformStream', () => {
   });
 
   it('emits DOCTYPE with quoted identifiers', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, [
       '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html/>',
     ]);
@@ -249,7 +249,7 @@ describe('transformStream', () => {
   });
 
   it('emits DOCTYPE with internal subset discarded', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, [
       '<!DOCTYPE root [<!ELEMENT root (#PCDATA)>]><root>text</root>',
     ]);
@@ -265,7 +265,7 @@ describe('transformStream', () => {
   });
 
   it('emits DOCTYPE split across chunks', async () => {
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, [
       '<!DOCT',
       'YPE html>',
@@ -279,7 +279,7 @@ describe('transformStream', () => {
   });
 
   it('flushes a trailing comment when keepComments is true', async () => {
-    const stream = transformStream(0, { keepComments: true });
+    const stream = new XmlParseStream({ keepComments: true });
     const results = await collect(stream, ['<a>1</a><!-- trailing -->']);
     const comments = results.filter(
       (r) => typeof r === 'string' && r.startsWith('<!--'),
@@ -303,7 +303,7 @@ function chunkString(str: string, size: number): string[] {
 // =================================================================
 // Streaming tests with complex fixture documents
 // =================================================================
-describe('transformStream with large fixtures', () => {
+describe('XmlParseStream with large fixtures', () => {
   const rssFeed = fixture('rss-feed.xml');
   const soapEnvelope = fixture('soap-envelope.xml');
   const atomFeed = fixture('atom-feed.xml');
@@ -312,7 +312,7 @@ describe('transformStream with large fixtures', () => {
 
   describe('rss-feed.xml', () => {
     it('streams entire document as a single chunk', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const results = await collect(stream, [rssFeed]);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
       expect(nodes.length).toBeGreaterThanOrEqual(1);
@@ -323,7 +323,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('streams in small chunks (64 bytes) and still produces valid nodes', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const chunks = chunkString(rssFeed, 64);
       const results = await collect(stream, chunks);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
@@ -332,7 +332,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('streams in medium chunks (256 bytes)', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const chunks = chunkString(rssFeed, 256);
       const results = await collect(stream, chunks);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
@@ -342,7 +342,7 @@ describe('transformStream with large fixtures', () => {
     it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [32, 128, 512, rssFeed.length]) {
-        const stream = transformStream();
+        const stream = new XmlParseStream();
         const chunks = chunkString(rssFeed, size);
         const results = await collect(stream, chunks);
         const tags = results
@@ -359,7 +359,7 @@ describe('transformStream with large fixtures', () => {
 
   describe('soap-envelope.xml', () => {
     it('streams entire document as a single chunk', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const results = await collect(stream, [soapEnvelope]);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
       const envelope = nodes.find((n) => n.tagName === 'soap:Envelope');
@@ -370,7 +370,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('streams in small chunks (48 bytes)', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const chunks = chunkString(soapEnvelope, 48);
       const results = await collect(stream, chunks);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
@@ -379,7 +379,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('preserves deeply nested structure when streamed', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const chunks = chunkString(soapEnvelope, 100);
       const results = await collect(stream, chunks);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
@@ -405,7 +405,7 @@ describe('transformStream with large fixtures', () => {
     it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [50, 200, soapEnvelope.length]) {
-        const stream = transformStream();
+        const stream = new XmlParseStream();
         const chunks = chunkString(soapEnvelope, size);
         const results = await collect(stream, chunks);
         const tags = results
@@ -421,7 +421,7 @@ describe('transformStream with large fixtures', () => {
 
   describe('atom-feed.xml', () => {
     it('streams entire document as a single chunk', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const results = await collect(stream, [atomFeed]);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
       const feed = nodes.find((n) => n.tagName === 'feed');
@@ -430,7 +430,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('streams in small chunks (80 bytes)', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const chunks = chunkString(atomFeed, 80);
       const results = await collect(stream, chunks);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
@@ -441,7 +441,7 @@ describe('transformStream with large fixtures', () => {
     it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [64, 256, 1024, atomFeed.length]) {
-        const stream = transformStream();
+        const stream = new XmlParseStream();
         const chunks = chunkString(atomFeed, size);
         const results = await collect(stream, chunks);
         const tags = results
@@ -457,7 +457,7 @@ describe('transformStream with large fixtures', () => {
 
   describe('xhtml-page.xml', () => {
     it('streams entire document as a single chunk', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const results = await collect(stream, [xhtmlPage]);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
       const html = nodes.find((n) => n.tagName === 'html');
@@ -465,7 +465,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('streams in small chunks (100 bytes)', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const chunks = chunkString(xhtmlPage, 100);
       const results = await collect(stream, chunks);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
@@ -474,7 +474,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('streams with keepComments enabled', async () => {
-      const stream = transformStream(0, { keepComments: true });
+      const stream = new XmlParseStream({ keepComments: true });
       const results = await collect(stream, chunkString(xhtmlPage, 150));
       const comments = results.filter(
         (r) => typeof r === 'string' && r.startsWith('<!--'),
@@ -489,7 +489,7 @@ describe('transformStream with large fixtures', () => {
     it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [75, 300, 1000, xhtmlPage.length]) {
-        const stream = transformStream();
+        const stream = new XmlParseStream();
         const chunks = chunkString(xhtmlPage, size);
         const results = await collect(stream, chunks);
         const tags = results
@@ -505,7 +505,7 @@ describe('transformStream with large fixtures', () => {
 
   describe('pom.xml', () => {
     it('streams entire document as a single chunk', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const results = await collect(stream, [pomXml]);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
       const project = nodes.find((n) => n.tagName === 'project');
@@ -513,7 +513,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('streams in small chunks (64 bytes)', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const chunks = chunkString(pomXml, 64);
       const results = await collect(stream, chunks);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
@@ -522,7 +522,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('preserves deeply nested build plugin configuration when streamed', async () => {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const chunks = chunkString(pomXml, 128);
       const results = await collect(stream, chunks);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
@@ -549,7 +549,7 @@ describe('transformStream with large fixtures', () => {
     it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [50, 200, 500, pomXml.length]) {
-        const stream = transformStream();
+        const stream = new XmlParseStream();
         const chunks = chunkString(pomXml, size);
         const results = await collect(stream, chunks);
         const tags = results
@@ -592,7 +592,7 @@ describe('transformStream with large fixtures', () => {
       channels: Map<string, string>;
       epg: EPG;
     }> {
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const writer = stream.writable.getWriter();
       const reader = stream.readable.getReader();
 
@@ -763,7 +763,7 @@ describe('transformStream with large fixtures', () => {
     it('builds EPG progressively — early channels appear before later programmes', async () => {
       // This test verifies the streaming nature: we can start processing
       // channels before all programmes have arrived
-      const stream = transformStream();
+      const stream = new XmlParseStream();
       const writer = stream.writable.getWriter();
       const reader = stream.readable.getReader();
 
@@ -814,7 +814,7 @@ describe('transformStream with large fixtures', () => {
     const htmlPage = fixture('html-page.html');
 
     it('streams entire document as a single chunk with html mode', async () => {
-      const stream = transformStream(0, { html: true });
+      const stream = new XmlParseStream({ html: true });
       const results = await collect(stream, [htmlPage]);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
       const html = nodes.find((n) => n.tagName === 'html');
@@ -823,7 +823,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('streams in small chunks (100 bytes) with html mode', async () => {
-      const stream = transformStream(0, { html: true });
+      const stream = new XmlParseStream({ html: true });
       const chunks = chunkString(htmlPage, 100);
       const results = await collect(stream, chunks);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
@@ -832,7 +832,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('preserves script content when streamed with html mode', async () => {
-      const stream = transformStream(0, { html: true });
+      const stream = new XmlParseStream({ html: true });
       const results = await collect(stream, [htmlPage]);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
       const html = nodes.find((n) => n.tagName === 'html')!;
@@ -866,7 +866,7 @@ describe('transformStream with large fixtures', () => {
     });
 
     it('preserves style content when streamed with html mode', async () => {
-      const stream = transformStream(0, { html: true });
+      const stream = new XmlParseStream({ html: true });
       const results = await collect(stream, [htmlPage]);
       const nodes = results.filter((r): r is TNode => typeof r === 'object');
       const html = nodes.find((n) => n.tagName === 'html')!;
@@ -890,7 +890,7 @@ describe('transformStream with large fixtures', () => {
     it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [80, 256, 1024, htmlPage.length]) {
-        const stream = transformStream(0, { html: true });
+        const stream = new XmlParseStream({ html: true });
         const chunks = chunkString(htmlPage, size);
         const results = await collect(stream, chunks);
         const tags = results
@@ -908,9 +908,9 @@ describe('transformStream with large fixtures', () => {
 // =================================================================
 // select option tests
 // =================================================================
-describe('transformStream with select', () => {
+describe('XmlParseStream with select', () => {
   it('emits only matching elements from a wrapped root', async () => {
-    const stream = transformStream(undefined, { select: 'item' });
+    const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, [
       '<root><item>1</item><item>2</item><item>3</item></root>',
     ]);
@@ -925,7 +925,7 @@ describe('transformStream with select', () => {
   });
 
   it('does not emit the root element', async () => {
-    const stream = transformStream(undefined, { select: 'item' });
+    const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, ['<root><item>a</item></root>']);
     const tags = results
       .filter((r): r is TNode => typeof r === 'object')
@@ -936,7 +936,7 @@ describe('transformStream with select', () => {
   });
 
   it('emits nothing when no elements match the selector', async () => {
-    const stream = transformStream(undefined, { select: 'missing' });
+    const stream = new XmlParseStream({ select: 'missing' });
     const results = await collect(stream, [
       '<root><item>1</item><entry>2</entry></root>',
     ]);
@@ -944,7 +944,7 @@ describe('transformStream with select', () => {
   });
 
   it('preserves subtree structure inside matched elements', async () => {
-    const stream = transformStream(undefined, { select: 'item' });
+    const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, [
       '<root><item><name>Widget</name><price currency="USD">9.99</price></item></root>',
     ]);
@@ -962,7 +962,7 @@ describe('transformStream with select', () => {
   });
 
   it('preserves attributes on matched elements', async () => {
-    const stream = transformStream(undefined, { select: 'item' });
+    const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, [
       '<root><item id="1" class="active">text</item></root>',
     ]);
@@ -972,7 +972,7 @@ describe('transformStream with select', () => {
   });
 
   it('accepts an array of tag names to select', async () => {
-    const stream = transformStream(undefined, { select: ['item', 'entry'] });
+    const stream = new XmlParseStream({ select: ['item', 'entry'] });
     const results = await collect(stream, [
       '<root><item>1</item><other>skip</other><entry>2</entry></root>',
     ]);
@@ -986,7 +986,7 @@ describe('transformStream with select', () => {
   it('emits nested selected elements as part of the outermost match', async () => {
     // Nested <item> inside an <item> — the outer one is the selected match;
     // the inner one is just a child in its subtree.
-    const stream = transformStream(undefined, { select: 'item' });
+    const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, [
       '<root><item><item>inner</item></item></root>',
     ]);
@@ -999,7 +999,7 @@ describe('transformStream with select', () => {
   });
 
   it('handles deeply nested selected elements', async () => {
-    const stream = transformStream(undefined, { select: 'item' });
+    const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, [
       '<a><b><c><item>deep</item></c></b></a>',
     ]);
@@ -1010,7 +1010,7 @@ describe('transformStream with select', () => {
   });
 
   it('handles multiple selected elements at different depths', async () => {
-    const stream = transformStream(undefined, { select: 'item' });
+    const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, [
       '<root><item>1</item><wrapper><item>2</item></wrapper><item>3</item></root>',
     ]);
@@ -1021,7 +1021,7 @@ describe('transformStream with select', () => {
   });
 
   it('discards text outside selected elements', async () => {
-    const stream = transformStream(undefined, { select: 'item' });
+    const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, [
       '<root>before<item>inside</item>after</root>',
     ]);
@@ -1031,7 +1031,7 @@ describe('transformStream with select', () => {
   });
 
   it('discards comments outside selected elements', async () => {
-    const stream = transformStream(undefined, {
+    const stream = new XmlParseStream({
       select: 'item',
       keepComments: true,
     });
@@ -1046,7 +1046,7 @@ describe('transformStream with select', () => {
   });
 
   it('handles chunks that split across selected element boundaries', async () => {
-    const stream = transformStream(undefined, { select: 'item' });
+    const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, [
       '<root><ite',
       'm>hel',
@@ -1059,7 +1059,7 @@ describe('transformStream with select', () => {
   });
 
   it('handles self-closing selected elements', async () => {
-    const stream = transformStream(undefined, {
+    const stream = new XmlParseStream({
       select: 'br',
       selfClosingTags: ['br'],
     });
@@ -1072,7 +1072,7 @@ describe('transformStream with select', () => {
   });
 
   it('handles HTML void elements with select', async () => {
-    const stream = transformStream(undefined, {
+    const stream = new XmlParseStream({
       select: 'img',
       html: true,
     });
@@ -1085,7 +1085,7 @@ describe('transformStream with select', () => {
   });
 
   it('works with CDATA inside selected elements', async () => {
-    const stream = transformStream(undefined, { select: 'data' });
+    const stream = new XmlParseStream({ select: 'data' });
     const results = await collect(stream, [
       '<root><data><![CDATA[<raw>&content</raw>]]></data></root>',
     ]);
@@ -1096,7 +1096,7 @@ describe('transformStream with select', () => {
 
   it('falls back to default behavior when select is undefined', async () => {
     // This verifies we didn't break the default path
-    const stream = transformStream();
+    const stream = new XmlParseStream();
     const results = await collect(stream, [
       '<root><item>1</item></root><other>2</other>',
     ]);
@@ -1106,7 +1106,7 @@ describe('transformStream with select', () => {
   });
 
   it('falls back to default behavior when select is empty array', async () => {
-    const stream = transformStream(undefined, { select: [] });
+    const stream = new XmlParseStream({ select: [] });
     const results = await collect(stream, ['<root><item>1</item></root>']);
     expect(results).toHaveLength(1);
     expect((results[0] as TNode).tagName).toBe('root');
@@ -1114,7 +1114,7 @@ describe('transformStream with select', () => {
 
   it('emits selected elements from RSS feed (channel/item)', async () => {
     const rssFeed = fixture('rss-feed.xml');
-    const stream = transformStream(undefined, { select: 'item' });
+    const stream = new XmlParseStream({ select: 'item' });
     const results = await collect(stream, [rssFeed]);
     const items = results.filter(
       (r): r is TNode => typeof r === 'object' && r.tagName === 'item',
@@ -1133,7 +1133,7 @@ describe('transformStream with select', () => {
     const rssFeed = fixture('rss-feed.xml');
     const tagSets: string[][] = [];
     for (const size of [64, 128, 256, rssFeed.length]) {
-      const stream = transformStream(undefined, { select: 'item' });
+      const stream = new XmlParseStream({ select: 'item' });
       const chunks = chunkString(rssFeed, size);
       const results = await collect(stream, chunks);
       const titles = results
@@ -1154,7 +1154,7 @@ describe('transformStream with select', () => {
   it('selects XMLTV programme elements for incremental EPG building', async () => {
     const xmltvFeed = fixture('xmltv-epg.xml');
     // Select both channel and programme elements for incremental processing
-    const stream = transformStream(undefined, {
+    const stream = new XmlParseStream({
       select: ['channel', 'programme'],
     });
     const chunks = chunkString(xmltvFeed, 128);
@@ -1185,5 +1185,163 @@ describe('transformStream with select', () => {
       (c): c is TNode => typeof c === 'object' && c.tagName === 'title',
     );
     expect(title).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// output option
+// ---------------------------------------------------------------------------
+
+describe('XmlParseStream with output option', () => {
+  /** Generic collect that works for any output type. */
+  async function collectAny<T>(
+    stream: TransformStream<string, T>,
+    chunks: string[],
+  ): Promise<T[]> {
+    const results: T[] = [];
+    const writer = stream.writable.getWriter();
+    const reader = stream.readable.getReader();
+
+    const readAll = (async () => {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        results.push(value);
+      }
+    })();
+
+    for (const chunk of chunks) {
+      await writer.write(chunk);
+    }
+    await writer.close();
+    await readAll;
+    return results;
+  }
+
+  describe('output: "lossy"', () => {
+    it('converts a simple element to lossy format', async () => {
+      const stream = new XmlParseStream({ output: 'lossy' });
+      const results = await collectAny(stream, ['<name>Alice</name>']);
+      expect(results).toEqual([{ name: 'Alice' }]);
+    });
+
+    it('converts multiple top-level elements', async () => {
+      const stream = new XmlParseStream({ output: 'lossy' });
+      const results = await collectAny(stream, ['<a>1</a><b>2</b><c>3</c>']);
+      expect(results).toEqual([{ a: '1' }, { b: '2' }, { c: '3' }]);
+    });
+
+    it('converts nested elements with attributes', async () => {
+      const stream = new XmlParseStream({ output: 'lossy' });
+      const results = await collectAny(stream, [
+        '<root><item id="1">text</item></root>',
+      ]);
+      // root has one child: item with attr and text → mixed content
+      expect(results).toEqual([{ root: { item: { $id: '1', $$: ['text'] } } }]);
+    });
+
+    it('converts an empty element to null', async () => {
+      const stream = new XmlParseStream({ output: 'lossy' });
+      const results = await collectAny(stream, ['<empty/>']);
+      expect(results).toEqual([{ empty: null }]);
+    });
+
+    it('works with select option', async () => {
+      const stream = new XmlParseStream({
+        output: 'lossy',
+        select: 'item',
+      });
+      const results = await collectAny(stream, [
+        '<root><item>A</item><item>B</item></root>',
+      ]);
+      expect(results).toEqual([{ item: 'A' }, { item: 'B' }]);
+    });
+
+    it('works with chunked input', async () => {
+      const stream = new XmlParseStream({ output: 'lossy' });
+      const results = await collectAny(stream, [
+        '<roo',
+        't><child>',
+        'hello</child>',
+        '</root>',
+      ]);
+      expect(results).toEqual([{ root: { child: 'hello' } }]);
+    });
+  });
+
+  describe('output: "lossless"', () => {
+    it('converts a simple element to lossless format', async () => {
+      const stream = new XmlParseStream({ output: 'lossless' });
+      const results = await collectAny(stream, ['<name>Alice</name>']);
+      expect(results).toEqual([{ name: [{ $text: 'Alice' }] }]);
+    });
+
+    it('converts multiple top-level elements', async () => {
+      const stream = new XmlParseStream({ output: 'lossless' });
+      const results = await collectAny(stream, ['<a>1</a><b>2</b><c>3</c>']);
+      expect(results).toEqual([
+        { a: [{ $text: '1' }] },
+        { b: [{ $text: '2' }] },
+        { c: [{ $text: '3' }] },
+      ]);
+    });
+
+    it('converts nested elements with attributes', async () => {
+      const stream = new XmlParseStream({ output: 'lossless' });
+      const results = await collectAny(stream, [
+        '<root><item id="1">text</item></root>',
+      ]);
+      expect(results).toEqual([
+        {
+          root: [
+            {
+              item: [{ $attr: { id: '1' } }, { $text: 'text' }],
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('converts an empty element to an entry with empty children', async () => {
+      const stream = new XmlParseStream({ output: 'lossless' });
+      const results = await collectAny(stream, ['<empty/>']);
+      expect(results).toEqual([{ empty: [] }]);
+    });
+
+    it('works with select option', async () => {
+      const stream = new XmlParseStream({
+        output: 'lossless',
+        select: 'item',
+      });
+      const results = await collectAny(stream, [
+        '<root><item>A</item><item>B</item></root>',
+      ]);
+      expect(results).toEqual([
+        { item: [{ $text: 'A' }] },
+        { item: [{ $text: 'B' }] },
+      ]);
+    });
+
+    it('works with chunked input', async () => {
+      const stream = new XmlParseStream({ output: 'lossless' });
+      const results = await collectAny(stream, [
+        '<roo',
+        't><child>',
+        'hello</child>',
+        '</root>',
+      ]);
+      expect(results).toEqual([{ root: [{ child: [{ $text: 'hello' }] }] }]);
+    });
+  });
+
+  describe('output: "dom" (explicit)', () => {
+    it('emits TNode | string just like the default', async () => {
+      const stream = new XmlParseStream({ output: 'dom' });
+      const results = await collectAny(stream, ['<a>1</a>']);
+      expect(results).toHaveLength(1);
+      const node = results[0] as TNode;
+      expect(node.tagName).toBe('a');
+      expect(node.children).toEqual(['1']);
+    });
   });
 });

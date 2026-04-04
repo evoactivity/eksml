@@ -13,7 +13,7 @@ import pageTitle from 'ember-page-title/helpers/page-title';
         <LinkTo @route='parse'>Parse</LinkTo>
         <LinkTo @route='writer'>Writer</LinkTo>
         <LinkTo @route='sax'>SAX Parser</LinkTo>
-        <LinkTo @route='transform-stream'>Transform Stream</LinkTo>
+        <LinkTo @route='stream'>Stream</LinkTo>
         <LinkTo @route='benchmark'>Benchmark</LinkTo>
       </div>
     </nav>

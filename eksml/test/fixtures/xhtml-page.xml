@@ -97,9 +97,9 @@ console.log(simple.root.item); // "Hello"</code></pre>
           <div class="card" id="card-streaming">
             <h3>Streaming</h3>
             <p>Process large XML documents with constant memory:</p>
-            <pre><code class="language-typescript">import { transformStream } from 'eksml';
+            <pre><code class="language-typescript">import { XmlParseStream } from 'eksml/stream';
 
-const stream = transformStream();
+const stream = new XmlParseStream();
 const writer = stream.writable.getWriter();
 const reader = stream.readable.getReader();
 
@@ -222,7 +222,7 @@ await writer.close();</code></pre>
             </aside>
 
             <h3>Phase 3: Streaming Considerations</h3>
-            <p>When parsing incrementally via <code>transformStream()</code>, we face an additional
+            <p>When parsing incrementally via <code>XmlParseStream</code>, we face an additional
               challenge: the input arrives in arbitrary chunks. A single XML element might span
               multiple chunks. The parser handles this by:</p>
             <ol>

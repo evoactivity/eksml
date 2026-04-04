@@ -197,6 +197,22 @@ function convertNode(node: TNode): LossyValue {
 }
 
 /**
+ * Convert a single `TNode | string` item into its lossy representation.
+ *
+ * - `TNode` → `{ tagName: convertedValue }` (same shape as the multi-root
+ *   branch of `lossy()`)
+ * - `string` → passed through as-is
+ *
+ * Used internally by `XmlParseStream` when `output: 'lossy'` is set.
+ *
+ * @internal
+ */
+export function convertItemToLossy(item: TNode | string): LossyValue {
+  if (typeof item === 'string') return item;
+  return { [item.tagName]: convertNode(item) } as LossyObject;
+}
+
+/**
  * Parse an XML/HTML string or convert a pre-parsed DOM tree into the most
  * simplified lossy JS object format.
  *
