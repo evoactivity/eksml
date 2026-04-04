@@ -74,7 +74,7 @@ function formatConverted(value: unknown): string {
   const keys = Object.keys(obj);
   const tag = keys.find((k) => !k.startsWith('$'));
   const label = tag
-    ? `<span class="node-tag">${escapeHtml(tag)}</span>`
+    ? `<span class="node-tag">&lt;${escapeHtml(tag)}&gt;</span>`
     : `<span class="node-tag">object</span>`;
   const keyCount = keys.length;
 
