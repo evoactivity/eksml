@@ -8,6 +8,7 @@ import { lossy } from 'eksml/lossy';
 import { parse } from 'eksml/parser';
 
 import MonacoEditor from '#components/monaco-editor.gts';
+import RunDuration from '#components/run-duration.gts';
 import TabStrip from '#components/tab-strip.gts';
 import TwoPaneLayout from '#components/two-pane-layout.gts';
 
@@ -27,13 +28,6 @@ function formatSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
 
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDuration(microseconds: number): string {
-  if (microseconds < 1000) return `${microseconds.toFixed(1)} us`;
-  if (microseconds < 1_000_000) return `${Math.round(microseconds / 1000)} ms`;
-
-  return `${(microseconds / 1_000_000).toFixed(1)} s`;
 }
 
 type ParseFn = (xml: string, options: Record<string, boolean>) => unknown;
@@ -60,7 +54,7 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
   @tracked entities = false;
   @tracked html = false;
   @tracked activeTab = 0;
-  @tracked timing = '';
+  @tracked elapsedMs: number | null = null;
   @tracked error: string | null = null;
   @tracked outputContent = '';
   @tracked inputContent = '';
@@ -174,13 +168,10 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
       const elapsed = performance.now() - t0;
 
       this.outputContent = JSON.stringify(result, null, 2);
-
-      const micro = elapsed * 1000;
-
-      this.timing = micro < 1000 ? '< 1 ms' : formatDuration(micro);
+      this.elapsedMs = elapsed;
     } catch (err: unknown) {
       this.error = (err as Error).message;
-      this.timing = '';
+      this.elapsedMs = null;
     }
   }
 
@@ -236,9 +227,7 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
       <:right>
         <div class='pane-header'>
           <span>Output</span>
-          <span class='timing'>
-            {{this.timing}}
-          </span>
+          <RunDuration @ms={{this.elapsedMs}} />
         </div>
         <MonacoEditor
           @language='json'

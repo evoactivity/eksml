@@ -8,6 +8,7 @@ import { fromLossy } from 'eksml/from-lossy';
 import { writer } from 'eksml/writer';
 
 import MonacoEditor from '#components/monaco-editor.gts';
+import RunDuration from '#components/run-duration.gts';
 import TabStrip from '#components/tab-strip.gts';
 import TwoPaneLayout from '#components/two-pane-layout.gts';
 
@@ -17,17 +18,6 @@ import type { init as monacoInit } from 'modern-monaco';
 
 type MonacoApi = Awaited<ReturnType<typeof monacoInit>>;
 type EditorInstance = ReturnType<MonacoApi['editor']['create']> | null;
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function formatDuration(microseconds: number): string {
-  if (microseconds < 1000) return `${microseconds.toFixed(1)} us`;
-  if (microseconds < 1_000_000) return `${(microseconds / 1000).toFixed(3)} ms`;
-
-  return `${(microseconds / 1_000_000).toFixed(3)} s`;
-}
 
 // ---------------------------------------------------------------------------
 // Route template component
@@ -45,7 +35,7 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
   @tracked entities = false;
   @tracked html = false;
   @tracked activeTab = 0;
-  @tracked timing = '';
+  @tracked elapsedMs: number | null = null;
   @tracked error: string | null = null;
   @tracked outputContent = '';
   @tracked inputContent = '';
@@ -163,13 +153,10 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
       const elapsed = performance.now() - t0;
 
       this.outputContent = xml;
-
-      const micro = elapsed * 1000;
-
-      this.timing = micro < 1000 ? '< 1 ms' : formatDuration(micro);
+      this.elapsedMs = elapsed;
     } catch (err: unknown) {
       this.error = (err as Error).message;
-      this.timing = '';
+      this.elapsedMs = null;
     }
   }
 
@@ -235,7 +222,7 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
       <:right>
         <div class='pane-header'>
           <span>Output XML</span>
-          <span class='timing'>{{this.timing}}</span>
+          <RunDuration @ms={{this.elapsedMs}} />
         </div>
         <MonacoEditor
           @language='xml'

@@ -10,6 +10,7 @@ import { init } from 'modern-monaco';
 import MonacoEditor from '#components/monaco-editor.gts';
 import NodeLogArea from '#components/node-log-area.gts';
 import ProgressBar from '#components/progress-bar.gts';
+import RunDuration, { formatMs } from '#components/run-duration.gts';
 import TwoPaneLayout from '#components/two-pane-layout.gts';
 import { NodeEntry } from '#utils/node-log.ts';
 
@@ -98,6 +99,7 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
   @tracked chunkSize = '64';
   @tracked selectTags = '';
   @tracked stats = '';
+  @tracked elapsedMs: number | null = null;
   @tracked progress = 0;
   @tracked logItems: LogItem[] = trackedArray([]);
   @tracked running = false;
@@ -148,7 +150,7 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
   private appendDone(nodeCount: number, elapsed: number): void {
     this.logItems.push({
       type: 'done',
-      text: `${nodeCount} nodes in ${elapsed.toFixed(1)} ms`,
+      text: `${nodeCount} nodes in ${formatMs(elapsed)}`,
     });
   }
 
@@ -209,6 +211,7 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
     // Reset
     this.logItems = trackedArray([]);
     this.stats = '';
+    this.elapsedMs = null;
     this.progress = 0;
     this.running = true;
 
@@ -270,7 +273,8 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
 
       this.appendDone(nodeCount, elapsed);
       this.progress = 100;
-      this.stats = `${nodeCount} nodes | ${elapsed.toFixed(1)} ms`;
+      this.stats = `${nodeCount} nodes`;
+      this.elapsedMs = elapsed;
     }
 
     this.running = false;
@@ -366,6 +370,7 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
         <div class='pane-header'>
           <span>Emitted Nodes</span>
           <span class='stats'>{{this.stats}}</span>
+          <RunDuration @ms={{this.elapsedMs}} />
         </div>
         {{#if this.showEmptyState}}
           <div class='bench-empty'>
