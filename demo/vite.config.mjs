@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { extensions, ember } from '@embroider/vite';
 import { babel } from '@rollup/plugin-babel';
+import { emberSsg } from 'vite-ember-ssr/vite-plugin';
 
 export default defineConfig({
   plugins: [
@@ -8,6 +9,10 @@ export default defineConfig({
     babel({
       babelHelpers: 'runtime',
       extensions,
+    }),
+    emberSsg({
+      routes: ['index', 'parse', 'writer', 'sax', 'stream', 'benchmark'],
+      rehydrate: true,
     }),
   ],
   resolve: {
