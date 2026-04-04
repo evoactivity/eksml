@@ -31,14 +31,14 @@ import Card from '#components/card.gts';
         <:tag><span class='tag tag-write'>write / fromLossy / fromLossless</span></:tag>
       </Card>
 
-      <Card @route='fast-stream'>
-        <:title>Fast Stream (SAX)</:title>
+      <Card @route='sax'>
+        <:title>SAX Parser</:title>
         <:content>
           Feed XML to the SAX parser chunk-by-chunk. Watch opentag, closetag,
           text, CDATA, and comment events stream in with configurable throttle
           and chunk size.
         </:content>
-        <:tag><span class='tag tag-stream'>fastStream</span></:tag>
+        <:tag><span class='tag tag-stream'>createSaxParser</span></:tag>
       </Card>
 
       <Card @route='transform-stream'>

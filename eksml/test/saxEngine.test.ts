@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
-import { fastStream } from '#src/fastStream.ts';
-import type { Attributes } from '#src/fastStream.ts';
+import { saxEngine } from '#src/saxEngine.ts';
+import type { Attributes } from '#src/saxEngine.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
@@ -29,7 +29,7 @@ interface Events {
   doctypes: { tagName: string; attrs: Attributes }[];
 }
 
-/** Feed chunks through fastStream and collect all events. */
+/** Feed chunks through saxEngine and collect all events. */
 function collectEvents(
   chunks: string[],
   options: {
@@ -47,7 +47,7 @@ function collectEvents(
     doctypes: [],
   };
 
-  const parser = fastStream({
+  const parser = saxEngine({
     ...options,
     onopentag(name, attrs) {
       events.opens.push({ name, attrs });
@@ -91,7 +91,7 @@ function parseEvents(
 // =========================================================================
 // Basic parsing
 // =========================================================================
-describe('fastStream', () => {
+describe('saxEngine', () => {
   describe('basic parsing', () => {
     it('parses a simple element with text', () => {
       const e = parseEvents('<a>hello</a>');
@@ -451,7 +451,7 @@ describe('fastStream', () => {
     const pomXml = fixture('pom.xml');
     const xmltvEpg = fixture('xmltv-epg.xml');
 
-    /** Build a tree from fastStream events for comparison. */
+    /** Build a tree from saxEngine events for comparison. */
     interface Node {
       tagName: string;
       attributes: Attributes;
@@ -467,7 +467,7 @@ describe('fastStream', () => {
       const roots: (Node | string)[] = [];
       const stack: Node[] = [];
 
-      const parser = fastStream({
+      const parser = saxEngine({
         ...options,
         onopentag(name, attrs) {
           const el: Node = {
@@ -736,7 +736,7 @@ describe('fastStream', () => {
   describe('selective callbacks', () => {
     it('works with only onopentag', () => {
       const tags: string[] = [];
-      const parser = fastStream({
+      const parser = saxEngine({
         onopentag(name) {
           tags.push(name);
         },
@@ -747,7 +747,7 @@ describe('fastStream', () => {
     });
 
     it('works with no callbacks at all (just tokenizes)', () => {
-      const parser = fastStream();
+      const parser = saxEngine();
       parser.write('<a><b>text</b></a>');
       parser.close();
       // Should not throw

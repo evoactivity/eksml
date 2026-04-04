@@ -58,23 +58,23 @@ Returns a standard `TransformStream<string, TNode | string>` — works in browse
 - You want complete `TNode` subtrees without building them yourself
 - You need backpressure handling via the Web Streams API
 
-## `fastStream()` — synchronous SAX parser, fires callbacks
+## `createSaxParser()` — EventEmitter-style SAX parser, fires callbacks
 
 Use when you need maximum throughput and don't need a tree — or when you want full control over how events are processed.
 
 ```ts
-import { fastStream } from 'eksml';
+import { createSaxParser } from 'eksml/sax';
 
-const parser = fastStream({
-  onopentag(name, attrs) {
-    console.log(`<${name}>`, attrs);
-  },
-  ontext(text) {
-    console.log(text);
-  },
-  onclosetag(name) {
-    console.log(`</${name}>`);
-  },
+const parser = createSaxParser();
+
+parser.on('opentag', (name, attrs) => {
+  console.log(`<${name}>`, attrs);
+});
+parser.on('text', (text) => {
+  console.log(text);
+});
+parser.on('closetag', (name) => {
+  console.log(`</${name}>`);
 });
 
 parser.write(chunk1);
@@ -82,7 +82,7 @@ parser.write(chunk2);
 parser.close();
 ```
 
-Available callbacks: `onopentag`, `onclosetag`, `ontext`, `oncdata`, `oncomment`, `onprocessinginstruction`.
+Available events: `opentag`, `closetag`, `text`, `cdata`, `comment`, `processinginstruction`, `doctype`.
 
 **Pick this when:**
 
@@ -131,20 +131,17 @@ parse('<div><br><img src="a.png"><p>text</p></div>', { html: true });
 
 transformStream(0, { html: true });
 
-fastStream({
-  selfClosingTags: HTML_VOID_ELEMENTS,
-  rawContentTags: HTML_RAW_CONTENT_TAGS,
-});
+createSaxParser({ html: true });
 
 lossy('<div><br><p>text</p></div>', { html: true });
 ```
 
 ## Quick reference
 
-|          | `parse()`                    | `transformStream()`      | `fastStream()`                    | `lossless()`      | `lossy()`            |
+|          | `parse()`                    | `transformStream()`      | `createSaxParser()`               | `lossless()`      | `lossy()`            |
 | -------- | ---------------------------- | ------------------------ | --------------------------------- | ----------------- | -------------------- |
 | Input    | full string                  | chunked strings          | chunked strings                   | full string       | full string          |
-| Output   | `TNode[]` tree               | `TNode` stream           | SAX callbacks                     | `LosslessEntry[]` | keyed objects        |
+| Output   | `TNode[]` tree               | `TNode` stream           | SAX events via `.on()`            | `LosslessEntry[]` | keyed objects        |
 | Async    | no                           | yes                      | no                                | no                | no                   |
 | Lossless | yes                          | yes                      | yes                               | yes               | no (sibling order)   |
 | Best for | full documents, tree walking | streaming with DOM nodes | max throughput, custom processing | JSON storage/IPC  | easy property access |

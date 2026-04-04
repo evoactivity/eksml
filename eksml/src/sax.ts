@@ -1,8 +1,8 @@
 /**
- * createSaxParser — EventEmitter-style SAX parser built on `fastStream`.
+ * createSaxParser — EventEmitter-style SAX parser built on the internal SAX engine.
  *
- * Unlike `fastStream` (which uses static callback options), `createSaxParser`
- * lets you add and remove event handlers dynamically with `.on()` / `.off()`.
+ * Provides dynamic `.on()` / `.off()` handler management on top of the core
+ * SAX tokenizer.
  *
  * @example
  * ```ts
@@ -18,9 +18,9 @@
  * ```
  */
 
-import type { FastStreamHandlers, Attributes } from '#src/fastStream.ts';
+import type { SaxEngineHandlers, Attributes } from '#src/saxEngine.ts';
 import type { ParseOptions } from '#src/parser.ts';
-import { fastStream } from '#src/fastStream.ts';
+import { saxEngine } from '#src/saxEngine.ts';
 import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
@@ -80,7 +80,7 @@ export interface SaxParserOptions {
 /**
  * Create an EventEmitter-style SAX parser.
  *
- * Uses `fastStream` internally, but wraps it with `.on()` / `.off()` methods
+ * Uses the internal SAX engine, but wraps it with `.on()` / `.off()` methods
  * so handlers can be added and removed dynamically.
  *
  * @param options - Parser options (html mode, selfClosingTags, rawContentTags).
@@ -110,7 +110,7 @@ export function createSaxParser(options?: SaxParserOptions): SaxParser {
   };
 
   // Bridge handlers: call all registered listeners for each event
-  const handlers: FastStreamHandlers = {
+  const handlers: SaxEngineHandlers = {
     onopentag(tagName: string, attributes: Attributes) {
       for (const handler of listeners.opentag) handler(tagName, attributes);
     },
@@ -135,7 +135,7 @@ export function createSaxParser(options?: SaxParserOptions): SaxParser {
     },
   };
 
-  const parser = fastStream({
+  const parser = saxEngine({
     ...handlers,
     selfClosingTags,
     rawContentTags,

@@ -10,7 +10,7 @@ export default class Router extends EmbroiderRouter {
 Router.map(function () {
   this.route('parse');
   this.route('writer');
-  this.route('fast-stream');
+  this.route('sax');
   this.route('transform-stream');
   this.route('benchmark');
 });

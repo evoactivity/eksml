@@ -145,7 +145,7 @@ export const PARSER_DEFS: ParserDef[] = [
 ];
 
 export const STREAM_PARSER_DEFS: ParserDef[] = [
-  { id: 'eksml-stream', label: 'eksml (fastStream)', color: '#3b82f6' },
+  { id: 'eksml-stream', label: 'eksml (SAX)', color: '#3b82f6' },
   { id: 'htmlparser2-sax', label: 'htmlparser2 (SAX)', color: '#ef4444' },
   { id: 'sax', label: 'sax', color: '#22c55e' },
   { id: 'saxes', label: 'saxes', color: '#ec4899' },

@@ -1,24 +1,13 @@
 /**
- * fastStream — a high-performance, synchronous, event-based streaming XML parser.
+ * saxEngine — a high-performance, synchronous, event-based streaming XML parser.
  *
- * Unlike `transformStream` (which uses the async Web Streams API and emits full
- * TNode subtrees), `fastStream` is a pure SAX-style parser designed to compete
- * on raw speed with sax, saxes, and htmlparser2.
+ * This is an internal module used by `createSaxParser` and `transformStream`.
+ * It is not part of the public API.
  *
  * Architecture: single-pass state machine with batch scanning. Each character is
  * consumed exactly once. Within a chunk, hot-path states (text, tag names,
  * attribute names/values, close tags) scan ahead with indexOf / charCodeAt loops
  * to extract tokens via a single substring() rather than per-character +=.
- *
- * Usage:
- *   const parser = fastStream({
- *     onopentag(name, attrs) { ... },
- *     ontext(text) { ... },
- *     onclosetag(name) { ... },
- *   });
- *   parser.write(chunk1);
- *   parser.write(chunk2);
- *   parser.close();
  */
 
 // @generated:char-codes:begin
@@ -49,8 +38,8 @@ const UPPER_T = 84; // T
 /** Attributes record emitted with opentag events. */
 export type Attributes = Record<string, string | null>;
 
-/** Event handlers for the streaming parser. All callbacks are optional. */
-export interface FastStreamHandlers {
+/** Event handlers for the SAX engine. All callbacks are optional. */
+export interface SaxEngineHandlers {
   /** Fired when an opening tag and its attributes have been fully parsed. */
   onopentag?: (tagName: string, attributes: Attributes) => void;
   /** Fired when a closing tag is encountered. */
@@ -67,16 +56,16 @@ export interface FastStreamHandlers {
   ondoctype?: (tagName: string, attributes: Attributes) => void;
 }
 
-/** Options for the streaming parser. */
-export interface FastStreamOptions extends FastStreamHandlers {
+/** Options for the SAX engine. */
+export interface SaxEngineOptions extends SaxEngineHandlers {
   /** Tag names that are self-closing (void). Default `[]`. */
   selfClosingTags?: string[];
   /** Tag names whose content is raw text. Default `[]`. */
   rawContentTags?: string[];
 }
 
-/** The parser instance returned by `fastStream()`. */
-export interface FastStreamParser {
+/** The parser instance returned by `saxEngine()`. */
+export interface SaxEngineParser {
   /** Feed a chunk of XML to the parser. */
   write(chunk: string): void;
   /** Signal end-of-input and flush any remaining buffered data. */
@@ -127,7 +116,7 @@ const enum State {
 // Implementation
 // ---------------------------------------------------------------------------
 
-export function fastStream(options: FastStreamOptions = {}): FastStreamParser {
+export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
   const {
     onopentag,
     onclosetag,

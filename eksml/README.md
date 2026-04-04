@@ -198,117 +198,14 @@ const fromEntries = write([
 
 ---
 
-### `fastStream(options?)`
-
-A high-performance synchronous SAX parser. Feed it chunks of XML and receive events via callbacks.
-
-```ts
-import { fastStream } from 'eksml/stream';
-
-const parser = fastStream({
-  onopentag(tagName, attributes) {
-    /* ... */
-  },
-  onclosetag(tagName) {
-    /* ... */
-  },
-  ontext(text) {
-    /* ... */
-  },
-  oncdata(data) {
-    /* ... */
-  },
-  oncomment(comment) {
-    /* ... */
-  },
-  onprocessinginstruction(name, body) {
-    /* ... */
-  },
-  ondoctype(tagName, attributes) {
-    /* ... */
-  },
-});
-
-parser.write('<root><item>1</item>');
-parser.write('<item>2</item></root>');
-parser.close();
-```
-
-#### `FastStreamOptions`
-
-<table>
-  <tr>
-    <th>Option</th>
-    <th>Type</th>
-    <th>Default</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><code>selfClosingTags</code></td>
-    <td><code>string[]</code></td>
-    <td><code>[]</code></td>
-    <td>Tag names treated as self-closing void elements</td>
-  </tr>
-  <tr>
-    <td><code>rawContentTags</code></td>
-    <td><code>string[]</code></td>
-    <td><code>[]</code></td>
-    <td>Tag names whose content is raw text</td>
-  </tr>
-  <tr>
-    <td><code>onopentag</code></td>
-    <td><code>(tagName, attributes) =&gt; void</code></td>
-    <td>--</td>
-    <td>Opening tag handler</td>
-  </tr>
-  <tr>
-    <td><code>onclosetag</code></td>
-    <td><code>(tagName) =&gt; void</code></td>
-    <td>--</td>
-    <td>Closing tag handler</td>
-  </tr>
-  <tr>
-    <td><code>ontext</code></td>
-    <td><code>(text) =&gt; void</code></td>
-    <td>--</td>
-    <td>Text content handler</td>
-  </tr>
-  <tr>
-    <td><code>oncdata</code></td>
-    <td><code>(data) =&gt; void</code></td>
-    <td>--</td>
-    <td>CDATA section handler</td>
-  </tr>
-  <tr>
-    <td><code>oncomment</code></td>
-    <td><code>(comment) =&gt; void</code></td>
-    <td>--</td>
-    <td>Comment handler (receives full <code>&lt;!-- ... --&gt;</code> string)</td>
-  </tr>
-  <tr>
-    <td><code>onprocessinginstruction</code></td>
-    <td><code>(name, body) =&gt; void</code></td>
-    <td>--</td>
-    <td>Processing instruction handler</td>
-  </tr>
-  <tr>
-    <td><code>ondoctype</code></td>
-    <td><code>(tagName, attributes) =&gt; void</code></td>
-    <td>--</td>
-    <td>DOCTYPE handler</td>
-  </tr>
-</table>
-
----
-
 ### `createSaxParser(options?)`
 
-An EventEmitter-style SAX parser built on `fastStream`. Unlike `fastStream` (which uses static callback options), `createSaxParser` lets you add and remove event handlers dynamically with `.on()` / `.off()`.
+A high-performance EventEmitter-style SAX parser. Feed it chunks of XML and receive events via `.on()` / `.off()` handlers. Handlers can be added and removed dynamically at any time.
 
 ```ts
 import { createSaxParser } from 'eksml/sax';
 
-const parser = createSaxParser({ html: true });
+const parser = createSaxParser();
 
 parser.on('opentag', (tagName, attributes) => {
   console.log('opened:', tagName, attributes);
@@ -317,8 +214,8 @@ parser.on('text', (text) => {
   console.log('text:', text);
 });
 
-parser.write('<div><br><p>Hello</p>');
-parser.write('</div>');
+parser.write('<root><item>1</item>');
+parser.write('<item>2</item></root>');
 parser.close();
 
 // Remove a handler
@@ -693,7 +590,7 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
     <th align="right">EPG 64 B stress</th>
   </tr>
   <tr>
-    <td><strong>Eksml (fastStream)</strong></td>
+    <td><strong>Eksml (SAX)</strong></td>
     <td align="right"><strong>73,744 op/s</strong></td>
     <td align="right"><strong>12,385 op/s</strong></td>
     <td align="right"><strong>8,313 op/s</strong></td>
@@ -744,7 +641,7 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
     <th align="right">EPG 64 B stress</th>
   </tr>
   <tr>
-    <td><strong>Eksml (fastStream)</strong></td>
+    <td><strong>Eksml (SAX)</strong></td>
     <td align="right"><strong>85,798 op/s</strong></td>
     <td align="right"><strong>16,367 op/s</strong></td>
     <td align="right"><strong>13,465 op/s</strong></td>
@@ -858,8 +755,7 @@ Eksml's DOM parser is built on the work of **[Tobias Nickel](https://github.com/
 
 Eksml extends tXml's foundation with:
 
-- A high-performance SAX streaming engine (`fastStream`)
-- An EventEmitter-style SAX parser with dynamic handler management (`createSaxParser`)
+- A high-performance SAX streaming engine with an EventEmitter-style API (`createSaxParser`)
 - A Web Streams `TransformStream` for incremental parsing
 - Lossy and lossless JSON converters with round-trip support
 - HTML-aware parsing and serialization (void elements, raw content tags, entity encoding)

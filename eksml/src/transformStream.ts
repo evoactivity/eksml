@@ -1,6 +1,6 @@
 import type { TNode } from '#src/parser.ts';
-import { fastStream } from '#src/fastStream.ts';
-import type { Attributes } from '#src/fastStream.ts';
+import { saxEngine } from '#src/saxEngine.ts';
+import type { Attributes } from '#src/saxEngine.ts';
 import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
@@ -208,7 +208,7 @@ function parsePIAttributes(body: string): Record<string, string | null> | null {
  * Create a TransformStream that incrementally parses XML chunks.
  * Uses the Web Streams API, which is available in browsers, Node.js 18+, Deno, and Bun.
  *
- * Internally powered by `fastStream` (SAX parser) with a tree-construction layer
+ * Internally powered by the SAX engine with a tree-construction layer
  * that assembles `TNode` subtrees and emits them as they complete.
  *
  * By default, nodes are emitted when a top-level element closes (depth 0).
@@ -463,7 +463,7 @@ export function transformStream(
   // Wire up the appropriate handler set
   // -------------------------------------------------------------------------
 
-  const parser = fastStream({
+  const parser = saxEngine({
     selfClosingTags,
     rawContentTags,
     onopentag: selectSet ? selectOnopentag : defaultOnopentag,

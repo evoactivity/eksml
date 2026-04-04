@@ -50,12 +50,12 @@ const DEFAULT_XML = `\
   </product>
 </catalog>`;
 
-export interface FastStreamModel {
+export interface SaxModel {
   defaultXml: string;
 }
 
-export default class FastStreamRoute extends Route {
-  model(): FastStreamModel {
+export default class SaxRoute extends Route {
+  model(): SaxModel {
     return {
       defaultXml: DEFAULT_XML,
     };

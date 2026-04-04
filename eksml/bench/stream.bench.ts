@@ -15,7 +15,7 @@ import { bench, describe } from 'vitest';
 
 // --- eksml ---
 import { transformStream } from '#src/transformStream.ts';
-import { fastStream } from '#src/fastStream.ts';
+import { saxEngine } from '#src/saxEngine.ts';
 
 // --- competitors ---
 import { XMLParser } from 'fast-xml-parser';
@@ -236,15 +236,15 @@ function htmlparser2Stream(xml: string, chunkSize: number): Node[] {
 }
 
 // ---------------------------------------------------------------------------
-// eksml fastStream — synchronous SAX, build DOM tree from events
+// eksml saxEngine — synchronous SAX, build DOM tree from events
 // ---------------------------------------------------------------------------
-function eksmlFastStream(xml: string, chunkSize: number): Node[] {
+function eksmlSaxEngine(xml: string, chunkSize: number): Node[] {
   const chunks = chunkString(xml, chunkSize);
 
   const roots: (Node | string)[] = [];
   const stack: Node[] = [];
 
-  const parser = fastStream({
+  const parser = saxEngine({
     onopentag(tagName, attributes) {
       const el: Node = {
         tagName,
@@ -306,8 +306,8 @@ describe('stream: RSS feed (256 B chunks)', () => {
     await eksmlStream(rssFeed, size);
   });
 
-  bench('eksml (fastStream)', () => {
-    eksmlFastStream(rssFeed, size);
+  bench('eksml (SAX)', () => {
+    eksmlSaxEngine(rssFeed, size);
   });
 
   bench('sax', () => {
@@ -337,8 +337,8 @@ describe('stream: XMLTV EPG (256 B chunks)', () => {
     await eksmlStream(xmltvEpg, size);
   });
 
-  bench('eksml (fastStream)', () => {
-    eksmlFastStream(xmltvEpg, size);
+  bench('eksml (SAX)', () => {
+    eksmlSaxEngine(xmltvEpg, size);
   });
 
   bench('sax', () => {
@@ -368,8 +368,8 @@ describe('stream: Maven POM (256 B chunks)', () => {
     await eksmlStream(pomXml, size);
   });
 
-  bench('eksml (fastStream)', () => {
-    eksmlFastStream(pomXml, size);
+  bench('eksml (SAX)', () => {
+    eksmlSaxEngine(pomXml, size);
   });
 
   bench('sax', () => {
@@ -399,8 +399,8 @@ describe('stream: XMLTV EPG (64 B chunks — stress)', () => {
     await eksmlStream(xmltvEpg, size);
   });
 
-  bench('eksml (fastStream)', () => {
-    eksmlFastStream(xmltvEpg, size);
+  bench('eksml (SAX)', () => {
+    eksmlSaxEngine(xmltvEpg, size);
   });
 
   bench('sax', () => {

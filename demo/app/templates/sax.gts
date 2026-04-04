@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 
-import { fastStream } from 'eksml/stream';
+import { createSaxParser } from 'eksml/sax';
 import pageTitle from 'ember-page-title/helpers/page-title';
 
 import LogArea from '#components/log-area.gts';
@@ -11,7 +11,7 @@ import ProgressBar from '#components/progress-bar.gts';
 import { formatMs } from '#components/run-duration.gts';
 import TwoPaneLayout from '#components/two-pane-layout.gts';
 
-import type { FastStreamModel } from '../routes/fast-stream';
+import type { SaxModel } from '../routes/sax';
 import type { LogEntry } from '#components/log-area.gts';
 import type * as ModernMonaco from 'modern-monaco';
 
@@ -55,13 +55,13 @@ function sleep(ms: number): Promise<void> {
 // Route template component
 // ---------------------------------------------------------------------------
 
-interface FastStreamTemplateSignature {
+interface SaxTemplateSignature {
   Args: {
-    model: FastStreamModel;
+    model: SaxModel;
   };
 }
 
-class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
+class SaxTemplate extends Component<SaxTemplateSignature> {
   @tracked throttle = '100';
   @tracked chunkSize = '64';
   @tracked stats = '';
@@ -100,7 +100,7 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
   // ------- Actions -------
 
   onInputReady = (
-    editor: FastStreamTemplate['inputEditorInstance'],
+    editor: SaxTemplate['inputEditorInstance'],
     monaco: Awaited<ReturnType<typeof ModernMonaco.init>>,
   ): void => {
     this.inputEditorInstance = editor;
@@ -147,57 +147,63 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
       chunks.push(xml.slice(i, i + chunkSize));
     }
 
-    const parser = fastStream({
-      onopentag: (name: string, attrs: Record<string, string | null>) => {
+    const parser = createSaxParser();
+
+    parser.on(
+      'opentag',
+      (name: string, attrs: Record<string, string | null>) => {
         this.appendLog(
           'event-opentag',
           'opentag',
           `&lt;${escapeHtml(name)}&gt;${formatAttrs(attrs)}`,
         );
       },
-      onclosetag: (name: string) => {
-        this.appendLog(
-          'event-closetag',
-          'closetag',
-          `&lt;/${escapeHtml(name)}&gt;`,
-        );
-      },
-      ontext: (text: string) => {
-        this.appendLog(
-          'event-text',
-          'text',
-          `<span class="event-value">"${escapeHtml(truncate(text))}"</span>`,
-        );
-      },
-      oncdata: (data: string) => {
-        this.appendLog(
-          'event-cdata',
-          'cdata',
-          `<span class="event-value">${escapeHtml(truncate(data))}</span>`,
-        );
-      },
-      oncomment: (comment: string) => {
-        this.appendLog(
-          'event-comment',
-          'comment',
-          `<span class="event-value">${escapeHtml(truncate(comment))}</span>`,
-        );
-      },
-      onprocessinginstruction: (name: string, body: string) => {
-        this.appendLog(
-          'event-pi',
-          'pi',
-          `&lt;?${escapeHtml(name)} ${escapeHtml(truncate(body))}?&gt;`,
-        );
-      },
-      ondoctype: (tagName: string, attrs: Record<string, string | null>) => {
+    );
+    parser.on('closetag', (name: string) => {
+      this.appendLog(
+        'event-closetag',
+        'closetag',
+        `&lt;/${escapeHtml(name)}&gt;`,
+      );
+    });
+    parser.on('text', (text: string) => {
+      this.appendLog(
+        'event-text',
+        'text',
+        `<span class="event-value">"${escapeHtml(truncate(text))}"</span>`,
+      );
+    });
+    parser.on('cdata', (data: string) => {
+      this.appendLog(
+        'event-cdata',
+        'cdata',
+        `<span class="event-value">${escapeHtml(truncate(data))}</span>`,
+      );
+    });
+    parser.on('comment', (comment: string) => {
+      this.appendLog(
+        'event-comment',
+        'comment',
+        `<span class="event-value">${escapeHtml(truncate(comment))}</span>`,
+      );
+    });
+    parser.on('processinginstruction', (name: string, body: string) => {
+      this.appendLog(
+        'event-pi',
+        'pi',
+        `&lt;?${escapeHtml(name)} ${escapeHtml(truncate(body))}?&gt;`,
+      );
+    });
+    parser.on(
+      'doctype',
+      (tagName: string, attrs: Record<string, string | null>) => {
         this.appendLog(
           'event-doctype',
           'doctype',
           `&lt;${escapeHtml(tagName)}&gt;${formatAttrs(attrs)}`,
         );
       },
-    });
+    );
 
     const totalChunks = chunks.length;
     const startTime = performance.now();
@@ -261,9 +267,9 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
   isThrottle = (value: string): boolean => this.throttle === value;
 
   <template>
-    {{pageTitle 'Fast Stream (SAX)'}}
+    {{pageTitle 'SAX Parser'}}
 
-    <h1>Fast Stream (SAX)</h1>
+    <h1>SAX Parser</h1>
     <p class='subtitle'>
       Feeds XML to the SAX parser chunk-by-chunk with configurable throttle to
       simulate network conditions and chunk size.
@@ -331,4 +337,4 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
   </template>
 }
 
-export default FastStreamTemplate;
+export default SaxTemplate;

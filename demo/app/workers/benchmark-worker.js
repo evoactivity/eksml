@@ -13,7 +13,7 @@
 
 import { parseXml } from '@rgrove/parse-xml';
 import { parse } from 'eksml/parser';
-import { fastStream } from 'eksml/stream';
+import { createSaxParser } from 'eksml/sax';
 import { XMLParser } from 'fast-xml-parser';
 import { parseDocument, Parser as HtmlParser } from 'htmlparser2';
 import sax from 'sax';
@@ -68,15 +68,15 @@ const PARSERS = {
   // -----------------------------------------------------------------------
 
   'eksml-stream': (xml) => {
-    const p = fastStream({
-      onopentag: noop,
-      onclosetag: noop,
-      ontext: noop,
-      oncdata: noop,
-      oncomment: noop,
-      onprocessinginstruction: noop,
-      ondoctype: noop,
-    });
+    const p = createSaxParser();
+
+    p.on('opentag', noop);
+    p.on('closetag', noop);
+    p.on('text', noop);
+    p.on('cdata', noop);
+    p.on('comment', noop);
+    p.on('processinginstruction', noop);
+    p.on('doctype', noop);
 
     p.write(xml);
     p.close();

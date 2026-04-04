@@ -453,7 +453,7 @@ button:disabled {
   animation: pulse 0.8s ease-in-out infinite;
 }
 
-/* --- Fast Stream: event colors --- */
+/* --- SAX Parser: event colors --- */
 
 .event-tag {
   font-weight: 600;

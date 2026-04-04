@@ -16,10 +16,6 @@
       "types": "./dist/writer.d.mts",
       "import": "./dist/writer.mjs"
     },
-    "./stream": {
-      "types": "./dist/fastStream.d.mts",
-      "import": "./dist/fastStream.mjs"
-    },
     "./sax": {
       "types": "./dist/sax.d.mts",
       "import": "./dist/sax.mjs"
