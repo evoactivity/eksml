@@ -54,9 +54,10 @@ const xml = new Eksml(options?: EksmlOptions);
 
 Extends all `ParseOptions` (see below) plus:
 
-| Option   | Type                             | Default | Description                                                                                                                                             |
-| -------- | -------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `output` | `'dom' \| 'lossy' \| 'lossless'` | `'dom'` | Output format for `.parse()`. `'dom'` returns a `TNode` tree, `'lossy'` returns compact JS objects, `'lossless'` returns order-preserving JSON entries. |
+<table>
+<tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>output</code></td><td><code>'dom' | 'lossy' | 'lossless'</code></td><td><code>'dom'</code></td><td>Output format for <code>.parse()</code>. <code>'dom'</code> returns a <code>TNode</code> tree, <code>'lossy'</code> returns compact JS objects, <code>'lossless'</code> returns order-preserving JSON entries.</td></tr>
+</table>
 
 ### Methods
 
@@ -146,15 +147,16 @@ parser.close();
 
 ### SAX Events
 
-| Event                   | Callback Signature                                                      | Description                            |
-| ----------------------- | ----------------------------------------------------------------------- | -------------------------------------- |
-| `opentag`               | `(tagName: string, attributes: Record<string, string \| null>) => void` | Opening tag with parsed attributes     |
-| `closetag`              | `(tagName: string) => void`                                             | Closing tag                            |
-| `text`                  | `(text: string) => void`                                                | Text content between tags              |
-| `cdata`                 | `(data: string) => void`                                                | CDATA section content                  |
-| `comment`               | `(comment: string) => void`                                             | Comment content                        |
-| `processinginstruction` | `(name: string, body: string) => void`                                  | Processing instruction (`<?xml ...?>`) |
-| `doctype`               | `(tagName: string, attributes: Record<string, string \| null>) => void` | DOCTYPE declaration                    |
+<table>
+<tr><th>Event</th><th>Callback Signature</th><th>Description</th></tr>
+<tr><td><code>opentag</code></td><td><code>(tagName: string, attributes: Record&lt;string, string | null&gt;) =&gt; void</code></td><td>Opening tag with parsed attributes</td></tr>
+<tr><td><code>closetag</code></td><td><code>(tagName: string) =&gt; void</code></td><td>Closing tag</td></tr>
+<tr><td><code>text</code></td><td><code>(text: string) =&gt; void</code></td><td>Text content between tags</td></tr>
+<tr><td><code>cdata</code></td><td><code>(data: string) =&gt; void</code></td><td>CDATA section content</td></tr>
+<tr><td><code>comment</code></td><td><code>(comment: string) =&gt; void</code></td><td>Comment content</td></tr>
+<tr><td><code>processinginstruction</code></td><td><code>(name: string, body: string) =&gt; void</code></td><td>Processing instruction (<code>&lt;?xml ...?&gt;</code>)</td></tr>
+<tr><td><code>doctype</code></td><td><code>(tagName: string, attributes: Record&lt;string, string | null&gt;) =&gt; void</code></td><td>DOCTYPE declaration</td></tr>
+</table>
 
 ---
 
@@ -172,19 +174,20 @@ const dom = parse('<root><item>Hello</item></root>');
 
 #### `ParseOptions`
 
-| Option            | Type                                    | Default                     | Description                                                       |
-| ----------------- | --------------------------------------- | --------------------------- | ----------------------------------------------------------------- |
-| `pos`             | `number`                                | `0`                         | Starting character position in the string                         |
-| `html`            | `boolean`                               | `false`                     | Enable HTML mode (sets void element and raw content tag defaults) |
-| `selfClosingTags` | `string[]`                              | `[]` / HTML voids           | Tag names treated as self-closing void elements                   |
-| `rawContentTags`  | `string[]`                              | `[]` / `['script','style']` | Tag names whose content is raw text (not parsed)                  |
-| `keepComments`    | `boolean`                               | `false`                     | Include XML/HTML comments in the output tree                      |
-| `trimWhitespace`  | `boolean`                               | `false`                     | Trim text nodes and discard whitespace-only text                  |
-| `strict`          | `boolean`                               | `false`                     | Throw on malformed XML instead of recovering silently             |
-| `entities`        | `boolean`                               | `false`                     | Decode XML/HTML entities in text and attributes                   |
-| `attrName`        | `string`                                | `'id'`                      | Attribute name to search for (used with `attrValue`)              |
-| `attrValue`       | `string`                                | --                          | Regex pattern to match attribute values (fast-path filter)        |
-| `filter`          | `(node, index, depth, path) => boolean` | --                          | Predicate to filter nodes during parsing                          |
+<table>
+<tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>pos</code></td><td><code>number</code></td><td><code>0</code></td><td>Starting character position in the string</td></tr>
+<tr><td><code>html</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Enable HTML mode (sets void element and raw content tag defaults)</td></tr>
+<tr><td><code>selfClosingTags</code></td><td><code>string[]</code></td><td><code>[]</code> / HTML voids</td><td>Tag names treated as self-closing void elements</td></tr>
+<tr><td><code>rawContentTags</code></td><td><code>string[]</code></td><td><code>[]</code> / <code>['script','style']</code></td><td>Tag names whose content is raw text (not parsed)</td></tr>
+<tr><td><code>keepComments</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Include XML/HTML comments in the output tree</td></tr>
+<tr><td><code>trimWhitespace</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Trim text nodes and discard whitespace-only text</td></tr>
+<tr><td><code>strict</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Throw on malformed XML instead of recovering silently</td></tr>
+<tr><td><code>entities</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Decode XML/HTML entities in text and attributes</td></tr>
+<tr><td><code>attrName</code></td><td><code>string</code></td><td><code>'id'</code></td><td>Attribute name to search for (used with <code>attrValue</code>)</td></tr>
+<tr><td><code>attrValue</code></td><td><code>string</code></td><td>--</td><td>Regex pattern to match attribute values (fast-path filter)</td></tr>
+<tr><td><code>filter</code></td><td><code>(node, index, depth, path) =&gt; boolean</code></td><td>--</td><td>Predicate to filter nodes during parsing</td></tr>
+</table>
 
 #### `TNode`
 
@@ -227,11 +230,12 @@ const fromEntries = writer([
 
 #### `WriterOptions`
 
-| Option     | Type                | Default | Description                                                                                                                 |
-| ---------- | ------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `pretty`   | `boolean \| string` | `false` | Pretty-print with indentation. `true` uses 2 spaces; a string value is used as the indent (e.g. `'\t'`).                    |
-| `entities` | `boolean`           | `false` | Encode special characters as XML/HTML entities                                                                              |
-| `html`     | `boolean`           | `false` | HTML mode: void elements emit as `<br>` instead of `<br/>`, and HTML named entities are used when `entities` is also `true` |
+<table>
+<tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>pretty</code></td><td><code>boolean | string</code></td><td><code>false</code></td><td>Pretty-print with indentation. <code>true</code> uses 2 spaces; a string value is used as the indent (e.g. <code>'\t'</code>).</td></tr>
+<tr><td><code>entities</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Encode special characters as XML/HTML entities</td></tr>
+<tr><td><code>html</code></td><td><code>boolean</code></td><td><code>false</code></td><td>HTML mode: void elements emit as <code>&lt;br&gt;</code> instead of <code>&lt;br/&gt;</code>, and HTML named entities are used when <code>entities</code> is also <code>true</code></td></tr>
+</table>
 
 ---
 
@@ -273,17 +277,18 @@ parser.close();
 
 #### `FastStreamOptions`
 
-| Option                    | Type                            | Default | Description                                     |
-| ------------------------- | ------------------------------- | ------- | ----------------------------------------------- |
-| `selfClosingTags`         | `string[]`                      | `[]`    | Tag names treated as self-closing void elements |
-| `rawContentTags`          | `string[]`                      | `[]`    | Tag names whose content is raw text             |
-| `onopentag`               | `(tagName, attributes) => void` | --      | Opening tag handler                             |
-| `onclosetag`              | `(tagName) => void`             | --      | Closing tag handler                             |
-| `ontext`                  | `(text) => void`                | --      | Text content handler                            |
-| `oncdata`                 | `(data) => void`                | --      | CDATA section handler                           |
-| `oncomment`               | `(comment) => void`             | --      | Comment handler                                 |
-| `onprocessinginstruction` | `(name, body) => void`          | --      | Processing instruction handler                  |
-| `ondoctype`               | `(tagName, attributes) => void` | --      | DOCTYPE handler                                 |
+<table>
+<tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>selfClosingTags</code></td><td><code>string[]</code></td><td><code>[]</code></td><td>Tag names treated as self-closing void elements</td></tr>
+<tr><td><code>rawContentTags</code></td><td><code>string[]</code></td><td><code>[]</code></td><td>Tag names whose content is raw text</td></tr>
+<tr><td><code>onopentag</code></td><td><code>(tagName, attributes) =&gt; void</code></td><td>--</td><td>Opening tag handler</td></tr>
+<tr><td><code>onclosetag</code></td><td><code>(tagName) =&gt; void</code></td><td>--</td><td>Closing tag handler</td></tr>
+<tr><td><code>ontext</code></td><td><code>(text) =&gt; void</code></td><td>--</td><td>Text content handler</td></tr>
+<tr><td><code>oncdata</code></td><td><code>(data) =&gt; void</code></td><td>--</td><td>CDATA section handler</td></tr>
+<tr><td><code>oncomment</code></td><td><code>(comment) =&gt; void</code></td><td>--</td><td>Comment handler</td></tr>
+<tr><td><code>onprocessinginstruction</code></td><td><code>(name, body) =&gt; void</code></td><td>--</td><td>Processing instruction handler</td></tr>
+<tr><td><code>ondoctype</code></td><td><code>(tagName, attributes) =&gt; void</code></td><td>--</td><td>DOCTYPE handler</td></tr>
+</table>
 
 ---
 
@@ -309,13 +314,14 @@ while (true) {
 
 #### `TransformStreamOptions`
 
-| Option            | Type                 | Default                     | Description                                                                            |
-| ----------------- | -------------------- | --------------------------- | -------------------------------------------------------------------------------------- |
-| `html`            | `boolean`            | `false`                     | Enable HTML mode                                                                       |
-| `selfClosingTags` | `string[]`           | `[]` / HTML voids           | Tag names treated as self-closing                                                      |
-| `rawContentTags`  | `string[]`           | `[]` / `['script','style']` | Tag names whose content is raw text                                                    |
-| `keepComments`    | `boolean`            | `false`                     | Include comments in the output                                                         |
-| `select`          | `string \| string[]` | --                          | Emit only elements matching these tag names as they close, regardless of nesting depth |
+<table>
+<tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>html</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Enable HTML mode</td></tr>
+<tr><td><code>selfClosingTags</code></td><td><code>string[]</code></td><td><code>[]</code> / HTML voids</td><td>Tag names treated as self-closing</td></tr>
+<tr><td><code>rawContentTags</code></td><td><code>string[]</code></td><td><code>[]</code> / <code>['script','style']</code></td><td>Tag names whose content is raw text</td></tr>
+<tr><td><code>keepComments</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Include comments in the output</td></tr>
+<tr><td><code>select</code></td><td><code>string | string[]</code></td><td>--</td><td>Emit only elements matching these tag names as they close, regardless of nesting depth</td></tr>
+</table>
 
 The `select` option is particularly useful for large feeds:
 
@@ -403,16 +409,17 @@ import {
 } from 'eksml/utilities';
 ```
 
-| Export                                     | Description                                                          |
-| ------------------------------------------ | -------------------------------------------------------------------- |
-| `filter(input, predicate)`                 | Recursively walk a tree and return all `TNode`s matching a predicate |
-| `getElementById(input, id)`                | Find an element by its `id` attribute                                |
-| `getElementsByClassName(input, className)` | Find elements by class name (supports multi-class attributes)        |
-| `toContentString(node)`                    | Extract concatenated text content from a node or tree                |
-| `isTextNode(node)`                         | Type guard: `node is string`                                         |
-| `isElementNode(node)`                      | Type guard: `node is TNode`                                          |
-| `HTML_VOID_ELEMENTS`                       | Standard HTML void element tag names                                 |
-| `HTML_RAW_CONTENT_TAGS`                    | HTML raw content tag names (`script`, `style`)                       |
+<table>
+<tr><th>Export</th><th>Description</th></tr>
+<tr><td><code>filter(input, predicate)</code></td><td>Recursively walk a tree and return all <code>TNode</code>s matching a predicate</td></tr>
+<tr><td><code>getElementById(input, id)</code></td><td>Find an element by its <code>id</code> attribute</td></tr>
+<tr><td><code>getElementsByClassName(input, className)</code></td><td>Find elements by class name (supports multi-class attributes)</td></tr>
+<tr><td><code>toContentString(node)</code></td><td>Extract concatenated text content from a node or tree</td></tr>
+<tr><td><code>isTextNode(node)</code></td><td>Type guard: <code>node is string</code></td></tr>
+<tr><td><code>isElementNode(node)</code></td><td>Type guard: <code>node is TNode</code></td></tr>
+<tr><td><code>HTML_VOID_ELEMENTS</code></td><td>Standard HTML void element tag names</td></tr>
+<tr><td><code>HTML_RAW_CONTENT_TAGS</code></td><td>HTML raw content tag names (<code>script</code>, <code>style</code>)</td></tr>
+</table>
 
 ---
 
@@ -424,14 +431,15 @@ All benchmarks run via [Vitest bench](https://vitest.dev/guide/features.html#ben
 
 Parse an XML string into a tree structure.
 
-| Library         |     small (~100 B) |     RSS (~3 KB) |    SOAP (~2 KB) |    Atom (~3 KB) |     POM (~5 KB) |     EPG (~9 KB) |
-| --------------- | -----------------: | --------------: | --------------: | --------------: | --------------: | --------------: |
-| **eksml**       | **1,361,164 op/s** | **86,551 op/s** | **61,091 op/s** | **33,542 op/s** | **12,916 op/s** | **17,004 op/s** |
-| txml            |       906,585 op/s |              -- |     48,017 op/s |     26,981 op/s |     11,032 op/s |     13,317 op/s |
-| htmlparser2     |       470,327 op/s |     24,047 op/s |     16,455 op/s |      9,791 op/s |      3,442 op/s |      4,732 op/s |
-| fast-xml-parser |       169,185 op/s |      9,412 op/s |      7,133 op/s |      3,482 op/s |      1,313 op/s |      2,279 op/s |
-| xml2js          |       130,322 op/s |      8,832 op/s |      6,414 op/s |      3,833 op/s |      1,556 op/s |      2,015 op/s |
-| @xmldom/xmldom  |        92,091 op/s |      5,834 op/s |      4,770 op/s |      2,469 op/s |        861 op/s |      1,378 op/s |
+<table>
+<tr><th>Library</th><th align="right">small (~100 B)</th><th align="right">RSS (~3 KB)</th><th align="right">SOAP (~2 KB)</th><th align="right">Atom (~3 KB)</th><th align="right">POM (~5 KB)</th><th align="right">EPG (~9 KB)</th></tr>
+<tr><td><strong>eksml</strong></td><td align="right"><strong>1,361,164 op/s</strong></td><td align="right"><strong>86,551 op/s</strong></td><td align="right"><strong>61,091 op/s</strong></td><td align="right"><strong>33,542 op/s</strong></td><td align="right"><strong>12,916 op/s</strong></td><td align="right"><strong>17,004 op/s</strong></td></tr>
+<tr><td>txml</td><td align="right">906,585 op/s</td><td align="right">--</td><td align="right">48,017 op/s</td><td align="right">26,981 op/s</td><td align="right">11,032 op/s</td><td align="right">13,317 op/s</td></tr>
+<tr><td>htmlparser2</td><td align="right">470,327 op/s</td><td align="right">24,047 op/s</td><td align="right">16,455 op/s</td><td align="right">9,791 op/s</td><td align="right">3,442 op/s</td><td align="right">4,732 op/s</td></tr>
+<tr><td>fast-xml-parser</td><td align="right">169,185 op/s</td><td align="right">9,412 op/s</td><td align="right">7,133 op/s</td><td align="right">3,482 op/s</td><td align="right">1,313 op/s</td><td align="right">2,279 op/s</td></tr>
+<tr><td>xml2js</td><td align="right">130,322 op/s</td><td align="right">8,832 op/s</td><td align="right">6,414 op/s</td><td align="right">3,833 op/s</td><td align="right">1,556 op/s</td><td align="right">2,015 op/s</td></tr>
+<tr><td>@xmldom/xmldom</td><td align="right">92,091 op/s</td><td align="right">5,834 op/s</td><td align="right">4,770 op/s</td><td align="right">2,469 op/s</td><td align="right">861 op/s</td><td align="right">1,378 op/s</td></tr>
+</table>
 
 eksml is **1.2-1.5x faster than txml**, **3-4x faster than htmlparser2**, **7-10x faster than fast-xml-parser**, and **8-15x faster than xmldom**.
 
@@ -439,13 +447,14 @@ eksml is **1.2-1.5x faster than txml**, **3-4x faster than htmlparser2**, **7-10
 
 Chunked streaming parse where each parser tokenizes SAX events and builds a full DOM tree.
 
-| Library                 |     RSS (~3 KB) |     EPG (~9 KB) |    POM (~5 KB) | EPG 64 B stress |
-| ----------------------- | --------------: | --------------: | -------------: | --------------: |
-| **eksml (fastStream)**  | **73,744 op/s** | **12,385 op/s** | **8,313 op/s** | **11,452 op/s** |
-| eksml (transformStream) |     31,459 op/s |      7,764 op/s |     5,967 op/s |      4,559 op/s |
-| saxes                   |     29,121 op/s |      6,628 op/s |     6,791 op/s |      6,284 op/s |
-| htmlparser2             |     27,279 op/s |      7,372 op/s |     5,919 op/s |      6,821 op/s |
-| sax                     |     12,224 op/s |      3,720 op/s |     3,078 op/s |      4,013 op/s |
+<table>
+<tr><th>Library</th><th align="right">RSS (~3 KB)</th><th align="right">EPG (~9 KB)</th><th align="right">POM (~5 KB)</th><th align="right">EPG 64 B stress</th></tr>
+<tr><td><strong>eksml (fastStream)</strong></td><td align="right"><strong>73,744 op/s</strong></td><td align="right"><strong>12,385 op/s</strong></td><td align="right"><strong>8,313 op/s</strong></td><td align="right"><strong>11,452 op/s</strong></td></tr>
+<tr><td>eksml (transformStream)</td><td align="right">31,459 op/s</td><td align="right">7,764 op/s</td><td align="right">5,967 op/s</td><td align="right">4,559 op/s</td></tr>
+<tr><td>saxes</td><td align="right">29,121 op/s</td><td align="right">6,628 op/s</td><td align="right">6,791 op/s</td><td align="right">6,284 op/s</td></tr>
+<tr><td>htmlparser2</td><td align="right">27,279 op/s</td><td align="right">7,372 op/s</td><td align="right">5,919 op/s</td><td align="right">6,821 op/s</td></tr>
+<tr><td>sax</td><td align="right">12,224 op/s</td><td align="right">3,720 op/s</td><td align="right">3,078 op/s</td><td align="right">4,013 op/s</td></tr>
+</table>
 
 eksml's SAX engine is **1.6-2.5x faster than htmlparser2/saxes** and **3-6x faster than sax**.
 
@@ -453,25 +462,27 @@ eksml's SAX engine is **1.6-2.5x faster than htmlparser2/saxes** and **3-6x fast
 
 Pure scanner throughput with no downstream work -- isolates the tokenizer's raw speed.
 
-| Library                |     RSS (~3 KB) |     EPG (~9 KB) |     POM (~5 KB) | EPG 64 B stress |
-| ---------------------- | --------------: | --------------: | --------------: | --------------: |
-| **eksml (fastStream)** | **85,798 op/s** | **16,367 op/s** | **13,465 op/s** | **14,763 op/s** |
-| saxes                  |     34,370 op/s |      8,990 op/s |      8,484 op/s |      8,965 op/s |
-| htmlparser2            |     28,558 op/s |      7,534 op/s |      6,126 op/s |      6,980 op/s |
-| sax                    |     15,331 op/s |      4,193 op/s |      3,183 op/s |      3,950 op/s |
+<table>
+<tr><th>Library</th><th align="right">RSS (~3 KB)</th><th align="right">EPG (~9 KB)</th><th align="right">POM (~5 KB)</th><th align="right">EPG 64 B stress</th></tr>
+<tr><td><strong>eksml (fastStream)</strong></td><td align="right"><strong>85,798 op/s</strong></td><td align="right"><strong>16,367 op/s</strong></td><td align="right"><strong>13,465 op/s</strong></td><td align="right"><strong>14,763 op/s</strong></td></tr>
+<tr><td>saxes</td><td align="right">34,370 op/s</td><td align="right">8,990 op/s</td><td align="right">8,484 op/s</td><td align="right">8,965 op/s</td></tr>
+<tr><td>htmlparser2</td><td align="right">28,558 op/s</td><td align="right">7,534 op/s</td><td align="right">6,126 op/s</td><td align="right">6,980 op/s</td></tr>
+<tr><td>sax</td><td align="right">15,331 op/s</td><td align="right">4,193 op/s</td><td align="right">3,183 op/s</td><td align="right">3,950 op/s</td></tr>
+</table>
 
 ### XML Serialization (tree to string)
 
 Serialize a pre-parsed in-memory tree back to XML.
 
-| Library         |     small (~100 B) |      RSS (~3 KB) |     SOAP (~3 KB) |    Atom (~6 KB) |     POM (~8 KB) |    EPG (~30 KB) |
-| --------------- | -----------------: | ---------------: | ---------------: | --------------: | --------------: | --------------: |
-| **eksml**       | **1,885,288 op/s** | **308,059 op/s** |     195,102 op/s |     87,992 op/s | **52,345 op/s** |     34,001 op/s |
-| txml            | **2,459,009 op/s** |               -- | **226,242 op/s** | **95,098 op/s** |     48,697 op/s | **43,192 op/s** |
-| htmlparser2     |     1,996,848 op/s |      99,635 op/s |      72,448 op/s |     29,742 op/s |     14,393 op/s |     16,840 op/s |
-| @xmldom/xmldom  |     1,075,965 op/s |      44,446 op/s |      38,996 op/s |     14,354 op/s |      7,318 op/s |     10,038 op/s |
-| fast-xml-parser |       356,881 op/s |      23,261 op/s |      27,979 op/s |     11,582 op/s |      4,622 op/s |      3,435 op/s |
-| xml2js          |       220,393 op/s |      16,480 op/s |      19,606 op/s |      8,577 op/s |      4,114 op/s |      4,174 op/s |
+<table>
+<tr><th>Library</th><th align="right">small (~100 B)</th><th align="right">RSS (~3 KB)</th><th align="right">SOAP (~3 KB)</th><th align="right">Atom (~6 KB)</th><th align="right">POM (~8 KB)</th><th align="right">EPG (~30 KB)</th></tr>
+<tr><td><strong>eksml</strong></td><td align="right"><strong>1,885,288 op/s</strong></td><td align="right"><strong>308,059 op/s</strong></td><td align="right">195,102 op/s</td><td align="right">87,992 op/s</td><td align="right"><strong>52,345 op/s</strong></td><td align="right">34,001 op/s</td></tr>
+<tr><td>txml</td><td align="right"><strong>2,459,009 op/s</strong></td><td align="right">--</td><td align="right"><strong>226,242 op/s</strong></td><td align="right"><strong>95,098 op/s</strong></td><td align="right">48,697 op/s</td><td align="right"><strong>43,192 op/s</strong></td></tr>
+<tr><td>htmlparser2</td><td align="right">1,996,848 op/s</td><td align="right">99,635 op/s</td><td align="right">72,448 op/s</td><td align="right">29,742 op/s</td><td align="right">14,393 op/s</td><td align="right">16,840 op/s</td></tr>
+<tr><td>@xmldom/xmldom</td><td align="right">1,075,965 op/s</td><td align="right">44,446 op/s</td><td align="right">38,996 op/s</td><td align="right">14,354 op/s</td><td align="right">7,318 op/s</td><td align="right">10,038 op/s</td></tr>
+<tr><td>fast-xml-parser</td><td align="right">356,881 op/s</td><td align="right">23,261 op/s</td><td align="right">27,979 op/s</td><td align="right">11,582 op/s</td><td align="right">4,622 op/s</td><td align="right">3,435 op/s</td></tr>
+<tr><td>xml2js</td><td align="right">220,393 op/s</td><td align="right">16,480 op/s</td><td align="right">19,606 op/s</td><td align="right">8,577 op/s</td><td align="right">4,114 op/s</td><td align="right">4,174 op/s</td></tr>
+</table>
 
 eksml and txml trade top position depending on document size and shape. Both are **3-7x faster than @xmldom/xmldom** and **7-13x faster than fast-xml-parser/xml2js** at serialization.
 
