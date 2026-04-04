@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '#src/parser.ts';
 import { writer } from '#src/writer.ts';
+import { lossy } from '#src/converters/lossy.ts';
+import { lossless } from '#src/converters/lossless.ts';
 import type { TNode } from '#src/parser.ts';
+import type { LossyValue } from '#src/converters/lossy.ts';
+import type { LosslessEntry } from '#src/converters/lossless.ts';
 
 // =================================================================
 // writer
@@ -564,6 +568,154 @@ describe('writer', () => {
       expect(result).toContain('<meta');
       expect(result).toContain('<br>');
       expect(result).toContain('<hr>');
+    });
+  });
+
+  // --- lossy input auto-detection ---
+
+  describe('lossy input', () => {
+    it('writes a simple lossy object', () => {
+      const input: LossyValue = { root: { a: '1', b: '2' } };
+      expect(writer(input)).toBe('<root><a>1</a><b>2</b></root>');
+    });
+
+    it('writes a lossy object with attributes', () => {
+      const input: LossyValue = { img: { $src: 'a.png', $alt: 'pic' } };
+      expect(writer(input)).toBe('<img src="a.png" alt="pic"></img>');
+    });
+
+    it('writes a lossy object with repeated elements', () => {
+      const input: LossyValue = { list: { item: ['A', 'B', 'C'] } };
+      expect(writer(input)).toBe(
+        '<list><item>A</item><item>B</item><item>C</item></list>',
+      );
+    });
+
+    it('writes a lossy object with mixed content', () => {
+      const input: LossyValue = { p: { $$: ['Hello ', { b: 'world' }] } };
+      expect(writer(input)).toBe('<p>Hello <b>world</b></p>');
+    });
+
+    it('writes a lossy object with pretty option', () => {
+      const input: LossyValue = { root: { child: 'text' } };
+      expect(writer(input, { pretty: true })).toBe(
+        '<root>\n  <child>text</child>\n</root>',
+      );
+    });
+
+    it('writes a lossy object with entities option', () => {
+      const input: LossyValue = { root: { msg: 'A & B' } };
+      expect(writer(input, { entities: true })).toBe(
+        '<root><msg>A &amp; B</msg></root>',
+      );
+    });
+
+    it('writes a lossy array', () => {
+      const input: LossyValue[] = [{ a: '1' }, { b: '2' }];
+      expect(writer(input)).toBe('<a>1</a><b>2</b>');
+    });
+
+    it('roundtrips: XML → lossy → writer → parse matches', () => {
+      const xml = '<root><item>1</item><item>2</item></root>';
+      const lossyData = lossy(xml);
+      const result = writer(lossyData);
+      // lossy loses sibling order between different tags but preserves same-tag
+      const reParsedLossy = lossy(result);
+      expect(reParsedLossy).toEqual(lossyData);
+    });
+  });
+
+  // --- lossless input auto-detection ---
+
+  describe('lossless input', () => {
+    it('writes simple lossless entries', () => {
+      const input: LosslessEntry[] = [
+        { root: [{ child: [{ $text: 'hello' }] }] },
+      ];
+      expect(writer(input)).toBe('<root><child>hello</child></root>');
+    });
+
+    it('writes lossless entries with attributes', () => {
+      const input: LosslessEntry[] = [
+        {
+          user: [{ $attr: { id: '1' } }, { name: [{ $text: 'Alice' }] }],
+        },
+      ];
+      expect(writer(input)).toBe('<user id="1"><name>Alice</name></user>');
+    });
+
+    it('writes lossless entries with comments', () => {
+      const input: LosslessEntry[] = [
+        {
+          root: [{ $comment: ' a comment ' }, { child: [{ $text: 'text' }] }],
+        },
+      ];
+      expect(writer(input)).toBe(
+        '<root><!-- a comment --><child>text</child></root>',
+      );
+    });
+
+    it('writes lossless entries with pretty option', () => {
+      const input: LosslessEntry[] = [
+        { root: [{ a: [] }, { b: [{ $text: 'text' }] }] },
+      ];
+      expect(writer(input, { pretty: true })).toBe(
+        '<root>\n  <a/>\n  <b>text</b>\n</root>',
+      );
+    });
+
+    it('writes lossless entries with entities option', () => {
+      const input: LosslessEntry[] = [
+        { root: [{ msg: [{ $text: 'A & B < C' }] }] },
+      ];
+      expect(writer(input, { entities: true })).toBe(
+        '<root><msg>A &amp; B &lt; C</msg></root>',
+      );
+    });
+
+    it('roundtrips: XML → lossless → writer matches original', () => {
+      const xml = '<root id="1"><item>A</item><item>B</item></root>';
+      const losslessData = lossless(xml);
+      const result = writer(losslessData);
+      expect(result).toBe(xml);
+    });
+
+    it('roundtrips: complex XML → lossless → writer', () => {
+      const xml =
+        '<catalog><book title="XML Guide"><chapter>Intro</chapter><chapter>Advanced</chapter></book></catalog>';
+      const losslessData = lossless(xml);
+      const result = writer(losslessData);
+      expect(result).toBe(xml);
+    });
+  });
+
+  // --- edge cases for input auto-detection ---
+
+  describe('input auto-detection edge cases', () => {
+    it('empty array returns empty string', () => {
+      expect(writer([])).toBe('');
+    });
+
+    it('null/undefined returns empty string', () => {
+      expect(writer(null as any)).toBe('');
+      expect(writer(undefined as any)).toBe('');
+    });
+
+    it('single TNode (not wrapped in array) works', () => {
+      const node: TNode = { tagName: 'div', attributes: null, children: [] };
+      expect(writer(node)).toBe('<div></div>');
+    });
+
+    it('DOM array with text strings passes through', () => {
+      const dom: (TNode | string)[] = [
+        'hello ',
+        { tagName: 'b', attributes: null, children: ['world'] },
+      ];
+      expect(writer(dom)).toBe('hello <b>world</b>');
+    });
+
+    it('all-string array passes through as DOM text', () => {
+      expect(writer(['hello', ' ', 'world'] as any)).toBe('hello world');
     });
   });
 });
