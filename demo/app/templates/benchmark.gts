@@ -3,6 +3,8 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { action } from '@ember/object';
 
+import pageTitle from 'ember-page-title/helpers/page-title';
+
 import BenchResultList from '#components/bench-result-list.gts';
 import DurationSelect from '#components/duration-select.gts';
 import MonacoEditor from '#components/monaco-editor.gts';
@@ -193,9 +195,11 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
   // ------- Template -------
 
   <template>
+    {{pageTitle 'Benchmark'}}
     <h1>Benchmark</h1>
     <p class='subtitle'>
       {{this.currentSuite.description}}
+      Benchmarks run in a Web Worker.
     </p>
 
     <div class='controls'>
