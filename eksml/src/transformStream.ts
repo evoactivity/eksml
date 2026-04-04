@@ -65,15 +65,35 @@ const SPACE = 32; // (space)
 // @generated:char-codes:end
 
 /**
+ * Convert a SAX `Attributes` object into the format used by `parse()`:
+ * - Returns `null` when there are no attributes.
+ * - Returns an `Object.create(null)` prototype-free record otherwise.
+ */
+function toNodeAttributes(
+  attributes: Attributes,
+): Record<string, string | null> | null {
+  const keys = Object.keys(attributes);
+  if (keys.length === 0) return null;
+  const out: Record<string, string | null> = Object.create(null);
+  for (let i = 0; i < keys.length; i++) {
+    out[keys[i]!] = attributes[keys[i]!]!;
+  }
+  return out;
+}
+
+/**
  * Parse a processing instruction body string into an attributes record.
  * e.g. `version="1.0" encoding="UTF-8"` -> `{ version: "1.0", encoding: "UTF-8" }`
  *
  * This replicates the attribute-parsing behavior of `parse()` so that PIs
  * emitted by `transformStream` match the `{ tagName: "?xml", attributes: {...} }`
  * format that consumers expect.
+ *
+ * Returns `null` when the body contains no attributes, matching `parse()`.
+ * Uses `Object.create(null)` for prototype-free attribute records.
  */
-function parsePIAttributes(body: string): Record<string, string | null> {
-  const attributes: Record<string, string | null> = {};
+function parsePIAttributes(body: string): Record<string, string | null> | null {
+  let attributes: Record<string, string | null> | null = null;
   const bodyLength = body.length;
   let i = 0;
 
@@ -109,6 +129,9 @@ function parsePIAttributes(body: string): Record<string, string | null> {
       continue;
     }
     const name = body.substring(nameStart, i);
+
+    // Allocate attributes object lazily on first attribute
+    if (attributes === null) attributes = Object.create(null);
 
     // Skip whitespace
     while (i < bodyLength) {
@@ -147,10 +170,10 @@ function parsePIAttributes(body: string): Record<string, string | null> {
           const valueStartIndex = i;
           const end = body.indexOf(quoteCharacter, i);
           if (end === -1) {
-            attributes[name] = body.substring(valueStartIndex);
+            attributes![name] = body.substring(valueStartIndex);
             i = bodyLength;
           } else {
-            attributes[name] = body.substring(valueStartIndex, end);
+            attributes![name] = body.substring(valueStartIndex, end);
             i = end + 1;
           }
         } else {
@@ -167,14 +190,14 @@ function parsePIAttributes(body: string): Record<string, string | null> {
               break;
             i++;
           }
-          attributes[name] = body.substring(valueStartIndex, i);
+          attributes![name] = body.substring(valueStartIndex, i);
         }
       } else {
-        attributes[name] = null;
+        attributes![name] = null;
       }
     } else {
       // Boolean attribute (no value)
-      attributes[name] = null;
+      attributes![name] = null;
     }
   }
 
@@ -276,7 +299,7 @@ export function transformStream(
   function defaultOnopentag(tagName: string, attributes: Attributes): void {
     const node: TNode = {
       tagName,
-      attributes: { ...attributes },
+      attributes: toNodeAttributes(attributes),
       children: [],
     };
     const parent = currentParent();
@@ -330,7 +353,7 @@ export function transformStream(
   function defaultOndoctype(tagName: string, attributes: Attributes): void {
     const node: TNode = {
       tagName,
-      attributes: Object.keys(attributes).length > 0 ? { ...attributes } : null,
+      attributes: toNodeAttributes(attributes),
       children: [],
     };
     emitOrAttach(node);
@@ -346,7 +369,7 @@ export function transformStream(
       // Inside a selected subtree — build the TNode and attach to parent.
       const node: TNode = {
         tagName,
-        attributes: { ...attributes },
+        attributes: toNodeAttributes(attributes),
         children: [],
       };
       const parent = selectParent();
@@ -359,7 +382,7 @@ export function transformStream(
       selectDepth = depth;
       const node: TNode = {
         tagName,
-        attributes: { ...attributes },
+        attributes: toNodeAttributes(attributes),
         children: [],
       };
       stack.push(node);
@@ -427,7 +450,7 @@ export function transformStream(
     if (!insideSelection()) return;
     const node: TNode = {
       tagName,
-      attributes: Object.keys(attributes).length > 0 ? { ...attributes } : null,
+      attributes: toNodeAttributes(attributes),
       children: [],
     };
     const parent = selectParent();

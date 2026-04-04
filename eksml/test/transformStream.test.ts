@@ -858,7 +858,7 @@ describe('transformStream with large fixtures', () => {
       expect(() => JSON.parse(jsonContent)).not.toThrow();
 
       // Inline JS should contain angle brackets
-      const inlineJs = scripts.find((s) => !s.attributes!.type);
+      const inlineJs = scripts.find((s) => !s.attributes?.type);
       expect(inlineJs).toBeDefined();
       const jsContent = inlineJs!.children[0] as string;
       expect(jsContent).toContain("createElement('script')");
