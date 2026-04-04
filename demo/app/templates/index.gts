@@ -28,7 +28,7 @@ import Card from '#components/card.gts';
           Enter JSON (DOM, lossy, or lossless) and serialize it back to XML.
           Toggle pretty-print, entity encoding, and HTML mode.
         </:content>
-        <:tag><span class='tag tag-write'>writer / fromLossy / fromLossless</span></:tag>
+        <:tag><span class='tag tag-write'>write / fromLossy / fromLossless</span></:tag>
       </Card>
 
       <Card @route='fast-stream'>

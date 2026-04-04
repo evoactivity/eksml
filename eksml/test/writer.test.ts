@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '#src/parser.ts';
-import { writer } from '#src/writer.ts';
+import { write } from '#src/writer.ts';
 import { lossy } from '#src/converters/lossy.ts';
 import { lossless } from '#src/converters/lossless.ts';
 import type { TNode } from '#src/parser.ts';
@@ -8,32 +8,32 @@ import type { LossyValue } from '#src/converters/lossy.ts';
 import type { LosslessEntry } from '#src/converters/lossless.ts';
 
 // =================================================================
-// writer
+// write
 // =================================================================
-describe('writer', () => {
+describe('write', () => {
   it('roundtrips optimal XML', () => {
     const x = '<test a="value"><child a=\'g"g\'>text</child></test>';
-    expect(writer(parse(x))).toBe(x);
+    expect(write(parse(x))).toBe(x);
   });
 
   it('roundtrips attribute without value', () => {
     const s = '<test><something flag></something></test>';
-    expect(writer(parse(s))).toBe(s);
+    expect(write(parse(s))).toBe(s);
   });
 
   it('returns empty string for undefined', () => {
-    expect(writer(undefined as any)).toBe('');
+    expect(write(undefined as any)).toBe('');
   });
 
   it('stringifies a simple element', () => {
-    expect(writer({ tagName: 'div', attributes: {}, children: [] })).toBe(
+    expect(write({ tagName: 'div', attributes: {}, children: [] })).toBe(
       '<div></div>',
     );
   });
 
   it('stringifies nested elements', () => {
     expect(
-      writer({
+      write({
         tagName: 'a',
         attributes: {},
         children: [{ tagName: 'b', attributes: {}, children: ['text'] }],
@@ -43,7 +43,7 @@ describe('writer', () => {
 
   it('stringifies boolean attributes', () => {
     expect(
-      writer({
+      write({
         tagName: 'input',
         attributes: { disabled: null },
         children: [],
@@ -53,7 +53,7 @@ describe('writer', () => {
 
   it('stringifies an array of nodes', () => {
     expect(
-      writer([
+      write([
         { tagName: 'a', attributes: {}, children: [] },
         { tagName: 'b', attributes: {}, children: [] },
       ]),
@@ -62,7 +62,7 @@ describe('writer', () => {
 
   it('stringifies processing instructions', () => {
     expect(
-      writer({
+      write({
         tagName: '?xml',
         attributes: { version: '1.0' },
         children: [],
@@ -74,30 +74,30 @@ describe('writer', () => {
 
   it('roundtrips simple HTML5 DOCTYPE', () => {
     const xml = '<!DOCTYPE html><html></html>';
-    expect(writer(parse(xml))).toBe(xml);
+    expect(write(parse(xml))).toBe(xml);
   });
 
   it('roundtrips DOCTYPE with quoted public and system identifiers', () => {
     const xml =
       '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
-    expect(writer(parse(xml))).toBe(xml);
+    expect(write(parse(xml))).toBe(xml);
   });
 
   it('roundtrips DOCTYPE with quoted identifiers in pretty mode', () => {
     const xml =
       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-    expect(writer(parse(xml), { pretty: true })).toBe(xml);
+    expect(write(parse(xml), { pretty: true })).toBe(xml);
   });
 
   it('roundtrips DOCTYPE with quoted identifiers in entities mode', () => {
     const xml =
       '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
-    expect(writer(parse(xml), { entities: true })).toBe(xml);
+    expect(write(parse(xml), { entities: true })).toBe(xml);
   });
 
   it('roundtrips DOCTYPE with SYSTEM identifier', () => {
     const xml = '<!DOCTYPE note SYSTEM "note.dtd">';
-    expect(writer(parse(xml))).toBe(xml);
+    expect(write(parse(xml))).toBe(xml);
   });
 
   it('writes DOCTYPE as void (no closing tag) in all modes', () => {
@@ -106,18 +106,18 @@ describe('writer', () => {
       attributes: { html: null },
       children: [],
     };
-    expect(writer(node)).toBe('<!DOCTYPE html>');
-    expect(writer(node, { pretty: true })).toBe('<!DOCTYPE html>');
-    expect(writer(node, { html: true })).toBe('<!DOCTYPE html>');
-    expect(writer(node, { entities: true })).toBe('<!DOCTYPE html>');
-    expect(writer(node, { html: true, entities: true, pretty: true })).toBe(
+    expect(write(node)).toBe('<!DOCTYPE html>');
+    expect(write(node, { pretty: true })).toBe('<!DOCTYPE html>');
+    expect(write(node, { html: true })).toBe('<!DOCTYPE html>');
+    expect(write(node, { entities: true })).toBe('<!DOCTYPE html>');
+    expect(write(node, { html: true, entities: true, pretty: true })).toBe(
       '<!DOCTYPE html>',
     );
   });
 
   it('uses single quotes when value contains double quotes', () => {
     expect(
-      writer({
+      write({
         tagName: 'div',
         attributes: { data: 'he said "hi"' },
         children: [],
@@ -129,37 +129,37 @@ describe('writer', () => {
 
   it('pretty: true uses 2-space indent', () => {
     const tree = parse('<root><child><leaf></leaf></child></root>');
-    expect(writer(tree, { pretty: true })).toBe(
+    expect(write(tree, { pretty: true })).toBe(
       '<root>\n  <child>\n    <leaf/>\n  </child>\n</root>',
     );
   });
 
   it('pretty: custom indent string', () => {
     const tree = parse('<root><child></child></root>');
-    expect(writer(tree, { pretty: '\t' })).toBe('<root>\n\t<child/>\n</root>');
+    expect(write(tree, { pretty: '\t' })).toBe('<root>\n\t<child/>\n</root>');
   });
 
   it('pretty: empty elements self-close', () => {
     expect(
-      writer({ tagName: 'br', attributes: {}, children: [] }, { pretty: true }),
+      write({ tagName: 'br', attributes: {}, children: [] }, { pretty: true }),
     ).toBe('<br/>');
   });
 
   it('pretty: text-only elements stay inline', () => {
     const tree = parse('<name>Alice</name>');
-    expect(writer(tree, { pretty: true })).toBe('<name>Alice</name>');
+    expect(write(tree, { pretty: true })).toBe('<name>Alice</name>');
   });
 
   it('pretty: mixed content indents each child on its own line', () => {
     const tree = parse('<p>Hello <b>world</b>!</p>');
-    expect(writer(tree, { pretty: true })).toBe(
+    expect(write(tree, { pretty: true })).toBe(
       '<p>\n  Hello\n  <b>world</b>\n  !\n</p>',
     );
   });
 
   it('pretty: processing instructions render correctly', () => {
     expect(
-      writer(
+      write(
         { tagName: '?xml', attributes: { version: '1.0' }, children: [] },
         { pretty: true },
       ),
@@ -168,28 +168,28 @@ describe('writer', () => {
 
   it('pretty: attributes are preserved', () => {
     const tree = parse('<root id="1"><child class="a"></child></root>');
-    expect(writer(tree, { pretty: true })).toBe(
+    expect(write(tree, { pretty: true })).toBe(
       '<root id="1">\n  <child class="a"/>\n</root>',
     );
   });
 
   it('pretty: multiple top-level nodes', () => {
     const tree = parse('<?xml version="1.0"?><root><a></a></root>');
-    expect(writer(tree, { pretty: true })).toBe(
+    expect(write(tree, { pretty: true })).toBe(
       '<?xml version="1.0"?>\n<root>\n  <a/>\n</root>',
     );
   });
 
   it('pretty: deeply nested structure', () => {
     const tree = parse('<a><b><c><d></d></c></b></a>');
-    expect(writer(tree, { pretty: true })).toBe(
+    expect(write(tree, { pretty: true })).toBe(
       '<a>\n  <b>\n    <c>\n      <d/>\n    </c>\n  </b>\n</a>',
     );
   });
 
   it('pretty: boolean attributes', () => {
     expect(
-      writer(
+      write(
         {
           tagName: 'input',
           attributes: { disabled: null, type: 'text' },
@@ -204,26 +204,26 @@ describe('writer', () => {
     const tree = parse(
       '<root><header><title>Hello</title></header><body></body></root>',
     );
-    expect(writer(tree, { pretty: true })).toBe(
+    expect(write(tree, { pretty: true })).toBe(
       '<root>\n  <header>\n    <title>Hello</title>\n  </header>\n  <body/>\n</root>',
     );
   });
 
   it('pretty: false is same as no option', () => {
     const tree = parse('<root><child></child></root>');
-    expect(writer(tree, { pretty: false })).toBe(writer(tree));
+    expect(write(tree, { pretty: false })).toBe(write(tree));
   });
 
   it('pretty: mixed content with nested elements', () => {
     const tree = parse('<p>Click <a><b>here</b></a> now</p>');
-    expect(writer(tree, { pretty: true })).toBe(
+    expect(write(tree, { pretty: true })).toBe(
       '<p>\n  Click\n  <a>\n    <b>here</b>\n  </a>\n  now\n</p>',
     );
   });
 
   it('pretty: four-space indent string', () => {
     const tree = parse('<root><child></child></root>');
-    expect(writer(tree, { pretty: '    ' })).toBe(
+    expect(write(tree, { pretty: '    ' })).toBe(
       '<root>\n    <child/>\n</root>',
     );
   });
@@ -237,7 +237,7 @@ describe('writer', () => {
         attributes: null,
         children: ['Tom & Jerry < Mickey > Goofy'],
       };
-      expect(writer(tree, { entities: true })).toBe(
+      expect(write(tree, { entities: true })).toBe(
         '<p>Tom &amp; Jerry &lt; Mickey &gt; Goofy</p>',
       );
     });
@@ -249,7 +249,7 @@ describe('writer', () => {
         children: [],
       };
       // Since " is encoded, double-quote wrapper is safe
-      expect(writer(tree, { entities: true })).toBe(
+      expect(write(tree, { entities: true })).toBe(
         '<div title="A &amp; B &quot;quoted&quot;"></div>',
       );
     });
@@ -262,7 +262,7 @@ describe('writer', () => {
         attributes: { title: "it's here" },
         children: [],
       };
-      expect(writer(tree, { entities: true })).toBe(
+      expect(write(tree, { entities: true })).toBe(
         '<div title="it\'s here"></div>',
       );
     });
@@ -273,7 +273,7 @@ describe('writer', () => {
         attributes: { title: 'A & B "C"' },
         children: ['Tom & Jerry'],
       };
-      const result = writer(tree);
+      const result = write(tree);
       expect(result).toBe('<p title=\'A & B "C"\'>Tom & Jerry</p>');
     });
 
@@ -286,7 +286,7 @@ describe('writer', () => {
           { tagName: 'b', attributes: null, children: ['3 > 2'] },
         ],
       };
-      expect(writer(tree, { entities: true })).toBe(
+      expect(write(tree, { entities: true })).toBe(
         '<root><a>1 &lt; 2</a><b>3 &gt; 2</b></root>',
       );
     });
@@ -297,7 +297,7 @@ describe('writer', () => {
         attributes: null,
         children: [{ tagName: 'msg', attributes: null, children: ['A & B'] }],
       };
-      expect(writer(tree, { entities: true, pretty: true })).toBe(
+      expect(write(tree, { entities: true, pretty: true })).toBe(
         '<root>\n  <msg>A &amp; B</msg>\n</root>',
       );
     });
@@ -309,7 +309,7 @@ describe('writer', () => {
         children: [],
       };
       // escapeAttribute encodes & and " only; < and > are valid in attribute values
-      expect(writer(tree, { entities: true, pretty: true })).toBe(
+      expect(write(tree, { entities: true, pretty: true })).toBe(
         '<input value="1 < 2 &amp; 3 > 0"/>',
       );
     });
@@ -325,7 +325,7 @@ describe('writer', () => {
           ' \u00A9 2024',
         ],
       };
-      expect(writer(tree, { entities: true, pretty: true })).toBe(
+      expect(write(tree, { entities: true, pretty: true })).toBe(
         '<p>\n  Copyright\n  <b>A &amp; B</b>\n  \u00A9 2024\n</p>',
       );
     });
@@ -336,7 +336,7 @@ describe('writer', () => {
         attributes: null,
         children: ['Hello world'],
       };
-      expect(writer(tree, { entities: true })).toBe('<p>Hello world</p>');
+      expect(write(tree, { entities: true })).toBe('<p>Hello world</p>');
     });
 
     it('top-level string array elements are encoded', () => {
@@ -344,7 +344,7 @@ describe('writer', () => {
         'before & after',
         { tagName: 'br', attributes: null, children: [] },
       ];
-      expect(writer(nodes, { entities: true })).toBe(
+      expect(write(nodes, { entities: true })).toBe(
         'before &amp; after<br></br>',
       );
     });
@@ -352,7 +352,7 @@ describe('writer', () => {
     it('roundtrip: parse with entities → write with entities', () => {
       const xml = '<root attr="a &amp; b">1 &lt; 2</root>';
       const tree = parse(xml, { entities: true });
-      const result = writer(tree, { entities: true });
+      const result = write(tree, { entities: true });
       expect(result).toBe(xml);
     });
 
@@ -361,7 +361,7 @@ describe('writer', () => {
       const xml =
         '<catalog><book title="Smith &amp; Associates"><desc>Learn &lt;XML&gt; &amp; more</desc></book></catalog>';
       const tree = parse(xml, { entities: true });
-      const result = writer(tree, { entities: true });
+      const result = write(tree, { entities: true });
       expect(result).toBe(xml);
     });
   });
@@ -379,7 +379,7 @@ describe('writer', () => {
           { tagName: 'hr', attributes: null, children: [] },
         ],
       };
-      expect(writer(tree, { html: true })).toBe('<div><br>text<hr></div>');
+      expect(write(tree, { html: true })).toBe('<div><br>text<hr></div>');
     });
 
     it('void elements self-close in pretty mode', () => {
@@ -391,7 +391,7 @@ describe('writer', () => {
           { tagName: 'p', attributes: null, children: ['text'] },
         ],
       };
-      expect(writer(tree, { html: true, pretty: true })).toBe(
+      expect(write(tree, { html: true, pretty: true })).toBe(
         '<div>\n  <img src="a.png">\n  <p>text</p>\n</div>',
       );
     });
@@ -406,7 +406,7 @@ describe('writer', () => {
           'line 2',
         ],
       };
-      expect(writer(tree, { html: true, pretty: true })).toBe(
+      expect(write(tree, { html: true, pretty: true })).toBe(
         '<p>\n  line 1\n  <br>\n  line 2\n</p>',
       );
     });
@@ -417,7 +417,7 @@ describe('writer', () => {
         attributes: null,
         children: [],
       };
-      expect(writer(tree, { html: true })).toBe('<span></span>');
+      expect(write(tree, { html: true })).toBe('<span></span>');
     });
 
     it('void element with attributes', () => {
@@ -426,7 +426,7 @@ describe('writer', () => {
         attributes: { type: 'text', disabled: null },
         children: [],
       };
-      expect(writer(tree, { html: true })).toBe('<input type="text" disabled>');
+      expect(write(tree, { html: true })).toBe('<input type="text" disabled>');
     });
 
     it('all HTML void elements are recognized', () => {
@@ -448,7 +448,7 @@ describe('writer', () => {
       ];
       for (const tag of voids) {
         const tree: TNode = { tagName: tag, attributes: null, children: [] };
-        expect(writer(tree, { html: true })).toBe(`<${tag}>`);
+        expect(write(tree, { html: true })).toBe(`<${tag}>`);
       }
     });
 
@@ -459,7 +459,7 @@ describe('writer', () => {
         children: [],
       };
       // Should be <br>, not <br/> or <br />
-      expect(writer(tree, { html: true, pretty: true })).toBe('<br>');
+      expect(write(tree, { html: true, pretty: true })).toBe('<br>');
     });
   });
 
@@ -472,7 +472,7 @@ describe('writer', () => {
         attributes: null,
         children: ['Copyright \u00A9 2024'],
       };
-      const result = writer(tree, { html: true, entities: true });
+      const result = write(tree, { html: true, entities: true });
       // © is preserved as UTF-8, not encoded to &copy;
       expect(result).toBe('<p>Copyright \u00A9 2024</p>');
     });
@@ -483,7 +483,7 @@ describe('writer', () => {
         attributes: { title: '\u00A9 2024' },
         children: [],
       };
-      const result = writer(tree, { html: true, entities: true });
+      const result = write(tree, { html: true, entities: true });
       // © is preserved as UTF-8, not encoded to &copy;
       expect(result).toContain('\u00A9');
     });
@@ -494,7 +494,7 @@ describe('writer', () => {
         attributes: null,
         children: ['A & B < C'],
       };
-      const result = writer(tree, { html: true, entities: true });
+      const result = write(tree, { html: true, entities: true });
       expect(result).toBe('<p>A &amp; B &lt; C</p>');
     });
 
@@ -511,7 +511,7 @@ describe('writer', () => {
           },
         ],
       };
-      const result = writer(tree, { html: true, entities: true, pretty: true });
+      const result = write(tree, { html: true, entities: true, pretty: true });
       expect(result).toContain('<img');
       expect(result).toContain('&amp;');
       // é and è are preserved as UTF-8, not encoded to &eacute;/&egrave;
@@ -552,7 +552,7 @@ describe('writer', () => {
           },
         ],
       };
-      const result = writer(tree, {
+      const result = write(tree, {
         html: true,
         entities: true,
         pretty: true,
@@ -576,49 +576,49 @@ describe('writer', () => {
   describe('lossy input', () => {
     it('writes a simple lossy object', () => {
       const input: LossyValue = { root: { a: '1', b: '2' } };
-      expect(writer(input)).toBe('<root><a>1</a><b>2</b></root>');
+      expect(write(input)).toBe('<root><a>1</a><b>2</b></root>');
     });
 
     it('writes a lossy object with attributes', () => {
       const input: LossyValue = { img: { $src: 'a.png', $alt: 'pic' } };
-      expect(writer(input)).toBe('<img src="a.png" alt="pic"></img>');
+      expect(write(input)).toBe('<img src="a.png" alt="pic"></img>');
     });
 
     it('writes a lossy object with repeated elements', () => {
       const input: LossyValue = { list: { item: ['A', 'B', 'C'] } };
-      expect(writer(input)).toBe(
+      expect(write(input)).toBe(
         '<list><item>A</item><item>B</item><item>C</item></list>',
       );
     });
 
     it('writes a lossy object with mixed content', () => {
       const input: LossyValue = { p: { $$: ['Hello ', { b: 'world' }] } };
-      expect(writer(input)).toBe('<p>Hello <b>world</b></p>');
+      expect(write(input)).toBe('<p>Hello <b>world</b></p>');
     });
 
     it('writes a lossy object with pretty option', () => {
       const input: LossyValue = { root: { child: 'text' } };
-      expect(writer(input, { pretty: true })).toBe(
+      expect(write(input, { pretty: true })).toBe(
         '<root>\n  <child>text</child>\n</root>',
       );
     });
 
     it('writes a lossy object with entities option', () => {
       const input: LossyValue = { root: { msg: 'A & B' } };
-      expect(writer(input, { entities: true })).toBe(
+      expect(write(input, { entities: true })).toBe(
         '<root><msg>A &amp; B</msg></root>',
       );
     });
 
     it('writes a lossy array', () => {
       const input: LossyValue[] = [{ a: '1' }, { b: '2' }];
-      expect(writer(input)).toBe('<a>1</a><b>2</b>');
+      expect(write(input)).toBe('<a>1</a><b>2</b>');
     });
 
     it('roundtrips: XML → lossy → writer → parse matches', () => {
       const xml = '<root><item>1</item><item>2</item></root>';
       const lossyData = lossy(xml);
-      const result = writer(lossyData);
+      const result = write(lossyData);
       // lossy loses sibling order between different tags but preserves same-tag
       const reParsedLossy = lossy(result);
       expect(reParsedLossy).toEqual(lossyData);
@@ -632,7 +632,7 @@ describe('writer', () => {
       const input: LosslessEntry[] = [
         { root: [{ child: [{ $text: 'hello' }] }] },
       ];
-      expect(writer(input)).toBe('<root><child>hello</child></root>');
+      expect(write(input)).toBe('<root><child>hello</child></root>');
     });
 
     it('writes lossless entries with attributes', () => {
@@ -641,7 +641,7 @@ describe('writer', () => {
           user: [{ $attr: { id: '1' } }, { name: [{ $text: 'Alice' }] }],
         },
       ];
-      expect(writer(input)).toBe('<user id="1"><name>Alice</name></user>');
+      expect(write(input)).toBe('<user id="1"><name>Alice</name></user>');
     });
 
     it('writes lossless entries with comments', () => {
@@ -650,7 +650,7 @@ describe('writer', () => {
           root: [{ $comment: ' a comment ' }, { child: [{ $text: 'text' }] }],
         },
       ];
-      expect(writer(input)).toBe(
+      expect(write(input)).toBe(
         '<root><!-- a comment --><child>text</child></root>',
       );
     });
@@ -659,7 +659,7 @@ describe('writer', () => {
       const input: LosslessEntry[] = [
         { root: [{ a: [] }, { b: [{ $text: 'text' }] }] },
       ];
-      expect(writer(input, { pretty: true })).toBe(
+      expect(write(input, { pretty: true })).toBe(
         '<root>\n  <a/>\n  <b>text</b>\n</root>',
       );
     });
@@ -668,7 +668,7 @@ describe('writer', () => {
       const input: LosslessEntry[] = [
         { root: [{ msg: [{ $text: 'A & B < C' }] }] },
       ];
-      expect(writer(input, { entities: true })).toBe(
+      expect(write(input, { entities: true })).toBe(
         '<root><msg>A &amp; B &lt; C</msg></root>',
       );
     });
@@ -676,7 +676,7 @@ describe('writer', () => {
     it('roundtrips: XML → lossless → writer matches original', () => {
       const xml = '<root id="1"><item>A</item><item>B</item></root>';
       const losslessData = lossless(xml);
-      const result = writer(losslessData);
+      const result = write(losslessData);
       expect(result).toBe(xml);
     });
 
@@ -684,7 +684,7 @@ describe('writer', () => {
       const xml =
         '<catalog><book title="XML Guide"><chapter>Intro</chapter><chapter>Advanced</chapter></book></catalog>';
       const losslessData = lossless(xml);
-      const result = writer(losslessData);
+      const result = write(losslessData);
       expect(result).toBe(xml);
     });
   });
@@ -693,17 +693,17 @@ describe('writer', () => {
 
   describe('input auto-detection edge cases', () => {
     it('empty array returns empty string', () => {
-      expect(writer([])).toBe('');
+      expect(write([])).toBe('');
     });
 
     it('null/undefined returns empty string', () => {
-      expect(writer(null as any)).toBe('');
-      expect(writer(undefined as any)).toBe('');
+      expect(write(null as any)).toBe('');
+      expect(write(undefined as any)).toBe('');
     });
 
     it('single TNode (not wrapped in array) works', () => {
       const node: TNode = { tagName: 'div', attributes: null, children: [] };
-      expect(writer(node)).toBe('<div></div>');
+      expect(write(node)).toBe('<div></div>');
     });
 
     it('DOM array with text strings passes through', () => {
@@ -711,11 +711,11 @@ describe('writer', () => {
         'hello ',
         { tagName: 'b', attributes: null, children: ['world'] },
       ];
-      expect(writer(dom)).toBe('hello <b>world</b>');
+      expect(write(dom)).toBe('hello <b>world</b>');
     });
 
     it('all-string array passes through as DOM text', () => {
-      expect(writer(['hello', ' ', 'world'] as any)).toBe('hello world');
+      expect(write(['hello', ' ', 'world'] as any)).toBe('hello world');
     });
   });
 });

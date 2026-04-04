@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { parse, type TNode } from '#src/parser.ts';
 import { filter } from '#src/utilities/filter.ts';
 import { toContentString } from '#src/utilities/toContentString.ts';
-import { writer } from '#src/writer.ts';
+import { write } from '#src/writer.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
@@ -84,7 +84,7 @@ describe('fixture: rss-feed.xml', () => {
 
   it('roundtrips via writer then re-parse', () => {
     const result = parse(rssFeed, { trimWhitespace: true });
-    const xml = writer(result);
+    const xml = write(result);
     const reparsed = parse(xml, { trimWhitespace: true });
     // Same number of top-level nodes
     expect(reparsed.length).toBe(result.length);
@@ -495,7 +495,7 @@ describe('fixture: pom.xml', () => {
 
   it('roundtrips via writer', () => {
     const result = parse(pomXml);
-    const xml = writer(result);
+    const xml = write(result);
     const reparsed = parse(xml);
     // Same number of dependencies
     const origDeps = filter(result, (n) => n.tagName === 'dependency');

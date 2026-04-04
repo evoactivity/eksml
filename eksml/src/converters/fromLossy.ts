@@ -19,11 +19,11 @@
  * ```ts
  * import { fromLossy } from "eksml/from-lossy";
  * import { lossy } from "eksml/lossy";
- * import { writer } from "eksml/writer";
+ * import { write } from "eksml/writer";
  *
  * const obj = lossy('<root><item>hello</item><item>world</item></root>');
  * const dom = fromLossy(obj);
- * const xml = writer(dom);
+ * const xml = write(dom);
  * ```
  */
 
@@ -45,7 +45,7 @@ const DOLLAR = 36; // $
  * - An array of `LossyValue` (multiple roots)
  *
  * @param input - A lossy value or array of lossy values.
- * @returns A DOM array suitable for `writer()` or further processing.
+ * @returns A DOM array suitable for `write()` or further processing.
  */
 export function fromLossy(
   input: LossyValue | LossyValue[],

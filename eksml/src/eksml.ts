@@ -40,7 +40,7 @@ import type { FastStreamHandlers, Attributes } from '#src/fastStream.ts';
 import type { LossyValue } from '#src/converters/lossy.ts';
 import type { LosslessEntry } from '#src/converters/lossless.ts';
 import { parse } from '#src/parser.ts';
-import { writer } from '#src/writer.ts';
+import { write } from '#src/writer.ts';
 import { fastStream } from '#src/fastStream.ts';
 import { transformStream } from '#src/transformStream.ts';
 import type { TransformStreamOptions } from '#src/transformStream.ts';
@@ -172,7 +172,7 @@ export class Eksml<M extends OutputMode = 'dom'> {
    * @returns The serialized XML/HTML string.
    */
   write(input: WriterInput, options?: WriterOptions): string {
-    return writer(input, options);
+    return write(input, options);
   }
 
   // -------------------------------------------------------------------------

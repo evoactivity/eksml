@@ -27,11 +27,21 @@ yarn add eksml
 ## Quick Start
 
 ```ts
+// Class API — shared configuration across all operations
 import { Eksml } from 'eksml';
 
 const xml = new Eksml();
 const dom = xml.parse('<root><item id="1">Hello</item></root>');
 const str = xml.write(dom);
+```
+
+```ts
+// Functional API — import only what you need
+import { parse } from 'eksml/parser';
+import { write } from 'eksml/writer';
+
+const dom = parse('<root><item id="1">Hello</item></root>');
+const str = write(dom);
 ```
 
 ---
@@ -326,25 +336,25 @@ interface TNode {
 
 ---
 
-### `writer(input, options?)`
+### `write(input, options?)`
 
 Serialize a DOM tree, lossy object, or lossless entries back to an XML/HTML string.
 Input format is auto-detected — no manual conversion needed.
 
 ```ts
-import { writer } from 'eksml/writer';
+import { write } from 'eksml/writer';
 
 // DOM input
-const xml = writer(dom);
-const pretty = writer(dom, { pretty: true });
-const html = writer(dom, { html: true, entities: true });
+const xml = write(dom);
+const pretty = write(dom, { pretty: true });
+const html = write(dom, { html: true, entities: true });
 
 // Lossy input — converted to DOM automatically
-const fromObj = writer({ user: { name: 'Alice', age: 30 } });
+const fromObj = write({ user: { name: 'Alice', age: 30 } });
 // -> '<user><name>Alice</name><age>30</age></user>'
 
 // Lossless input — converted to DOM automatically
-const fromEntries = writer([
+const fromEntries = write([
   { user: [{ name: ['Alice'] }, { role: ['admin'] }] },
 ]);
 // -> '<user><name>Alice</name><role>admin</role></user>'
@@ -616,21 +626,21 @@ Each entry type:
 
 Convert lossy or lossless representations back into `TNode` DOM trees.
 
-> **Note:** `writer()` auto-detects lossy and lossless inputs, so you rarely
+> **Note:** `write()` auto-detects lossy and lossless inputs, so you rarely
 > need these directly. They're useful when you want the DOM tree for inspection
 > or further manipulation before serializing.
 
 ```ts
 import { fromLossy } from 'eksml/from-lossy';
 import { fromLossless } from 'eksml/from-lossless';
-import { writer } from 'eksml/writer';
+import { write } from 'eksml/writer';
 
 // Explicit conversion (when you need the DOM tree)
 const dom = fromLossy({ user: { name: 'Alice' } });
-writer(dom); // => '<user><name>Alice</name></user>'
+write(dom); // => '<user><name>Alice</name></user>'
 
-// Or just pass lossy/lossless directly to writer()
-writer({ user: { name: 'Alice' } }); // same result
+// Or just pass lossy/lossless directly to write()
+write({ user: { name: 'Alice' } }); // same result
 ```
 
 ---

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { parse, type TNode } from '#src/parser.ts';
 import { filter } from '#src/utilities/filter.ts';
-import { writer } from '#src/writer.ts';
+import { write } from '#src/writer.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
@@ -162,7 +162,7 @@ describe('parse', () => {
 
   it('attribute without value', () => {
     const s = '<test><something flag></something></test>';
-    expect(writer(parse(s))).toBe(s);
+    expect(write(parse(s))).toBe(s);
   });
 
   it('CDATA', () => {

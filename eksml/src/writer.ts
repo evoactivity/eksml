@@ -10,7 +10,7 @@ const BANG = 33; // !
 const QUESTION = 63; // ?
 // @generated:char-codes:end
 
-/** Options for writer. */
+/** Options for write. */
 export interface WriterOptions {
   /**
    * Pretty-print with indentation. When enabled, each element is placed on
@@ -43,7 +43,7 @@ export interface WriterOptions {
   html?: boolean;
 }
 
-/** Input types accepted by `writer()`. */
+/** Input types accepted by `write()`. */
 export type WriterInput =
   | TNode
   | (TNode | string)[]
@@ -63,17 +63,17 @@ export type WriterInput =
  * @param options - Formatting options
  * @returns XML string
  */
-export function writer(
+export function write(
   input: TNode | (TNode | string)[],
   options?: WriterOptions,
 ): string;
-export function writer(
+export function write(
   input: LossyValue | LossyValue[],
   options?: WriterOptions,
 ): string;
-export function writer(input: LosslessEntry[], options?: WriterOptions): string;
-export function writer(input: WriterInput, options?: WriterOptions): string;
-export function writer(input: WriterInput, options?: WriterOptions): string {
+export function write(input: LosslessEntry[], options?: WriterOptions): string;
+export function write(input: WriterInput, options?: WriterOptions): string;
+export function write(input: WriterInput, options?: WriterOptions): string {
   if (!input) return '';
 
   const dom = toDom(input);

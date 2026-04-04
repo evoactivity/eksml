@@ -15,11 +15,11 @@
  * ```ts
  * import { fromLossless } from "eksml/from-lossless";
  * import { lossless } from "eksml/lossless";
- * import { writer } from "eksml/writer";
+ * import { write } from "eksml/writer";
  *
  * const entries = lossless('<root attr="1"><item>hello</item></root>');
  * const dom = fromLossless(entries);
- * const xml = writer(dom); // '<root attr="1"><item>hello</item></root>'
+ * const xml = write(dom); // '<root attr="1"><item>hello</item></root>'
  * ```
  */
 
@@ -30,7 +30,7 @@ import type { LosslessEntry } from '#src/converters/lossless.ts';
  * Convert a lossless JSON entry array back to a `(TNode | string)[]` DOM tree.
  *
  * @param entries - The lossless entry array (as returned by `lossless()`).
- * @returns A DOM array suitable for `writer()` or further processing.
+ * @returns A DOM array suitable for `write()` or further processing.
  */
 export function fromLossless(entries: LosslessEntry[]): (TNode | string)[] {
   const result: (TNode | string)[] = [];

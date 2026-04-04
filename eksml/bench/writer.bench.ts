@@ -1,5 +1,5 @@
 /**
- * Benchmarks comparing eksml writer (serializer) against competitor libraries'
+ * Benchmarks comparing eksml write (serializer) against competitor libraries'
  * builder/serializer implementations.
  *
  * Each benchmark pre-parses the XML into the library's native representation
@@ -12,7 +12,7 @@ import { bench, describe } from 'vitest';
 
 // --- eksml ---
 import { parse } from '#src/parser.ts';
-import { writer } from '#src/writer.ts';
+import { write } from '#src/writer.ts';
 
 // --- competitors ---
 import { XMLParser, XMLBuilder } from 'fast-xml-parser';
@@ -117,7 +117,7 @@ const hp2Epg = parseDocument(xmltvEpg, hp2Opts);
 // ---------------------------------------------------------------------------
 describe('write: small XML (~100 B)', () => {
   bench('eksml', () => {
-    writer(eksmlSmall);
+    write(eksmlSmall);
   });
 
   bench('fast-xml-parser', () => {
@@ -146,7 +146,7 @@ describe('write: small XML (~100 B)', () => {
 // ---------------------------------------------------------------------------
 describe('write: RSS feed (~3 KB)', () => {
   bench('eksml', () => {
-    writer(eksmlRss);
+    write(eksmlRss);
   });
 
   bench('fast-xml-parser', () => {
@@ -173,7 +173,7 @@ describe('write: RSS feed (~3 KB)', () => {
 // ---------------------------------------------------------------------------
 describe('write: SOAP envelope (~3 KB)', () => {
   bench('eksml', () => {
-    writer(eksmlSoap);
+    write(eksmlSoap);
   });
 
   bench('fast-xml-parser', () => {
@@ -202,7 +202,7 @@ describe('write: SOAP envelope (~3 KB)', () => {
 // ---------------------------------------------------------------------------
 describe('write: Atom feed (~6 KB)', () => {
   bench('eksml', () => {
-    writer(eksmlAtom);
+    write(eksmlAtom);
   });
 
   bench('fast-xml-parser', () => {
@@ -231,7 +231,7 @@ describe('write: Atom feed (~6 KB)', () => {
 // ---------------------------------------------------------------------------
 describe('write: Maven POM (~8 KB)', () => {
   bench('eksml', () => {
-    writer(eksmlPom);
+    write(eksmlPom);
   });
 
   bench('fast-xml-parser', () => {
@@ -260,7 +260,7 @@ describe('write: Maven POM (~8 KB)', () => {
 // ---------------------------------------------------------------------------
 describe('write: XMLTV EPG (~30 KB)', () => {
   bench('eksml', () => {
-    writer(eksmlEpg);
+    write(eksmlEpg);
   });
 
   bench('fast-xml-parser', () => {

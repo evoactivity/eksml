@@ -11,7 +11,7 @@ import { bench, describe } from 'vitest';
 
 // --- direct imports ---
 import { parse } from '#src/parser.ts';
-import { writer } from '#src/writer.ts';
+import { write } from '#src/writer.ts';
 import { lossy } from '#src/converters/lossy.ts';
 import { lossless } from '#src/converters/lossless.ts';
 
@@ -36,7 +36,7 @@ const eksmlEntities = new Eksml({ entities: true });
 const eksmlLossy = new Eksml({ output: 'lossy' });
 const eksmlLossless = new Eksml({ output: 'lossless' });
 
-// Pre-parse fixtures for writer benchmarks
+// Pre-parse fixtures for write benchmarks
 const parsedSmall = parse(small);
 const parsedRss = parse(rssFeed);
 const parsedPom = parse(pomXml);
@@ -112,8 +112,8 @@ describe('class vs direct: parse with entities EPG (~9 KB)', () => {
 // Write: class vs direct
 // ---------------------------------------------------------------------------
 describe('class vs direct: write small (~100 B)', () => {
-  bench('direct writer()', () => {
-    writer(parsedSmall);
+  bench('direct write()', () => {
+    write(parsedSmall);
   });
 
   bench('Eksml.write()', () => {
@@ -122,8 +122,8 @@ describe('class vs direct: write small (~100 B)', () => {
 });
 
 describe('class vs direct: write RSS (~3 KB)', () => {
-  bench('direct writer()', () => {
-    writer(parsedRss);
+  bench('direct write()', () => {
+    write(parsedRss);
   });
 
   bench('Eksml.write()', () => {
@@ -132,8 +132,8 @@ describe('class vs direct: write RSS (~3 KB)', () => {
 });
 
 describe('class vs direct: write POM (~5 KB)', () => {
-  bench('direct writer()', () => {
-    writer(parsedPom);
+  bench('direct write()', () => {
+    write(parsedPom);
   });
 
   bench('Eksml.write()', () => {
@@ -142,8 +142,8 @@ describe('class vs direct: write POM (~5 KB)', () => {
 });
 
 describe('class vs direct: write EPG (~9 KB)', () => {
-  bench('direct writer()', () => {
-    writer(parsedEpg);
+  bench('direct write()', () => {
+    write(parsedEpg);
   });
 
   bench('Eksml.write()', () => {

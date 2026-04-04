@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { lossy } from '#src/converters/lossy.ts';
 import type { LossyValue, LossyObject } from '#src/converters/lossy.ts';
 import { fromLossy } from '#src/converters/fromLossy.ts';
-import { writer } from '#src/writer.ts';
+import { write } from '#src/writer.ts';
 import type { TNode } from '#src/parser.ts';
 
 // =================================================================
@@ -222,7 +222,7 @@ describe('lossy round-trip through writer', () => {
     const xml = '<root><a>1</a><b>2</b></root>';
     const original = lossy(xml);
     const dom = fromLossy(original);
-    const rewritten = writer(dom);
+    const rewritten = write(dom);
     const roundTripped = lossy(rewritten);
     expect(roundTripped).toEqual(original);
   });
@@ -231,7 +231,7 @@ describe('lossy round-trip through writer', () => {
     const xml = '<name>Alice</name>';
     const original = lossy(xml);
     const dom = fromLossy(original);
-    const rewritten = writer(dom);
+    const rewritten = write(dom);
     const roundTripped = lossy(rewritten);
     expect(roundTripped).toEqual(original);
   });
@@ -240,7 +240,7 @@ describe('lossy round-trip through writer', () => {
     const xml = '<div id="main" class="wide"><p>text</p></div>';
     const original = lossy(xml);
     const dom = fromLossy(original);
-    const rewritten = writer(dom);
+    const rewritten = write(dom);
     const roundTripped = lossy(rewritten);
     expect(roundTripped).toEqual(original);
   });
@@ -249,7 +249,7 @@ describe('lossy round-trip through writer', () => {
     const xml = '<p>Hello <b>world</b> end</p>';
     const original = lossy(xml);
     const dom = fromLossy(original);
-    const rewritten = writer(dom);
+    const rewritten = write(dom);
     const roundTripped = lossy(rewritten);
     expect(roundTripped).toEqual(original);
   });
@@ -258,7 +258,7 @@ describe('lossy round-trip through writer', () => {
     const xml = '<list><item>A</item><item>B</item><item>C</item></list>';
     const original = lossy(xml);
     const dom = fromLossy(original);
-    const rewritten = writer(dom);
+    const rewritten = write(dom);
     const roundTripped = lossy(rewritten);
     expect(roundTripped).toEqual(original);
   });
@@ -267,7 +267,7 @@ describe('lossy round-trip through writer', () => {
     const xml = '<root><br/></root>';
     const original = lossy(xml);
     const dom = fromLossy(original);
-    const rewritten = writer(dom);
+    const rewritten = write(dom);
     const roundTripped = lossy(rewritten);
     expect(roundTripped).toEqual(original);
   });
@@ -276,7 +276,7 @@ describe('lossy round-trip through writer', () => {
     const xml = '<input value=""/>';
     const original = lossy(xml);
     const dom = fromLossy(original);
-    const rewritten = writer(dom);
+    const rewritten = write(dom);
     const roundTripped = lossy(rewritten);
     expect(roundTripped).toEqual(original);
   });
@@ -288,13 +288,13 @@ describe('lossy round-trip through writer', () => {
 describe('writer integration', () => {
   it('produces valid XML from simple lossy object', () => {
     const dom = fromLossy({ root: { a: '1', b: '2' } });
-    const xml = writer(dom);
+    const xml = write(dom);
     expect(xml).toBe('<root><a>1</a><b>2</b></root>');
   });
 
   it('produces valid XML with attributes', () => {
     const dom = fromLossy({ img: { $src: 'a.png', $alt: 'pic' } });
-    const xml = writer(dom);
+    const xml = write(dom);
     expect(xml).toBe('<img src="a.png" alt="pic"></img>');
   });
 
@@ -302,7 +302,7 @@ describe('writer integration', () => {
     const dom = fromLossy({
       p: { $$: ['Hello ', { b: 'world' }] },
     });
-    const xml = writer(dom);
+    const xml = write(dom);
     expect(xml).toBe('<p>Hello <b>world</b></p>');
   });
 
@@ -310,7 +310,7 @@ describe('writer integration', () => {
     const dom = fromLossy({
       list: { item: ['A', 'B'] },
     });
-    const xml = writer(dom);
+    const xml = write(dom);
     expect(xml).toBe('<list><item>A</item><item>B</item></list>');
   });
 });
@@ -325,7 +325,7 @@ describe('JSON deserialization', () => {
     const json = JSON.stringify(original);
     const parsed = JSON.parse(json);
     const dom = fromLossy(parsed);
-    const rewritten = writer(dom);
+    const rewritten = write(dom);
     const roundTripped = lossy(rewritten);
     expect(roundTripped).toEqual(original);
   });

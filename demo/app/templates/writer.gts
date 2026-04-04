@@ -4,7 +4,7 @@ import { on } from '@ember/modifier';
 
 import { fromLossless } from 'eksml/from-lossless';
 import { fromLossy } from 'eksml/from-lossy';
-import { writer } from 'eksml/writer';
+import { write } from 'eksml/writer';
 import pageTitle from 'ember-page-title/helpers/page-title';
 
 import MonacoEditor from '#components/monaco-editor.gts';
@@ -141,7 +141,7 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
       }
 
       const t0 = performance.now();
-      const xml = writer(dom as Parameters<typeof writer>[0], options);
+      const xml = write(dom as Parameters<typeof write>[0], options);
       const elapsed = performance.now() - t0;
 
       this.outputContent = xml;

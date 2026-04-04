@@ -106,7 +106,7 @@ describe('Eksml.write()', () => {
     expect(eksml.write(nodes)).toBe('<a>1</a><b>2</b>');
   });
 
-  it('accepts writer options per-call', () => {
+  it('accepts write options per-call', () => {
     const eksml = new Eksml();
     const node: TNode = {
       tagName: 'root',
@@ -117,7 +117,7 @@ describe('Eksml.write()', () => {
     expect(result).toContain('\n');
   });
 
-  it('encodes entities when writer entities option is set', () => {
+  it('encodes entities when write entities option is set', () => {
     const eksml = new Eksml();
     const node: TNode = {
       tagName: 'root',

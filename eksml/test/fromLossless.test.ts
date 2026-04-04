@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { lossless } from '#src/converters/lossless.ts';
 import { fromLossless } from '#src/converters/fromLossless.ts';
 import { parse } from '#src/parser.ts';
-import { writer } from '#src/writer.ts';
+import { write } from '#src/writer.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
@@ -182,7 +182,7 @@ describe('writer integration', () => {
     const dom = parse(xml);
     const entries = lossless(dom);
     const result = fromLossless(entries);
-    expect(writer(result)).toBe(writer(dom));
+    expect(write(result)).toBe(write(dom));
   });
 
   it('complex nested structure round-trips through writer', () => {
@@ -190,7 +190,7 @@ describe('writer integration', () => {
     const dom = parse(xml);
     const entries = lossless(dom);
     const result = fromLossless(entries);
-    expect(writer(result)).toBe(writer(dom));
+    expect(write(result)).toBe(write(dom));
   });
 
   it('mixed content round-trips through writer', () => {
@@ -198,7 +198,7 @@ describe('writer integration', () => {
     const dom = parse(xml);
     const entries = lossless(dom);
     const result = fromLossless(entries);
-    expect(writer(result)).toBe(writer(dom));
+    expect(write(result)).toBe(write(dom));
   });
 });
 
