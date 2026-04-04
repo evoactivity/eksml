@@ -1,7 +1,6 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { action } from '@ember/object';
 
 import pageTitle from 'ember-page-title/helpers/page-title';
 
@@ -130,33 +129,28 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
 
   // ------- Actions -------
 
-  @action
-  selectTab(index: number): void {
+  selectTab = (index: number): void => {
     this.activeTab = index;
 
     const sample = this.args.model.samples[index];
 
     this.inputContent = sample ? sample.content : '';
-  }
+  };
 
-  @action
-  onInputChange(value: string): void {
+  onInputChange = (value: string): void => {
     this.inputContent = value;
-  }
+  };
 
-  @action
-  setDuration(value: string): void {
+  setDuration = (value: string): void => {
     this.durationMs = value;
-  }
+  };
 
-  @action
-  setSuite(event: Event): void {
+  setSuite = (event: Event): void => {
     this.suiteIndex = parseInt((event.target as HTMLSelectElement).value, 10);
     this.results = [];
-  }
+  };
 
-  @action
-  async run(): Promise<void> {
+  run = async (): Promise<void> => {
     if (this.running) return;
 
     const xml = this.inputContent;
@@ -190,7 +184,7 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
     }
 
     this.running = false;
-  }
+  };
 
   // ------- Template -------
 

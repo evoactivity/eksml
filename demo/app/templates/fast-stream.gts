@@ -1,7 +1,6 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { action } from '@ember/object';
 
 import { fastStream } from 'eksml/stream';
 import pageTitle from 'ember-page-title/helpers/page-title';
@@ -100,11 +99,10 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
 
   // ------- Actions -------
 
-  @action
-  onInputReady(
+  onInputReady = (
     editor: FastStreamTemplate['inputEditorInstance'],
     monaco: Awaited<ReturnType<typeof ModernMonaco.init>>,
-  ): void {
+  ): void => {
     this.inputEditorInstance = editor;
 
     if (monaco && editor) {
@@ -112,20 +110,17 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
         void this.run();
       });
     }
-  }
+  };
 
-  @action
-  setThrottle(event: Event): void {
+  setThrottle = (event: Event): void => {
     this.throttle = (event.target as HTMLSelectElement).value;
-  }
+  };
 
-  @action
-  setChunkSize(event: Event): void {
+  setChunkSize = (event: Event): void => {
     this.chunkSize = (event.target as HTMLInputElement).value;
-  }
+  };
 
-  @action
-  async run(): Promise<void> {
+  run = async (): Promise<void> => {
     const xml = this.inputEditorInstance
       ? ((
           this.inputEditorInstance as { getValue?: () => string }
@@ -241,16 +236,15 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
 
     this.running = false;
     this.abortController = null;
-  }
+  };
 
-  @action
-  stop(): void {
+  stop = (): void => {
     if (this.abortController) {
       this.abortController.abort();
       this.appendLog('event-done', 'stopped', 'aborted by user');
       this.running = false;
     }
-  }
+  };
 
   get hasEntries(): boolean {
     return this.entries.length > 0;
@@ -264,9 +258,7 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
     return !this.running;
   }
 
-  isThrottle(value: string): boolean {
-    return this.throttle === value;
-  }
+  isThrottle = (value: string): boolean => this.throttle === value;
 
   <template>
     {{pageTitle 'Fast Stream (SAX)'}}

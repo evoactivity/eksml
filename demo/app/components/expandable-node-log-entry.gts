@@ -1,6 +1,5 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
-import { action } from '@ember/object';
 
 import type { NodeEntry } from '#utils/node-log.ts';
 
@@ -15,10 +14,9 @@ export default class ExpandableNodeLogEntry extends Component<ExpandableNodeLogE
     return typeof this.args.entry.node === 'string';
   }
 
-  @action
-  toggle(): void {
+  toggle = (): void => {
     this.args.entry.expanded = !this.args.entry.expanded;
-  }
+  };
 
   <template>
     <div

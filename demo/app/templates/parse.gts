@@ -1,7 +1,6 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { action } from '@ember/object';
 
 import { lossless } from 'eksml/lossless';
 import { lossy } from 'eksml/lossy';
@@ -100,11 +99,10 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
 
   // ------- Actions -------
 
-  @action
-  onInputReady(
+  onInputReady = (
     editor: ParseTemplate['inputEditorInstance'],
     monaco: ParseTemplate['monacoApi'],
-  ): void {
+  ): void => {
     this.inputEditorInstance = editor;
     this.monacoApi = monaco;
 
@@ -117,41 +115,35 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
 
     // Run initial parse
     void this.run();
-  }
+  };
 
-  @action
-  onInputChange(value: string): void {
+  onInputChange = (value: string): void => {
     this.inputContent = value;
     void this.run();
-  }
+  };
 
-  @action
-  selectTab(index: number): void {
+  selectTab = (index: number): void => {
     this.activeTab = index;
     this.inputContent = this.sampleContent(index);
     void this.run();
-  }
+  };
 
-  @action
-  setMode(event: Event): void {
+  setMode = (event: Event): void => {
     this.mode = (event.target as HTMLSelectElement).value;
     void this.run();
-  }
+  };
 
-  @action
-  toggleEntities(): void {
+  toggleEntities = (): void => {
     this.entities = !this.entities;
     void this.run();
-  }
+  };
 
-  @action
-  toggleHtml(): void {
+  toggleHtml = (): void => {
     this.html = !this.html;
     void this.run();
-  }
+  };
 
-  @action
-  run(): void {
+  run = (): void => {
     const xml = this.inputContent;
     const mode = this.mode;
     const options: Record<string, boolean> = {};
@@ -174,7 +166,7 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
       this.error = (err as Error).message;
       this.elapsedMs = null;
     }
-  }
+  };
 
   get isDom(): boolean {
     return this.mode === 'dom';

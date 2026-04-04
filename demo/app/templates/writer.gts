@@ -1,7 +1,6 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { action } from '@ember/object';
 
 import { fromLossless } from 'eksml/from-lossless';
 import { fromLossy } from 'eksml/from-lossy';
@@ -65,11 +64,10 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
 
   // ------- Actions -------
 
-  @action
-  onInputReady(
+  onInputReady = (
     editor: WriterTemplate['inputEditorInstance'],
     monaco: WriterTemplate['monacoApi'],
-  ): void {
+  ): void => {
     this.inputEditorInstance = editor;
     this.monacoApi = monaco;
 
@@ -80,51 +78,44 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
     }
 
     this.run();
-  }
+  };
 
-  @action
-  onInputChange(value: string): void {
+  onInputChange = (value: string): void => {
     this.inputContent = value;
     this.run();
-  }
+  };
 
-  @action
-  selectTab(index: number): void {
+  selectTab = (index: number): void => {
     this.activeTab = index;
     this.inputContent = this.sampleContent(index);
     this.run();
-  }
+  };
 
-  @action
-  setFormat(event: Event): void {
+  setFormat = (event: Event): void => {
     this.format = (event.target as HTMLSelectElement).value as
       | 'dom'
       | 'lossy'
       | 'lossless';
     this.inputContent = this.sampleContent(this.activeTab);
     this.run();
-  }
+  };
 
-  @action
-  togglePretty(): void {
+  togglePretty = (): void => {
     this.pretty = !this.pretty;
     this.run();
-  }
+  };
 
-  @action
-  toggleEntities(): void {
+  toggleEntities = (): void => {
     this.entities = !this.entities;
     this.run();
-  }
+  };
 
-  @action
-  toggleHtml(): void {
+  toggleHtml = (): void => {
     this.html = !this.html;
     this.run();
-  }
+  };
 
-  @action
-  run(): void {
+  run = (): void => {
     const jsonText = this.inputContent;
     const format = this.format;
     const options: Record<string, boolean> = {};
@@ -159,7 +150,7 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
       this.error = (err as Error).message;
       this.elapsedMs = null;
     }
-  }
+  };
 
   get isDom(): boolean {
     return this.format === 'dom';

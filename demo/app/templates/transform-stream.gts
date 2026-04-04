@@ -1,7 +1,6 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { action } from '@ember/object';
 import { trackedArray } from '@ember/reactive/collections';
 
 import { transformStream } from 'eksml/transform-stream';
@@ -156,11 +155,10 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
 
   // ------- Actions -------
 
-  @action
-  onInputReady(
+  onInputReady = (
     editor: TransformStreamTemplate['inputEditorInstance'],
     monaco: TransformStreamTemplate['monacoApi'],
-  ): void {
+  ): void => {
     this.inputEditorInstance = editor;
     this.monacoApi = monaco;
 
@@ -169,25 +167,21 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
         void this.run();
       });
     }
-  }
+  };
 
-  @action
-  setThrottle(event: Event): void {
+  setThrottle = (event: Event): void => {
     this.throttle = (event.target as HTMLSelectElement).value;
-  }
+  };
 
-  @action
-  setChunkSize(event: Event): void {
+  setChunkSize = (event: Event): void => {
     this.chunkSize = (event.target as HTMLInputElement).value;
-  }
+  };
 
-  @action
-  setSelectTags(event: Event): void {
+  setSelectTags = (event: Event): void => {
     this.selectTags = (event.target as HTMLInputElement).value;
-  }
+  };
 
-  @action
-  async run(): Promise<void> {
+  run = async (): Promise<void> => {
     const xml = this.inputEditorInstance
       ? ((
           this.inputEditorInstance as { getValue?: () => string }
@@ -277,16 +271,15 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
 
     this.running = false;
     this.abortController = null;
-  }
+  };
 
-  @action
-  stop(): void {
+  stop = (): void => {
     if (this.abortController) {
       this.abortController.abort();
       this.logItems.push({ type: 'done', text: 'aborted by user' });
       this.running = false;
     }
-  }
+  };
 
   get notRunning(): boolean {
     return !this.running;
