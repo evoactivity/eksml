@@ -258,21 +258,45 @@ const SAMPLES: Sample[] = [
 
 function generateLargeCatalog(): string {
   const categories = [
-    "Electronics", "Books", "Clothing", "Home & Garden",
-    "Sports", "Toys", "Automotive", "Health",
+    "Electronics",
+    "Books",
+    "Clothing",
+    "Home & Garden",
+    "Sports",
+    "Toys",
+    "Automotive",
+    "Health",
   ];
   const adjectives = [
-    "Premium", "Ultra", "Pro", "Essential", "Classic",
-    "Advanced", "Compact", "Deluxe", "Eco", "Smart",
+    "Premium",
+    "Ultra",
+    "Pro",
+    "Essential",
+    "Classic",
+    "Advanced",
+    "Compact",
+    "Deluxe",
+    "Eco",
+    "Smart",
   ];
   const nouns = [
-    "Widget", "Gadget", "Device", "Tool", "Kit",
-    "Module", "Sensor", "Adapter", "Controller", "Monitor",
+    "Widget",
+    "Gadget",
+    "Device",
+    "Tool",
+    "Kit",
+    "Module",
+    "Sensor",
+    "Adapter",
+    "Controller",
+    "Monitor",
   ];
 
   const lines: string[] = [];
   lines.push('<?xml version="1.0" encoding="UTF-8"?>');
-  lines.push('<catalog xmlns="http://example.com/catalog/v1" generated="2026-04-03T12:00:00Z">');
+  lines.push(
+    '<catalog xmlns="http://example.com/catalog/v1" generated="2026-04-03T12:00:00Z">',
+  );
 
   // ~5,000 products produces roughly 1 MB
   const productCount = 5000;
@@ -280,7 +304,7 @@ function generateLargeCatalog(): string {
     const adj = adjectives[i % adjectives.length]!;
     const noun = nouns[Math.floor(i / adjectives.length) % nouns.length]!;
     const cat = categories[i % categories.length]!;
-    const price = (5 + (i * 7.31) % 993).toFixed(2);
+    const price = (5 + ((i * 7.31) % 993)).toFixed(2);
     const stock = (i * 13) % 500;
     const rating = (1 + (i % 50) / 10).toFixed(1);
     const sku = `SKU-${String(i).padStart(6, "0")}`;
@@ -291,7 +315,9 @@ function generateLargeCatalog(): string {
     lines.push(`    <price currency="USD">${price}</price>`);
     lines.push(`    <stock>${stock}</stock>`);
     lines.push(`    <rating>${rating}</rating>`);
-    lines.push(`    <description>The ${adj.toLowerCase()} ${noun.toLowerCase()} is perfect for ${cat.toLowerCase()} enthusiasts. Model #${i}.</description>`);
+    lines.push(
+      `    <description>The ${adj.toLowerCase()} ${noun.toLowerCase()} is perfect for ${cat.toLowerCase()} enthusiasts. Model #${i}.</description>`,
+    );
     lines.push("  </product>");
   }
 
@@ -420,7 +446,7 @@ function yieldFrame(): Promise<void> {
 
 const BENCH_TARGET_MS = 200;
 const BENCH_MIN_ITERATIONS = 10;
-const BENCH_MAX_ITERATIONS = 1_000_000;
+const BENCH_MAX_ITERATIONS = 200_000;
 
 async function run(): Promise<void> {
   const xml = inputModel.getValue();

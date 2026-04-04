@@ -146,9 +146,11 @@ describe("writer", () => {
     expect(writer(tree, { pretty: true })).toBe("<name>Alice</name>");
   });
 
-  it("pretty: mixed content stays inline", () => {
+  it("pretty: mixed content indents each child on its own line", () => {
     const tree = parse("<p>Hello <b>world</b>!</p>");
-    expect(writer(tree, { pretty: true })).toBe("<p>Hello <b>world</b>!</p>");
+    expect(writer(tree, { pretty: true })).toBe(
+      "<p>\n  Hello\n  <b>world</b>\n  !\n</p>",
+    );
   });
 
   it("pretty: processing instructions render correctly", () => {
@@ -208,10 +210,10 @@ describe("writer", () => {
     expect(writer(tree, { pretty: false })).toBe(writer(tree));
   });
 
-  it("pretty: mixed content with nested inline elements", () => {
+  it("pretty: mixed content with nested elements", () => {
     const tree = parse("<p>Click <a><b>here</b></a> now</p>");
     expect(writer(tree, { pretty: true })).toBe(
-      "<p>Click <a><b>here</b></a> now</p>",
+      "<p>\n  Click\n  <a>\n    <b>here</b>\n  </a>\n  now\n</p>",
     );
   });
 
@@ -310,7 +312,7 @@ describe("writer", () => {
       );
     });
 
-    it("encodes mixed content (inline path)", () => {
+    it("encodes mixed content with pretty-print", () => {
       const tree: TNode = {
         tagName: "p",
         attributes: null,
@@ -322,7 +324,7 @@ describe("writer", () => {
         ],
       };
       expect(writer(tree, { entities: true, pretty: true })).toBe(
-        "<p>Copyright <b>A &amp; B</b> \u00A9 2024</p>",
+        "<p>\n  Copyright\n  <b>A &amp; B</b>\n  \u00A9 2024\n</p>",
       );
     });
 
@@ -392,7 +394,7 @@ describe("writer", () => {
       );
     });
 
-    it("void elements self-close in inline (mixed content) path", () => {
+    it("void elements on their own line in mixed content", () => {
       const tree: TNode = {
         tagName: "p",
         attributes: null,
@@ -403,7 +405,7 @@ describe("writer", () => {
         ],
       };
       expect(writer(tree, { html: true, pretty: true })).toBe(
-        "<p>line 1<br>line 2</p>",
+        "<p>\n  line 1\n  <br>\n  line 2\n</p>",
       );
     });
 

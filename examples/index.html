@@ -5,37 +5,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>eksml - Examples</title>
+  <link rel="stylesheet" href="./styles.css">
   <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #0e0e10;
-      color: #e0e0e0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      padding: 24px;
     }
 
-    h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #fff;
+    .logo {
       margin-bottom: 8px;
     }
 
     .subtitle {
       font-size: 0.9rem;
-      color: #888;
       margin-bottom: 40px;
     }
 
@@ -110,19 +94,12 @@
       max-width: 600px;
       line-height: 1.6;
     }
-
-    code {
-      background: #1a1a1e;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.78rem;
-    }
   </style>
 </head>
 
 <body>
 
-  <h1>eksml</h1>
+  <img class="logo" src="/logo-dark.svg" alt="eksml" height="250">
   <p class="subtitle">Interactive examples for the eksml XML parser</p>
 
   <div class="cards">

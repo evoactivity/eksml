@@ -290,11 +290,7 @@ function fullWriter(
     }
   }
 
-  function prettyWriteNode(
-    node: TNode,
-    depth: number,
-    skipPadding?: boolean,
-  ): void {
+  function prettyWriteNode(node: TNode, depth: number): void {
     if (!node) return;
     const padding = indent.repeat(depth);
     const tag = node.tagName;
@@ -302,7 +298,7 @@ function fullWriter(
 
     // Processing instruction
     if (firstChar === QUESTION) {
-      out += (skipPadding ? "" : padding) + "<" + tag;
+      out += padding + "<" + tag;
       prettyWriteAttributes(node);
       out += "?>";
       return;
@@ -310,7 +306,7 @@ function fullWriter(
 
     // Declaration tags (e.g. !DOCTYPE) — void in all modes
     if (firstChar === BANG) {
-      out += (skipPadding ? "" : padding) + "<" + tag;
+      out += padding + "<" + tag;
       prettyWriteAttributes(node, true);
       out += ">";
       return;
@@ -321,7 +317,7 @@ function fullWriter(
 
     // HTML void elements — self-close without closing tag
     if (voidSet !== null && voidSet.has(tag)) {
-      out += (skipPadding ? "" : padding) + "<" + tag;
+      out += padding + "<" + tag;
       prettyWriteAttributes(node);
       out += ">";
       return;
@@ -329,14 +325,13 @@ function fullWriter(
 
     // Empty element — self-close
     if (childrenLength === 0) {
-      out += (skipPadding ? "" : padding) + "<" + tag;
+      out += padding + "<" + tag;
       prettyWriteAttributes(node);
       out += "/>";
       return;
     }
 
-    // Classify children: text-only keeps everything inline; mixed content
-    // writes text verbatim and pretty-prints element children.
+    // Classify children
     const hasText = hasTextChildren(children);
     let hasElements = false;
     if (hasText) {
@@ -348,65 +343,54 @@ function fullWriter(
       }
     }
 
-    // Text-only (no element children) — keep fully inline
+    // Text-only (no element children) — trim each text child, join with
+    // a single space, and write inline on one line.
     if (hasText && !hasElements) {
-      out += (skipPadding ? "" : padding) + "<" + tag;
+      out += padding + "<" + tag;
       prettyWriteAttributes(node);
       out += ">";
+      let first = true;
       for (let i = 0; i < childrenLength; i++) {
-        out += encodeTextContent(children[i] as string);
+        const text = (children[i] as string).trim();
+        if (text.length === 0) continue;
+        if (!first) out += " ";
+        first = false;
+        out += encodeTextContent(text);
       }
       out += "</" + tag + ">";
       return;
     }
 
-    // Mixed content — text verbatim, elements pretty-printed.
-    // Text nodes carry their own whitespace (preserved by the parser),
-    // so when a text node precedes an element, it already provides the
-    // positioning and the element skips its own padding prefix.
-    // When an element has no preceding text (first child or after another
-    // element), a synthetic newline is added and normal padding is used.
+    // Mixed content — trim text nodes, drop empty, place each non-empty
+    // text and each element child on its own indented line.
     if (hasText) {
-      out += (skipPadding ? "" : padding) + "<" + tag;
+      const childPadding = indent.repeat(depth + 1);
+      out += padding + "<" + tag;
       prettyWriteAttributes(node);
       out += ">";
       for (let i = 0; i < childrenLength; i++) {
         const child = children[i]!;
         if (typeof child === "string") {
-          out += encodeTextContent(child);
-        } else {
-          const previousChild = i > 0 ? children[i - 1] : undefined;
-          const precededByText =
-            typeof previousChild === "string" &&
-            !previousChild.startsWith("<!--");
-          if (precededByText) {
-            // Text before this element provides positioning.
-            // If text contains a newline, the element is block-positioned
-            // (e.g. "\n  <book>"); pretty-print without leading padding.
-            // Otherwise the element is inline (e.g. "Click <a>..."); write
-            // it fully inline to preserve tight mixed content.
-            if ((previousChild as string).indexOf("\n") !== -1) {
-              prettyWriteNode(child, depth + 1, true);
-            } else {
-              inlineWriteNode(child);
-            }
+          // Comments pass through without trimming
+          if (child.startsWith("<!--")) {
+            out += "\n" + childPadding + encodeTextContent(child);
           } else {
-            // No preceding text — add newline and use normal padding
-            out += "\n";
-            prettyWriteNode(child, depth + 1);
+            const trimmed = child.trim();
+            if (trimmed.length > 0) {
+              out += "\n" + childPadding + encodeTextContent(trimmed);
+            }
           }
+        } else {
+          out += "\n";
+          prettyWriteNode(child, depth + 1);
         }
       }
-      // If the last child is an element, add newline + padding before </tag>
-      if (typeof children[childrenLength - 1] !== "string") {
-        out += "\n" + padding;
-      }
-      out += "</" + tag + ">";
+      out += "\n" + padding + "</" + tag + ">";
       return;
     }
 
     // Element-only children (and comments) — indent each child
-    out += (skipPadding ? "" : padding) + "<" + tag;
+    out += padding + "<" + tag;
     prettyWriteAttributes(node);
     out += ">";
     for (let i = 0; i < childrenLength; i++) {
@@ -420,44 +404,6 @@ function fullWriter(
       }
     }
     out += "\n" + padding + "</" + tag + ">";
-  }
-
-  /** Write a node inline (no indentation), used inside mixed content. */
-  function inlineWriteNode(node: TNode): void {
-    if (!node) return;
-    const tag = node.tagName;
-    const firstChar = tag.charCodeAt(0);
-    out += "<" + tag;
-    const isDeclaration = firstChar === BANG;
-    prettyWriteAttributes(node, isDeclaration);
-    if (firstChar === QUESTION) {
-      out += "?>";
-      return;
-    }
-    // Declaration tags (e.g. !DOCTYPE) — void in all modes
-    if (isDeclaration) {
-      out += ">";
-      return;
-    }
-    // HTML void elements self-close without closing tag
-    if (voidSet !== null && voidSet.has(tag)) {
-      out += ">";
-      return;
-    }
-    if (node.children.length === 0) {
-      out += "/>";
-      return;
-    }
-    out += ">";
-    for (let i = 0; i < node.children.length; i++) {
-      const child = node.children[i]!;
-      if (typeof child === "string") {
-        out += encodeTextContent(child);
-      } else {
-        inlineWriteNode(child);
-      }
-    }
-    out += "</" + tag + ">";
   }
 
   const nodes = Array.isArray(input) ? input : [input];
