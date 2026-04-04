@@ -203,7 +203,7 @@ describe('fixture: html-page.html', () => {
     expect(inlineScript).toBeDefined();
     const js = inlineScript!.children[0] as string;
     // DOM manipulation with innerHTML containing HTML
-    expect(js).toContain("banner.innerHTML =");
+    expect(js).toContain('banner.innerHTML =');
     expect(js).toContain("'<span");
     // Template literal with embedded HTML
     expect(js).toContain('<div class="tooltip">');
