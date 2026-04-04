@@ -105,8 +105,8 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
   ): void {
     this.inputEditorInstance = editor;
 
-    if (monaco) {
-      editor!.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+    if (monaco && editor) {
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
         void this.run();
       });
     }
@@ -208,8 +208,10 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
     for (let i = 0; i < totalChunks; i++) {
       if (signal.aborted) break;
 
-      this.appendChunk(i + 1, chunks[i]!);
-      parser.write(chunks[i]!);
+      const chunk = chunks[i] as string;
+
+      this.appendChunk(i + 1, chunk);
+      parser.write(chunk);
 
       const pct = ((i + 1) / totalChunks) * 100;
 

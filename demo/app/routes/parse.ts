@@ -276,9 +276,11 @@ function generateLargeCatalog(): string {
   const productCount = 5000;
 
   for (let i = 1; i <= productCount; i++) {
-    const adj = adjectives[i % adjectives.length]!;
-    const noun = nouns[Math.floor(i / adjectives.length) % nouns.length]!;
-    const cat = categories[i % categories.length]!;
+    const adj = adjectives[i % adjectives.length] as string;
+    const noun = nouns[
+      Math.floor(i / adjectives.length) % nouns.length
+    ] as string;
+    const cat = categories[i % categories.length] as string;
     const price = (5 + ((i * 7.31) % 993)).toFixed(2);
     const stock = (i * 13) % 500;
     const rating = (1 + (i % 50) / 10).toFixed(1);

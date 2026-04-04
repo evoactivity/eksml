@@ -12,6 +12,11 @@ import TabStrip from '#components/tab-strip.gts';
 import TwoPaneLayout from '#components/two-pane-layout.gts';
 
 import type { WriterModel } from '../routes/writer';
+import type Owner from '@ember/owner';
+import type { init as monacoInit } from 'modern-monaco';
+
+type MonacoApi = Awaited<ReturnType<typeof monacoInit>>;
+type EditorInstance = ReturnType<MonacoApi['editor']['create']> | null;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -45,14 +50,10 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
   @tracked outputContent = '';
   @tracked inputContent = '';
 
-  private inputEditorInstance: ReturnType<
-    Awaited<ReturnType<typeof import('modern-monaco').init>>['editor']['create']
-  > | null = null;
-  private monacoApi: Awaited<
-    ReturnType<typeof import('modern-monaco').init>
-  > | null = null;
+  private inputEditorInstance: EditorInstance = null;
+  private monacoApi: MonacoApi | null = null;
 
-  constructor(owner: unknown, args: WriterTemplateSignature['Args']) {
+  constructor(owner: Owner, args: WriterTemplateSignature['Args']) {
     super(owner, args);
     this.inputContent = this.sampleContent(0);
   }
@@ -81,8 +82,8 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
     this.inputEditorInstance = editor;
     this.monacoApi = monaco;
 
-    if (monaco) {
-      editor!.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+    if (monaco && editor) {
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
         this.run();
       });
     }
@@ -144,15 +145,15 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
     this.error = null;
 
     try {
-      const parsed = JSON.parse(jsonText);
+      const parsed: unknown = JSON.parse(jsonText);
 
       // Convert to DOM if needed
       let dom: unknown;
 
       if (format === 'lossy') {
-        dom = fromLossy(parsed);
+        dom = fromLossy(parsed as Parameters<typeof fromLossy>[0]);
       } else if (format === 'lossless') {
-        dom = fromLossless(parsed);
+        dom = fromLossless(parsed as Parameters<typeof fromLossless>[0]);
       } else {
         dom = parsed;
       }

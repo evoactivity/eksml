@@ -12,6 +12,7 @@ import TabStrip from '#components/tab-strip.gts';
 import TwoPaneLayout from '#components/two-pane-layout.gts';
 
 import type { ParseModel } from '../routes/parse';
+import type Owner from '@ember/owner';
 import type { init as monacoInit } from 'modern-monaco';
 
 type MonacoApi = Awaited<ReturnType<typeof monacoInit>>;
@@ -78,7 +79,7 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
   private inputEditorInstance: InputEditorInstance = null;
   private monacoApi: MonacoApi | null = null;
 
-  constructor(owner: unknown, args: ParseTemplateSignature['Args']) {
+  constructor(owner: Owner, args: ParseTemplateSignature['Args']) {
     super(owner, args);
     this.inputContent = this.sampleContent(0);
   }
@@ -105,7 +106,9 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
     const { samples, getLargeCatalog } = this.args.model;
 
     if (index < samples.length) {
-      return samples[index]!.content;
+      const sample = samples[index];
+
+      return sample ? sample.content : '';
     }
 
     return getLargeCatalog();
@@ -122,8 +125,8 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
     this.monacoApi = monaco;
 
     // Cmd/Ctrl+Enter to parse
-    if (monaco) {
-      editor!.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+    if (monaco && editor) {
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
         void this.run();
       });
     }

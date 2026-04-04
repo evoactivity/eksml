@@ -42,9 +42,9 @@ function formatNode(node: TNode): string {
 
     if (keys.length > 0) {
       const parts = keys.map((k) => {
-        const v = node.attributes![k];
+        const v = node.attributes?.[k];
 
-        if (v === null)
+        if (v == null)
           return `<span class="node-attr-key">${escapeHtml(k)}</span>`;
 
         return `<span class="node-attr-key">${escapeHtml(k)}</span>=<span class="node-attr-val">"${escapeHtml(v)}"</span>`;
@@ -162,8 +162,8 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
     this.inputEditorInstance = editor;
     this.monacoApi = monaco;
 
-    if (monaco) {
-      editor!.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+    if (monaco && editor) {
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
         void this.run();
       });
     }
@@ -248,8 +248,10 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
     for (let i = 0; i < totalChunks; i++) {
       if (signal.aborted) break;
 
-      this.appendChunkMarker(i + 1, chunks[i]!);
-      await streamWriter.write(chunks[i]);
+      const chunk = chunks[i] as string;
+
+      this.appendChunkMarker(i + 1, chunk);
+      await streamWriter.write(chunk);
 
       const pct = ((i + 1) / totalChunks) * 100;
 
