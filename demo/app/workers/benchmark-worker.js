@@ -22,12 +22,6 @@ import { parse as tparse } from 'txml';
 import { parseString } from 'xml2js';
 
 // ---------------------------------------------------------------------------
-// Tree-producing DOM parsers
-// ---------------------------------------------------------------------------
-
-const fxpInstance = new XMLParser({ ignoreAttributes: false });
-
-// ---------------------------------------------------------------------------
 // xml2js sync wrapper
 // ---------------------------------------------------------------------------
 
@@ -49,16 +43,17 @@ function xml2jsParse(xml) {
   return result;
 }
 
-// ---------------------------------------------------------------------------
-// Parser registry — DOM (tree-producing) parsers
-// ---------------------------------------------------------------------------
-
 // No-op function used as a callback sink for SAX benchmarks.
 // Declared once to avoid allocation in the hot loop.
 const noop = () => {};
 
+const fxpInstance = new XMLParser({ ignoreAttributes: false });
+
 /** @type {Record<string, (xml: string) => unknown>} */
 const PARSERS = {
+  // -----------------------------------------------------------------------
+  // Tree parsers — parse entire XML into a tree structure and return it.
+  // -----------------------------------------------------------------------
   eksml: (xml) => parse(xml),
   'fast-xml-parser': (xml) => fxpInstance.parse(xml),
   txml: (xml) => tparse(xml),
