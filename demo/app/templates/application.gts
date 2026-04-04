@@ -11,6 +11,7 @@ import { LinkTo } from '@ember/routing';
         <LinkTo @route='writer'>Writer</LinkTo>
         <LinkTo @route='fast-stream'>Fast Stream</LinkTo>
         <LinkTo @route='transform-stream'>Transform Stream</LinkTo>
+        <LinkTo @route='benchmark'>Benchmark</LinkTo>
       </div>
     </nav>
 

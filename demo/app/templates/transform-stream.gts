@@ -290,10 +290,18 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
     return !this.running;
   }
 
+  get hasLogItems(): boolean {
+    return this.logItems.length > 0;
+  }
+
+  get showEmptyState(): boolean {
+    return !this.running && !this.hasLogItems;
+  }
+
   isThrottle = (value: string): boolean => this.throttle === value;
 
   <template>
-    <h1>eksml / Transform Stream</h1>
+    <h1>Transform Stream</h1>
     <p class='subtitle'>
       Feeds XML chunks through a Web TransformStream, emitting complete TNode
       subtrees as they close.
@@ -359,8 +367,14 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
           <span>Emitted Nodes</span>
           <span class='stats'>{{this.stats}}</span>
         </div>
-        <ProgressBar @percent={{this.progress}} />
-        <NodeLogArea @items={{this.logItems}} />
+        {{#if this.showEmptyState}}
+          <div class='bench-empty'>
+            Click "Stream" to begin parsing.
+          </div>
+        {{else}}
+          <ProgressBar @percent={{this.progress}} />
+          <NodeLogArea @items={{this.logItems}} />
+        {{/if}}
       </:right>
     </TwoPaneLayout>
   </template>

@@ -251,7 +251,7 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
   }
 
   <template>
-    <h1>eksml / Fast Stream (SAX)</h1>
+    <h1>Fast Stream (SAX)</h1>
     <p class='subtitle'>
       Feeds XML to the SAX parser chunk-by-chunk with configurable throttle to
       simulate network conditions and chunk size.
@@ -306,11 +306,25 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
           <span>Events</span>
           <span class='stats'>{{this.stats}}</span>
         </div>
-        <ProgressBar @percent={{this.progress}} />
-        <LogArea @entries={{this.entries}} />
+        {{#if this.showEmptyState}}
+          <div class='bench-empty'>
+            Click "Stream" to begin parsing.
+          </div>
+        {{else}}
+          <ProgressBar @percent={{this.progress}} />
+          <LogArea @entries={{this.entries}} />
+        {{/if}}
       </:right>
     </TwoPaneLayout>
   </template>
+
+  get hasEntries(): boolean {
+    return this.entries.length > 0;
+  }
+
+  get showEmptyState(): boolean {
+    return !this.running && !this.hasEntries;
+  }
 
   get notRunning(): boolean {
     return !this.running;

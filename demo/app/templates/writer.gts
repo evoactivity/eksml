@@ -174,7 +174,7 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
   }
 
   <template>
-    <h1>eksml / Writer</h1>
+    <h1>Writer</h1>
     <p class='subtitle'>
       Enter JSON (DOM, lossy, or lossless) on the left, see serialized XML on
       the right.

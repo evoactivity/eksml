@@ -12,6 +12,7 @@ Router.map(function () {
   this.route('writer');
   this.route('fast-stream');
   this.route('transform-stream');
+  this.route('benchmark');
 });
 
 /**

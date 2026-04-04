@@ -10,4 +10,13 @@ export default defineConfig({
       extensions,
     }),
   ],
+  resolve: {
+    alias: {
+      // xml2js (and sax) import Node built-ins that Vite externalises as
+      // empty stubs by default. Point them at real browser polyfills so the
+      // benchmark worker can use xml2js at runtime.
+      events: 'events',
+      timers: 'timers-browserify',
+    },
+  },
 });

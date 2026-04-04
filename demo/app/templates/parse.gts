@@ -232,7 +232,7 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
   }
 
   <template>
-    <h1>eksml / Parse</h1>
+    <h1>Parse</h1>
     <p class='subtitle'>
       Enter XML on the left, see parsed output on the right.
     </p>
