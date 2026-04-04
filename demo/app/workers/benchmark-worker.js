@@ -13,8 +13,9 @@
 
 import { parseXml } from '@rgrove/parse-xml';
 import { parse } from 'eksml/parser';
+import { fastStream } from 'eksml/stream';
 import { XMLParser } from 'fast-xml-parser';
-import { parseDocument } from 'htmlparser2';
+import { parseDocument, Parser as HtmlParser } from 'htmlparser2';
 import sax from 'sax';
 import { SaxesParser } from 'saxes';
 import { parse as tparse } from 'txml';
@@ -27,120 +28,8 @@ import { parseString } from 'xml2js';
 const fxpInstance = new XMLParser({ ignoreAttributes: false });
 
 // ---------------------------------------------------------------------------
-// SAX tree-builders — build a { tagName, attributes, children } tree from
-// SAX events so all parsers do equivalent work (tokenise + build tree).
-// Patterns taken from eksml/bench/stream.bench.ts.
+// xml2js sync wrapper
 // ---------------------------------------------------------------------------
-
-/**
- * sax — build tree via SAX events (strict mode).
- * @param {string} xml
- * @returns {unknown}
- */
-function saxParse(xml) {
-  const parser = sax.parser(true);
-
-  const roots = [];
-  const stack = [];
-
-  parser.onopentag = (node) => {
-    const el = {
-      tagName: node.name,
-      attributes: node.attributes,
-      children: [],
-    };
-
-    if (stack.length > 0) {
-      stack[stack.length - 1].children.push(el);
-    } else {
-      roots.push(el);
-    }
-
-    stack.push(el);
-  };
-
-  parser.ontext = (text) => {
-    if (stack.length > 0) {
-      stack[stack.length - 1].children.push(text);
-    } else {
-      roots.push(text);
-    }
-  };
-
-  parser.oncdata = (cdata) => {
-    if (stack.length > 0) {
-      stack[stack.length - 1].children.push(cdata);
-    } else {
-      roots.push(cdata);
-    }
-  };
-
-  parser.onclosetag = () => {
-    stack.pop();
-  };
-
-  parser.write(xml).close();
-
-  return roots;
-}
-
-/**
- * saxes — build tree via SAX events.
- * @param {string} xml
- * @returns {unknown}
- */
-function saxesParse(xml) {
-  const parser = new SaxesParser();
-
-  const roots = [];
-  const stack = [];
-
-  parser.on('opentag', (node) => {
-    const attrs = {};
-
-    for (const [k, v] of Object.entries(node.attributes)) {
-      if (typeof v === 'string') {
-        attrs[k] = v;
-      } else if (v && typeof v === 'object' && 'value' in v) {
-        attrs[k] = v.value;
-      }
-    }
-
-    const el = { tagName: node.name, attributes: attrs, children: [] };
-
-    if (stack.length > 0) {
-      stack[stack.length - 1].children.push(el);
-    } else {
-      roots.push(el);
-    }
-
-    stack.push(el);
-  });
-
-  parser.on('text', (text) => {
-    if (stack.length > 0) {
-      stack[stack.length - 1].children.push(text);
-    } else {
-      roots.push(text);
-    }
-  });
-
-  parser.on('cdata', (cdata) => {
-    if (stack.length > 0) {
-      stack[stack.length - 1].children.push(cdata);
-    } else {
-      roots.push(cdata);
-    }
-  });
-
-  parser.on('closetag', () => {
-    stack.pop();
-  });
-
-  parser.write(xml).close();
-
-  return roots;
-}
 
 /**
  * xml2js — uses the callback form of parseString which fires synchronously
@@ -161,8 +50,12 @@ function xml2jsParse(xml) {
 }
 
 // ---------------------------------------------------------------------------
-// Parser registry
+// Parser registry — DOM (tree-producing) parsers
 // ---------------------------------------------------------------------------
+
+// No-op function used as a callback sink for SAX benchmarks.
+// Declared once to avoid allocation in the hot loop.
+const noop = () => {};
 
 /** @type {Record<string, (xml: string) => unknown>} */
 const PARSERS = {
@@ -172,8 +65,69 @@ const PARSERS = {
   '@rgrove/parse-xml': (xml) => parseXml(xml),
   htmlparser2: (xml) => parseDocument(xml, { xmlMode: true }),
   xml2js: (xml) => xml2jsParse(xml),
-  sax: (xml) => saxParse(xml),
-  saxes: (xml) => saxesParse(xml),
+
+  // -----------------------------------------------------------------------
+  // Stream (SAX) parsers — tokenise + fire callbacks, no tree produced.
+  // Each parser gets the same set of no-op handlers registered so the
+  // callback dispatch overhead is included fairly for all.
+  // -----------------------------------------------------------------------
+
+  'eksml-stream': (xml) => {
+    const p = fastStream({
+      onopentag: noop,
+      onclosetag: noop,
+      ontext: noop,
+      oncdata: noop,
+      oncomment: noop,
+      onprocessinginstruction: noop,
+      ondoctype: noop,
+    });
+
+    p.write(xml);
+    p.close();
+  },
+
+  'htmlparser2-sax': (xml) => {
+    const p = new HtmlParser(
+      {
+        onopentag: noop,
+        onclosetag: noop,
+        ontext: noop,
+        oncomment: noop,
+        oncdatastart: noop,
+        oncdataend: noop,
+        onprocessinginstruction: noop,
+      },
+      { xmlMode: true },
+    );
+
+    p.write(xml);
+    p.end();
+  },
+
+  sax: (xml) => {
+    const p = sax.parser(true);
+
+    p.onopentag = noop;
+    p.onclosetag = noop;
+    p.ontext = noop;
+    p.oncdata = noop;
+    p.oncomment = noop;
+    p.onprocessinginstruction = noop;
+    p.write(xml).close();
+  },
+
+  saxes: (xml) => {
+    const p = new SaxesParser();
+
+    p.on('opentag', noop);
+    p.on('closetag', noop);
+    p.on('text', noop);
+    p.on('cdata', noop);
+    p.on('comment', noop);
+    p.on('pi', noop);
+    p.write(xml).close();
+  },
 };
 
 // ---------------------------------------------------------------------------

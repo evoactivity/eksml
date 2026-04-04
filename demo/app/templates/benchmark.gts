@@ -10,7 +10,7 @@ import TabStrip from '#components/tab-strip.gts';
 import TwoPaneLayout from '#components/two-pane-layout.gts';
 import { BenchResult, formatSize } from '#utils/bench-result.ts';
 
-import type { BenchmarkModel } from '../routes/benchmark';
+import type { BenchmarkModel, SuiteDef } from '../routes/benchmark';
 import type Owner from '@ember/owner';
 
 // ---------------------------------------------------------------------------
@@ -36,6 +36,7 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
   @tracked results: BenchResult[] = [];
   @tracked running = false;
   @tracked durationMs = String(DEFAULT_DURATION_MS);
+  @tracked suiteIndex = 0;
 
   private worker: Worker | null = null;
 
@@ -60,6 +61,18 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
       label: s.label,
       size: formatSize(s.content.length),
     }));
+  }
+
+  get currentSuite(): SuiteDef {
+    return this.args.model.suites[this.suiteIndex] as SuiteDef;
+  }
+
+  get isSuite0(): boolean {
+    return this.suiteIndex === 0;
+  }
+
+  get isSuite1(): boolean {
+    return this.suiteIndex === 1;
   }
 
   // ------- Worker management -------
@@ -135,12 +148,18 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
   }
 
   @action
+  setSuite(event: Event): void {
+    this.suiteIndex = parseInt((event.target as HTMLSelectElement).value, 10);
+    this.results = [];
+  }
+
+  @action
   async run(): Promise<void> {
     if (this.running) return;
 
     const xml = this.inputContent;
     const durationMs = parseInt(this.durationMs, 10) || DEFAULT_DURATION_MS;
-    const parsers = this.args.model.parsers;
+    const parsers = this.currentSuite.parsers;
 
     // Initialise fresh results
     this.results = parsers.map((p) => new BenchResult(p));
@@ -176,11 +195,20 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
   <template>
     <h1>Benchmark</h1>
     <p class='subtitle'>
-      Compare synchronous XML parsing performance across libraries. Each parser
-      runs for a fixed duration in a web worker.
+      {{this.currentSuite.description}}
     </p>
 
     <div class='controls'>
+      <label for='suite'>Suite</label>
+      <select
+        id='suite'
+        disabled={{this.running}}
+        {{on 'change' this.setSuite}}
+      >
+        <option value='0' selected={{this.isSuite0}}>Parse (DOM)</option>
+        <option value='1' selected={{this.isSuite1}}>Stream (SAX)</option>
+      </select>
+
       <DurationSelect
         @value={{this.durationMs}}
         @onChange={{this.setDuration}}

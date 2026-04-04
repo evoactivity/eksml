@@ -142,20 +142,49 @@ export const PARSER_DEFS: ParserDef[] = [
   { id: '@rgrove/parse-xml', label: '@rgrove/parse-xml', color: '#14b8a6' },
   { id: 'htmlparser2', label: 'htmlparser2', color: '#ef4444' },
   { id: 'xml2js', label: 'xml2js', color: '#eab308' },
+];
+
+export const STREAM_PARSER_DEFS: ParserDef[] = [
+  { id: 'eksml-stream', label: 'eksml fastStream', color: '#3b82f6' },
+  { id: 'htmlparser2-sax', label: 'htmlparser2 (SAX)', color: '#ef4444' },
   { id: 'sax', label: 'sax', color: '#22c55e' },
   { id: 'saxes', label: 'saxes', color: '#ec4899' },
 ];
 
+export interface SuiteDef {
+  id: string;
+  label: string;
+  description: string;
+  parsers: ParserDef[];
+}
+
+export const SUITES: SuiteDef[] = [
+  {
+    id: 'parse',
+    label: 'Parse (DOM)',
+    description:
+      'Synchronous XML-to-tree parsing — each library produces a full document tree.',
+    parsers: PARSER_DEFS,
+  },
+  {
+    id: 'stream',
+    label: 'Stream (SAX)',
+    description:
+      'SAX-style event parsing — each library tokenises XML and fires callbacks for every event.',
+    parsers: STREAM_PARSER_DEFS,
+  },
+];
+
 export interface BenchmarkModel {
   samples: Sample[];
-  parsers: ParserDef[];
+  suites: SuiteDef[];
 }
 
 export default class BenchmarkRoute extends Route {
   model(): BenchmarkModel {
     return {
       samples: SAMPLES,
-      parsers: PARSER_DEFS,
+      suites: SUITES,
     };
   }
 }
