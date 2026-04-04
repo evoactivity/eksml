@@ -1,91 +1,19 @@
 {
-  "name": "eksml",
+  "name": "eksml-monorepo",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
-  "sideEffects": false,
-  "imports": {
-    "#src/*": "./src/*"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/eksml.d.mts",
-      "import": "./dist/eksml.mjs"
-    },
-    "./parser": {
-      "types": "./dist/parser.d.mts",
-      "import": "./dist/parser.mjs"
-    },
-    "./writer": {
-      "types": "./dist/writer.d.mts",
-      "import": "./dist/writer.mjs"
-    },
-    "./stream": {
-      "types": "./dist/fastStream.d.mts",
-      "import": "./dist/fastStream.mjs"
-    },
-    "./transform-stream": {
-      "types": "./dist/transformStream.d.mts",
-      "import": "./dist/transformStream.mjs"
-    },
-    "./lossy": {
-      "types": "./dist/converters/lossy.d.mts",
-      "import": "./dist/converters/lossy.mjs"
-    },
-    "./lossless": {
-      "types": "./dist/converters/lossless.d.mts",
-      "import": "./dist/converters/lossless.mjs"
-    },
-    "./from-lossy": {
-      "types": "./dist/converters/fromLossy.d.mts",
-      "import": "./dist/converters/fromLossy.mjs"
-    },
-    "./from-lossless": {
-      "types": "./dist/converters/fromLossless.d.mts",
-      "import": "./dist/converters/fromLossless.mjs"
-    },
-    "./utilities": {
-      "types": "./dist/utilities/index.d.mts",
-      "import": "./dist/utilities/index.mjs"
-    }
-  },
-  "main": "./dist/eksml.mjs",
-  "types": "./dist/eksml.d.mts",
-  "files": [
-    "dist"
-  ],
+  "main": "index.js",
+  "type:": "module",
+  "private": true,
   "scripts": {
-    "build": "tsdown",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "bench": "vitest bench",
-    "typecheck": "tsc --noEmit",
-    "examples": "vite",
-    "examples:build": "vite build"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "Liam Potter",
   "license": "MIT",
   "packageManager": "pnpm@10.33.0",
   "devDependencies": {
-    "@types/node": "^25.5.0",
-    "@types/sax": "^1.2.7",
-    "@types/xml2js": "^0.4.14",
-    "@xmldom/xmldom": "^0.9.9",
-    "combinations": "^1.0.0",
-    "fast-xml-parser": "^5.5.9",
-    "htmlparser2": "^12.0.0",
-    "modern-monaco": "^0.4.0",
-    "sax": "^1.6.0",
-    "saxes": "^6.0.0",
-    "tsdown": "^0.21.7",
-    "txml": "^5.2.1",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.3",
-    "vitest": "^4.1.2",
-    "xml2js": "^0.6.2"
-  },
-  "dependencies": {
-    "entities": "^8.0.0"
+    "prettier": "3.8.1",
+    "prettier-plugin-ember-template-tag": "2.1.3"
   }
 }
