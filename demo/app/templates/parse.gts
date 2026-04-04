@@ -31,9 +31,9 @@ function formatSize(bytes: number): string {
 
 function formatDuration(microseconds: number): string {
   if (microseconds < 1000) return `${microseconds.toFixed(1)} us`;
-  if (microseconds < 1_000_000) return `${(microseconds / 1000).toFixed(3)} ms`;
+  if (microseconds < 1_000_000) return `${Math.round(microseconds / 1000)} ms`;
 
-  return `${(microseconds / 1_000_000).toFixed(3)} s`;
+  return `${(microseconds / 1_000_000).toFixed(1)} s`;
 }
 
 type ParseFn = (xml: string, options: Record<string, boolean>) => unknown;
@@ -44,14 +44,6 @@ function selectParser(mode: string): ParseFn {
 
   return lossless as ParseFn;
 }
-
-function yieldFrame(): Promise<void> {
-  return new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
-}
-
-const BENCH_TARGET_MS = 200;
-const BENCH_MIN_ITERATIONS = 10;
-const BENCH_MAX_ITERATIONS = 200_000;
 
 // ---------------------------------------------------------------------------
 // Route template component
@@ -67,13 +59,10 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
   @tracked mode = 'dom';
   @tracked entities = false;
   @tracked html = false;
-  @tracked bench = false;
   @tracked activeTab = 0;
   @tracked timing = '';
-  @tracked benching = false;
   @tracked error: string | null = null;
   @tracked outputContent = '';
-  @tracked parseDisabled = false;
   @tracked inputContent = '';
 
   private inputEditorInstance: InputEditorInstance = null;
@@ -167,15 +156,9 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
   }
 
   @action
-  toggleBench(): void {
-    this.bench = !this.bench;
-  }
-
-  @action
-  async run(): Promise<void> {
+  run(): void {
     const xml = this.inputContent;
     const mode = this.mode;
-    const bench = this.bench;
     const options: Record<string, boolean> = {};
 
     if (this.entities) options.entities = true;
@@ -186,48 +169,18 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
     try {
       const parseFn = selectParser(mode);
 
-      // Single run
       const t0 = performance.now();
       const result = parseFn(xml, options);
-      const singleMs = performance.now() - t0;
+      const elapsed = performance.now() - t0;
 
       this.outputContent = JSON.stringify(result, null, 2);
 
-      if (bench) {
-        this.timing = 'benching...';
-        this.benching = true;
-        this.parseDisabled = true;
-        await yieldFrame();
+      const micro = elapsed * 1000;
 
-        const iterations = Math.max(
-          BENCH_MIN_ITERATIONS,
-          Math.min(
-            BENCH_MAX_ITERATIONS,
-            Math.ceil(BENCH_TARGET_MS / Math.max(singleMs, 0.001)),
-          ),
-        );
-
-        const batchStart = performance.now();
-
-        for (let i = 0; i < iterations; i++) parseFn(xml, options);
-
-        const batchMs = performance.now() - batchStart;
-
-        const avgMicro = (batchMs / iterations) * 1000;
-
-        this.timing = `${formatDuration(avgMicro)} (avg of ${iterations.toLocaleString()})`;
-        this.benching = false;
-        this.parseDisabled = false;
-      } else {
-        const micro = singleMs * 1000;
-
-        this.timing = micro < 1000 ? '< 1 ms' : formatDuration(micro);
-      }
+      this.timing = micro < 1000 ? '< 1 ms' : formatDuration(micro);
     } catch (err: unknown) {
       this.error = (err as Error).message;
       this.timing = '';
-      this.benching = false;
-      this.parseDisabled = false;
     }
   }
 
@@ -263,20 +216,7 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
         HTML mode
       </label>
 
-      <label>
-        <input
-          type='checkbox'
-          checked={{this.bench}}
-          {{on 'change' this.toggleBench}}
-        />
-        Bench
-      </label>
-
-      <button
-        class='primary'
-        disabled={{this.parseDisabled}}
-        {{on 'click' this.run}}
-      >Parse</button>
+      <button class='primary' {{on 'click' this.run}}>Parse</button>
     </div>
 
     <TwoPaneLayout>
@@ -298,7 +238,7 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
       <:right>
         <div class='pane-header'>
           <span>Output</span>
-          <span class='timing {{if this.benching "benching"}}'>
+          <span class='timing'>
             {{this.timing}}
           </span>
         </div>
