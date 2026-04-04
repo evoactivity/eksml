@@ -58,6 +58,7 @@ a:hover {
 
 img {
   display: block;
+  max-width: 100%;
 }
 
 .page {
@@ -674,4 +675,66 @@ button:disabled {
 
 .bench-running .bench-iterations {
   animation: pulse 0.8s ease-in-out infinite;
+}
+
+/* --- Mobile responsive --- */
+
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+    height: auto;
+    max-height: none;
+    min-height: 100vh;
+  }
+
+  .page-content {
+    grid-template-rows: min-content min-content min-content minmax(0, 1fr);
+  }
+
+  .nav {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .nav-links {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  h1 {
+    font-size: 1.1rem;
+  }
+
+  .landing {
+    min-height: auto;
+  }
+
+  .landing .logo-container {
+    padding: 24px 16px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  /* Override the benchmark card span on mobile */
+  .cards > *[style] {
+    grid-column: auto !important;
+  }
+
+  .controls {
+    gap: 8px;
+  }
+
+  .panes {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    min-height: 70vh;
+  }
+
+  .pane {
+    min-height: 0;
+  }
 }
