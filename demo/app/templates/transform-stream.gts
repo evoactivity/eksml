@@ -5,6 +5,7 @@ import { action } from '@ember/object';
 import { trackedArray } from '@ember/reactive/collections';
 
 import { transformStream } from 'eksml/transform-stream';
+import pageTitle from 'ember-page-title/helpers/page-title';
 import { init } from 'modern-monaco';
 
 import MonacoEditor from '#components/monaco-editor.gts';
@@ -302,6 +303,7 @@ class TransformStreamTemplate extends Component<TransformStreamTemplateSignature
   isThrottle = (value: string): boolean => this.throttle === value;
 
   <template>
+    {{pageTitle 'Transform Stream'}}
     <h1>Transform Stream</h1>
     <p class='subtitle'>
       Feeds XML chunks through a Web TransformStream, emitting complete TNode

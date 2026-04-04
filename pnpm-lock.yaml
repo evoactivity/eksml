@@ -41,6 +41,9 @@ importers:
       ember-modifier:
         specifier: ^4.3.0
         version: 4.3.0(@babel/core@7.29.0)
+      ember-page-title:
+        specifier: ^9.0.3
+        version: 9.0.3
       ember-source:
         specifier: 6.12.0
         version: 6.12.0(@glimmer/component@2.0.0)(rsvp@4.8.5)
@@ -1427,6 +1430,9 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
+  '@simple-dom/document@1.4.0':
+    resolution: {integrity: sha512-/RUeVH4kuD3rzo5/91+h4Z1meLSLP66eXqpVAw/4aZmYozkeqUkMprq0znL4psX/adEed5cBgiNJcfMz/eKZLg==}
+
   '@simple-dom/interface@1.4.0':
     resolution: {integrity: sha512-l5qumKFWU0S+4ZzMaLXFU8tQZsicHEMEyAxI5kDFGhJsRqDwe0a7/iPA/GdxlGyDKseQQAgIz5kzU7eXTrlSpA==}
 
@@ -2261,6 +2267,10 @@ packages:
 
   ember-modifier@4.3.0:
     resolution: {integrity: sha512-O0rirSLQbGg0VJ/NqoQ4uN1bh2iAekZC/Ykma+FkjCM2ofrO38u+d8n3+AK6uVWeMJmogGX2KL+Is5fofoInJg==}
+
+  ember-page-title@9.0.3:
+    resolution: {integrity: sha512-fedRHUsvq8tIZgOii8jTrfAyeq+la/9H5eAzhNNwEyzo7nDMmqK2SxsyBUGXprd8fOacsPabLlzlucMi/4mUpA==}
+    engines: {node: 16.* || >= 18}
 
   ember-rfc176-data@0.3.18:
     resolution: {integrity: sha512-JtuLoYGSjay1W3MQAxt3eINWXNYYQliK90tLwtb8aeCuQK8zKGCRbBodVIrkcTqshULMnRuTOS6t1P7oQk3g6Q==}
@@ -5859,6 +5869,10 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
+  '@simple-dom/document@1.4.0':
+    dependencies:
+      '@simple-dom/interface': 1.4.0
+
   '@simple-dom/interface@1.4.0': {}
 
   '@standard-schema/spec@1.1.0': {}
@@ -6846,6 +6860,13 @@ snapshots:
       decorator-transforms: 2.3.1(@babel/core@7.29.0)
     transitivePeerDependencies:
       - '@babel/core'
+      - supports-color
+
+  ember-page-title@9.0.3:
+    dependencies:
+      '@embroider/addon-shim': 1.10.2
+      '@simple-dom/document': 1.4.0
+    transitivePeerDependencies:
       - supports-color
 
   ember-rfc176-data@0.3.18: {}

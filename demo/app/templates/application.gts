@@ -1,6 +1,9 @@
 import { LinkTo } from '@ember/routing';
 
+import pageTitle from 'ember-page-title/helpers/page-title';
+
 <template>
+  {{pageTitle 'Eksml Demo'}}
   <div class='page'>
     <nav class='nav'>
       <LinkTo @route='index'>

@@ -4,6 +4,7 @@ import { on } from '@ember/modifier';
 import { action } from '@ember/object';
 
 import { fastStream } from 'eksml/stream';
+import pageTitle from 'ember-page-title/helpers/page-title';
 
 import LogArea from '#components/log-area.gts';
 import MonacoEditor from '#components/monaco-editor.gts';
@@ -251,7 +252,25 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
     }
   }
 
+  get hasEntries(): boolean {
+    return this.entries.length > 0;
+  }
+
+  get showEmptyState(): boolean {
+    return !this.running && !this.hasEntries;
+  }
+
+  get notRunning(): boolean {
+    return !this.running;
+  }
+
+  isThrottle(value: string): boolean {
+    return this.throttle === value;
+  }
+
   <template>
+    {{pageTitle 'Fast Stream (SAX)'}}
+
     <h1>Fast Stream (SAX)</h1>
     <p class='subtitle'>
       Feeds XML to the SAX parser chunk-by-chunk with configurable throttle to
@@ -261,13 +280,13 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
     <div class='controls'>
       <label for='throttle'>Throttle</label>
       <select id='throttle' {{on 'change' this.setThrottle}}>
-        <option value='0' selected={{this.isThrottle0}}>No delay</option>
-        <option value='16' selected={{this.isThrottle16}}>16 ms (60 fps)</option>
-        <option value='50' selected={{this.isThrottle50}}>50 ms</option>
-        <option value='100' selected={{this.isThrottle100}}>100 ms</option>
-        <option value='250' selected={{this.isThrottle250}}>250 ms</option>
-        <option value='500' selected={{this.isThrottle500}}>500 ms</option>
-        <option value='1000' selected={{this.isThrottle1000}}>1000 ms</option>
+        <option value='0' selected={{this.isThrottle '0'}}>No delay</option>
+        <option value='16' selected={{this.isThrottle '16'}}>16 ms (60 fps)</option>
+        <option value='50' selected={{this.isThrottle '50'}}>50 ms</option>
+        <option value='100' selected={{this.isThrottle '100'}}>100 ms</option>
+        <option value='250' selected={{this.isThrottle '250'}}>250 ms</option>
+        <option value='500' selected={{this.isThrottle '500'}}>500 ms</option>
+        <option value='1000' selected={{this.isThrottle '1000'}}>1000 ms</option>
       </select>
 
       <label for='chunk-size'>Chunk size (bytes)</label>
@@ -318,40 +337,6 @@ class FastStreamTemplate extends Component<FastStreamTemplateSignature> {
       </:right>
     </TwoPaneLayout>
   </template>
-
-  get hasEntries(): boolean {
-    return this.entries.length > 0;
-  }
-
-  get showEmptyState(): boolean {
-    return !this.running && !this.hasEntries;
-  }
-
-  get notRunning(): boolean {
-    return !this.running;
-  }
-
-  get isThrottle0(): boolean {
-    return this.throttle === '0';
-  }
-  get isThrottle16(): boolean {
-    return this.throttle === '16';
-  }
-  get isThrottle50(): boolean {
-    return this.throttle === '50';
-  }
-  get isThrottle100(): boolean {
-    return this.throttle === '100';
-  }
-  get isThrottle250(): boolean {
-    return this.throttle === '250';
-  }
-  get isThrottle500(): boolean {
-    return this.throttle === '500';
-  }
-  get isThrottle1000(): boolean {
-    return this.throttle === '1000';
-  }
 }
 
 export default FastStreamTemplate;

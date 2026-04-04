@@ -6,6 +6,7 @@ import { action } from '@ember/object';
 import { fromLossless } from 'eksml/from-lossless';
 import { fromLossy } from 'eksml/from-lossy';
 import { writer } from 'eksml/writer';
+import pageTitle from 'ember-page-title/helpers/page-title';
 
 import MonacoEditor from '#components/monaco-editor.gts';
 import RunDuration from '#components/run-duration.gts';
@@ -160,7 +161,18 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
     }
   }
 
+  get isDom(): boolean {
+    return this.format === 'dom';
+  }
+  get isLossy(): boolean {
+    return this.format === 'lossy';
+  }
+  get isLossless(): boolean {
+    return this.format === 'lossless';
+  }
+
   <template>
+    {{pageTitle 'Writer'}}
     <h1>Writer</h1>
     <p class='subtitle'>
       Enter JSON (DOM, lossy, or lossless) on the left, see serialized XML on
@@ -235,16 +247,6 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
       </:right>
     </TwoPaneLayout>
   </template>
-
-  get isDom(): boolean {
-    return this.format === 'dom';
-  }
-  get isLossy(): boolean {
-    return this.format === 'lossy';
-  }
-  get isLossless(): boolean {
-    return this.format === 'lossless';
-  }
 }
 
 export default WriterTemplate;

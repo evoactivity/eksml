@@ -6,6 +6,7 @@ import { action } from '@ember/object';
 import { lossless } from 'eksml/lossless';
 import { lossy } from 'eksml/lossy';
 import { parse } from 'eksml/parser';
+import pageTitle from 'ember-page-title/helpers/page-title';
 
 import MonacoEditor from '#components/monaco-editor.gts';
 import RunDuration from '#components/run-duration.gts';
@@ -175,7 +176,18 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
     }
   }
 
+  get isDom(): boolean {
+    return this.mode === 'dom';
+  }
+  get isLossy(): boolean {
+    return this.mode === 'lossy';
+  }
+  get isLossless(): boolean {
+    return this.mode === 'lossless';
+  }
+
   <template>
+    {{pageTitle 'Parse'}}
     <h1>Parse</h1>
     <p class='subtitle'>
       Enter XML on the left, see parsed output on the right.
@@ -240,17 +252,6 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
       </:right>
     </TwoPaneLayout>
   </template>
-
-  // Select helpers for <option selected>
-  get isDom(): boolean {
-    return this.mode === 'dom';
-  }
-  get isLossy(): boolean {
-    return this.mode === 'lossy';
-  }
-  get isLossless(): boolean {
-    return this.mode === 'lossless';
-  }
 }
 
 export default ParseTemplate;
