@@ -28,7 +28,7 @@
  *
  * @example
  * ```ts
- * import { lossy } from "eksml";
+ * import { lossy } from "eksml/lossy";
  *
  * const result = lossy(`
  *   <thing>

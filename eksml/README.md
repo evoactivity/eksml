@@ -6,7 +6,7 @@
 
 # Eksml
 
-A fast, lightweight XML/HTML parser, serializer, and streaming toolkit for JavaScript and TypeScript. Eksml provides both a convenient class-based API and individual function exports for tree parsing, SAX streaming, object conversion, and serialization.
+A fast, lightweight XML/HTML parser, serializer, and streaming toolkit for JavaScript and TypeScript. Import only what you need — tree parsing, SAX streaming, object conversion, or serialization — each as a standalone function export.
 
 Built on the same core parsing architecture as [tXml](https://github.com/tobiasNickel/tXml) by Tobias Nickel, Eksml improves the performance and extends it with additional features.
 
@@ -27,16 +27,6 @@ yarn add eksml
 ## Quick Start
 
 ```ts
-// Class API — shared configuration across all operations
-import { Eksml } from 'eksml';
-
-const xml = new Eksml();
-const dom = xml.parse('<root><item id="1">Hello</item></root>');
-const str = xml.write(dom);
-```
-
-```ts
-// Functional API — import only what you need
 import { parse } from 'eksml/parser';
 import { write } from 'eksml/writer';
 
@@ -46,197 +36,7 @@ const str = write(dom);
 
 ---
 
-## The `Eksml` Class
-
-The `Eksml` class is the all-in-one entry point. It wraps every major feature behind a single import with shared configuration.
-
-```ts
-import { Eksml } from 'eksml';
-```
-
-### Constructor
-
-```ts
-const xml = new Eksml(options?: EksmlOptions);
-```
-
-### `EksmlOptions`
-
-Extends all `ParseOptions` (see below) plus:
-
-<table>
-  <tr>
-    <th>Option</th>
-    <th>Type</th>
-    <th>Default</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><code>output</code></td>
-    <td><code>'dom' | 'lossy' | 'lossless'</code></td>
-    <td><code>'dom'</code></td>
-    <td>
-      Output format for <code>.parse()</code>. <code>'dom'</code> returns a
-      <code>TNode</code> tree, <code>'lossy'</code> returns compact JS objects,
-      <code>'lossless'</code> returns order-preserving JSON entries.
-    </td>
-  </tr>
-</table>
-
-### Methods
-
-#### `xml.parse(input, overrides?)`
-
-Parse an XML or HTML string. The return type depends on the `output` mode.
-
-```ts
-// DOM mode (default)
-const xml = new Eksml();
-const dom: (TNode | string)[] = xml.parse('<root>Hello</root>');
-
-// Lossy mode
-const xml = new Eksml({ output: 'lossy' });
-const obj = xml.parse('<root>Hello</root>');
-// => { root: "Hello" }
-
-// Lossless mode
-const xml = new Eksml({ output: 'lossless' });
-const entries = xml.parse('<root>Hello</root>');
-// => [{ root: [{ $text: "Hello" }] }]
-```
-
-#### `xml.write(input, options?)`
-
-Serialize a parsed tree back to an XML/HTML string. Accepts DOM nodes, lossy objects, or lossless entries -- input format is auto-detected and converted to DOM before serialization.
-
-```ts
-const xml = new Eksml();
-
-// From a DOM tree
-const dom = xml.parse('<root><item>1</item></root>');
-xml.write(dom);
-// => '<root><item>1</item></root>'
-
-xml.write(dom, { pretty: true });
-// => '<root>\n  <item>1</item>\n</root>'
-
-// From a lossy object
-xml.write({ user: { name: 'Alice', age: '30' } });
-// => '<user><name>Alice</name><age>30</age></user>'
-
-// From lossless entries
-xml.write([{ user: [{ $attr: { id: '1' } }, { name: [{ $text: 'Alice' }] }] }]);
-// => '<user id="1"><name>Alice</name></user>'
-```
-
-#### `xml.stream(readable, overrides?)`
-
-Pipe a `ReadableStream<string>` through an internal transform parser. Returns a `ReadableStream<TNode | string>` that emits complete subtrees as they close.
-
-```ts
-const xml = new Eksml({ html: true });
-const response = await fetch('/feed.xml');
-const nodes = xml.stream(response.body);
-
-for await (const node of nodes) {
-  console.log(node);
-}
-```
-
-Use `select` to emit specific elements as they close at any depth:
-
-```ts
-const items = xml.stream(response.body, { select: 'item' });
-```
-
-#### `xml.sax(overrides?)`
-
-Create an event-based SAX parser with `.on()` / `.off()` methods.
-
-```ts
-const xml = new Eksml();
-const parser = xml.sax();
-
-parser.on('opentag', (tagName, attributes) => {
-  console.log('opened:', tagName, attributes);
-});
-parser.on('text', (text) => {
-  console.log('text:', text);
-});
-
-parser.write('<root><item id="1">Hello</item>');
-parser.write('</root>');
-parser.close();
-```
-
-### SAX Events
-
-#### `opentag`
-
-Opening tag with parsed attributes
-
-```ts
-(
-  tagName: string,
-  attributes: Record<string, string | null>
-) => void
-```
-
-#### `closetag`
-
-Closing tag
-
-```ts
-(tagName: string) => void
-```
-
-#### `text`
-
-Text content between tags
-
-```ts
-(text: string) => void
-```
-
-#### `cdata`
-
-CDATA section content
-
-```ts
-(data: string) => void
-```
-
-#### `comment`
-
-Comment (full `<!-- ... -->` string including delimiters)
-
-```ts
-(comment: string) => void
-```
-
-#### `processinginstruction`
-
-Processing instruction (`<?xml ...?>`)
-
-```ts
-(name: string, body: string) => void
-```
-
-#### `doctype`
-
-DOCTYPE declaration
-
-```ts
-(tagName: string, attributes: Record<string, string | null>) => void
-```
-
----
-
-## Functional API
-
-Every feature is also available as a standalone function import for tree-shaking and direct use.
-
-### `parse(xml, options?)`
+## API
 
 ```ts
 import { parse } from 'eksml/parser';
@@ -496,6 +296,106 @@ parser.close();
     <td><code>(tagName, attributes) =&gt; void</code></td>
     <td>--</td>
     <td>DOCTYPE handler</td>
+  </tr>
+</table>
+
+---
+
+### `createSaxParser(options?)`
+
+An EventEmitter-style SAX parser built on `fastStream`. Unlike `fastStream` (which uses static callback options), `createSaxParser` lets you add and remove event handlers dynamically with `.on()` / `.off()`.
+
+```ts
+import { createSaxParser } from 'eksml/sax';
+
+const parser = createSaxParser({ html: true });
+
+parser.on('opentag', (tagName, attributes) => {
+  console.log('opened:', tagName, attributes);
+});
+parser.on('text', (text) => {
+  console.log('text:', text);
+});
+
+parser.write('<div><br><p>Hello</p>');
+parser.write('</div>');
+parser.close();
+
+// Remove a handler
+parser.off('opentag', myHandler);
+```
+
+#### `SaxParserOptions`
+
+<table>
+  <tr>
+    <th>Option</th>
+    <th>Type</th>
+    <th>Default</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>html</code></td>
+    <td><code>boolean</code></td>
+    <td><code>false</code></td>
+    <td>Enable HTML mode (sets void element and raw content tag defaults)</td>
+  </tr>
+  <tr>
+    <td><code>selfClosingTags</code></td>
+    <td><code>string[]</code></td>
+    <td><code>[]</code> / HTML voids</td>
+    <td>Tag names treated as self-closing void elements</td>
+  </tr>
+  <tr>
+    <td><code>rawContentTags</code></td>
+    <td><code>string[]</code></td>
+    <td><code>[]</code> / <code>['script','style']</code></td>
+    <td>Tag names whose content is raw text</td>
+  </tr>
+</table>
+
+#### SAX Events
+
+<table>
+  <tr>
+    <th>Event</th>
+    <th>Handler signature</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>opentag</code></td>
+    <td><code>(tagName, attributes) =&gt; void</code></td>
+    <td>Opening tag with parsed attributes</td>
+  </tr>
+  <tr>
+    <td><code>closetag</code></td>
+    <td><code>(tagName) =&gt; void</code></td>
+    <td>Closing tag</td>
+  </tr>
+  <tr>
+    <td><code>text</code></td>
+    <td><code>(text) =&gt; void</code></td>
+    <td>Text content between tags</td>
+  </tr>
+  <tr>
+    <td><code>cdata</code></td>
+    <td><code>(data) =&gt; void</code></td>
+    <td>CDATA section content</td>
+  </tr>
+  <tr>
+    <td><code>comment</code></td>
+    <td><code>(comment) =&gt; void</code></td>
+    <td>Comment (full <code>&lt;!-- ... --&gt;</code> string including delimiters)</td>
+  </tr>
+  <tr>
+    <td><code>processinginstruction</code></td>
+    <td><code>(name, body) =&gt; void</code></td>
+    <td>Processing instruction</td>
+  </tr>
+  <tr>
+    <td><code>doctype</code></td>
+    <td><code>(tagName, attributes) =&gt; void</code></td>
+    <td>DOCTYPE declaration</td>
   </tr>
 </table>
 
@@ -959,12 +859,12 @@ Eksml's DOM parser is built on the work of **[Tobias Nickel](https://github.com/
 Eksml extends tXml's foundation with:
 
 - A high-performance SAX streaming engine (`fastStream`)
+- An EventEmitter-style SAX parser with dynamic handler management (`createSaxParser`)
 - A Web Streams `TransformStream` for incremental parsing
 - Lossy and lossless JSON converters with round-trip support
 - HTML-aware parsing and serialization (void elements, raw content tags, entity encoding)
 - Strict mode validation
 - Entity decoding (XML and full HTML named entities)
-- A unified `Eksml` class API
 
 Thank you, Tobias, for the elegant approach that made all of this possible.
 
@@ -978,7 +878,7 @@ Eksml optimizes for speed and simplicity, which means it intentionally does not 
 - **No namespace support.** Namespace prefixes are preserved in tag and attribute names (e.g. `soap:Envelope`) but not resolved to URIs. There is no namespace-aware API.
 - **No XPath or CSS selectors.** Querying uses simple functions like `filter()`, `getElementById()`, and `getElementsByClassName()`. For complex queries, use the DOM output with a dedicated query library.
 - **Entity decoding is opt-in.** By default, entities like `&amp;` and `&#x20;` are left as-is in text and attribute values. Pass `entities: true` to decode them.
-- **Streaming always emits DOM nodes.** The `transformStream` and `stream()` API emit `TNode` subtrees regardless of the class-level `output` mode. Convert after receiving if you need lossy/lossless format.
+- **Streaming always emits DOM nodes.** `transformStream` emits `TNode` subtrees. Convert after receiving if you need lossy/lossless format.
 - **Not a drop-in replacement for the W3C DOM.** `TNode` is a plain object with `tagName`, `attributes`, and `children` -- not a `Node`/`Element`/`Document` with methods like `querySelector`, `parentNode`, etc.
 - **Single-threaded.** Parsing runs synchronously on the calling thread. For CPU-bound workloads with very large documents, consider offloading to a Web Worker.
 

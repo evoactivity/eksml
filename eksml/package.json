@@ -8,10 +8,6 @@
     "#src/*": "./src/*"
   },
   "exports": {
-    ".": {
-      "types": "./dist/eksml.d.mts",
-      "import": "./dist/eksml.mjs"
-    },
     "./parser": {
       "types": "./dist/parser.d.mts",
       "import": "./dist/parser.mjs"
@@ -23,6 +19,10 @@
     "./stream": {
       "types": "./dist/fastStream.d.mts",
       "import": "./dist/fastStream.mjs"
+    },
+    "./sax": {
+      "types": "./dist/sax.d.mts",
+      "import": "./dist/sax.mjs"
     },
     "./transform-stream": {
       "types": "./dist/transformStream.d.mts",
@@ -49,8 +49,6 @@
       "import": "./dist/utilities/index.mjs"
     }
   },
-  "main": "./dist/eksml.mjs",
-  "types": "./dist/eksml.d.mts",
   "files": [
     "dist"
   ],
