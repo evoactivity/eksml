@@ -5,29 +5,29 @@
  * This isolates the parser's scanning and event-dispatch cost from any
  * downstream work (tree construction, string copying, etc.).
  */
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { bench, describe } from "vitest";
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { bench, describe } from 'vitest';
 
 // --- eksml ---
-import { fastStream } from "#src/fastStream.ts";
+import { fastStream } from '#src/fastStream.ts';
 
 // --- competitors ---
-import { Parser as Htmlparser2 } from "htmlparser2";
-import sax from "sax";
-import { SaxesParser } from "saxes";
+import { Parser as Htmlparser2 } from 'htmlparser2';
+import sax from 'sax';
+import { SaxesParser } from 'saxes';
 
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
-  readFileSync(resolve(__dirname, "../test/fixtures", name), "utf-8");
+  readFileSync(resolve(__dirname, '../test/fixtures', name), 'utf-8');
 
-const rssFeed = fixture("rss-feed.xml");
-const xmltvEpg = fixture("xmltv-epg.xml");
-const pomXml = fixture("pom.xml");
+const rssFeed = fixture('rss-feed.xml');
+const xmltvEpg = fixture('xmltv-epg.xml');
+const pomXml = fixture('pom.xml');
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -86,12 +86,12 @@ function saxStream(xml: string, chunkSize: number): void {
 function saxesStream(xml: string, chunkSize: number): void {
   const chunks = chunkString(xml, chunkSize);
   const parser = new SaxesParser();
-  parser.on("opentag", noop);
-  parser.on("closetag", noop);
-  parser.on("text", noop);
-  parser.on("cdata", noop);
-  parser.on("comment", noop);
-  parser.on("processinginstruction", noop);
+  parser.on('opentag', noop);
+  parser.on('closetag', noop);
+  parser.on('text', noop);
+  parser.on('cdata', noop);
+  parser.on('comment', noop);
+  parser.on('processinginstruction', noop);
   for (const chunk of chunks) {
     parser.write(chunk);
   }
@@ -124,22 +124,22 @@ function htmlparser2Stream(xml: string, chunkSize: number): void {
 // ---------------------------------------------------------------------------
 // RSS feed — 256 B chunks
 // ---------------------------------------------------------------------------
-describe("tokenize: RSS feed (256 B chunks)", () => {
+describe('tokenize: RSS feed (256 B chunks)', () => {
   const size = 256;
 
-  bench("eksml (fastStream)", () => {
+  bench('eksml (fastStream)', () => {
     eksmlFastStream(rssFeed, size);
   });
 
-  bench("sax", () => {
+  bench('sax', () => {
     saxStream(rssFeed, size);
   });
 
-  bench("saxes", () => {
+  bench('saxes', () => {
     saxesStream(rssFeed, size);
   });
 
-  bench("htmlparser2", () => {
+  bench('htmlparser2', () => {
     htmlparser2Stream(rssFeed, size);
   });
 });
@@ -147,22 +147,22 @@ describe("tokenize: RSS feed (256 B chunks)", () => {
 // ---------------------------------------------------------------------------
 // XMLTV EPG — 256 B chunks
 // ---------------------------------------------------------------------------
-describe("tokenize: XMLTV EPG (256 B chunks)", () => {
+describe('tokenize: XMLTV EPG (256 B chunks)', () => {
   const size = 256;
 
-  bench("eksml (fastStream)", () => {
+  bench('eksml (fastStream)', () => {
     eksmlFastStream(xmltvEpg, size);
   });
 
-  bench("sax", () => {
+  bench('sax', () => {
     saxStream(xmltvEpg, size);
   });
 
-  bench("saxes", () => {
+  bench('saxes', () => {
     saxesStream(xmltvEpg, size);
   });
 
-  bench("htmlparser2", () => {
+  bench('htmlparser2', () => {
     htmlparser2Stream(xmltvEpg, size);
   });
 });
@@ -170,22 +170,22 @@ describe("tokenize: XMLTV EPG (256 B chunks)", () => {
 // ---------------------------------------------------------------------------
 // Maven POM — 256 B chunks
 // ---------------------------------------------------------------------------
-describe("tokenize: Maven POM (256 B chunks)", () => {
+describe('tokenize: Maven POM (256 B chunks)', () => {
   const size = 256;
 
-  bench("eksml (fastStream)", () => {
+  bench('eksml (fastStream)', () => {
     eksmlFastStream(pomXml, size);
   });
 
-  bench("sax", () => {
+  bench('sax', () => {
     saxStream(pomXml, size);
   });
 
-  bench("saxes", () => {
+  bench('saxes', () => {
     saxesStream(pomXml, size);
   });
 
-  bench("htmlparser2", () => {
+  bench('htmlparser2', () => {
     htmlparser2Stream(pomXml, size);
   });
 });
@@ -193,22 +193,22 @@ describe("tokenize: Maven POM (256 B chunks)", () => {
 // ---------------------------------------------------------------------------
 // XMLTV EPG — 64 B chunks (stress test)
 // ---------------------------------------------------------------------------
-describe("tokenize: XMLTV EPG (64 B chunks — stress)", () => {
+describe('tokenize: XMLTV EPG (64 B chunks — stress)', () => {
   const size = 64;
 
-  bench("eksml (fastStream)", () => {
+  bench('eksml (fastStream)', () => {
     eksmlFastStream(xmltvEpg, size);
   });
 
-  bench("sax", () => {
+  bench('sax', () => {
     saxStream(xmltvEpg, size);
   });
 
-  bench("saxes", () => {
+  bench('saxes', () => {
     saxesStream(xmltvEpg, size);
   });
 
-  bench("htmlparser2", () => {
+  bench('htmlparser2', () => {
     htmlparser2Stream(xmltvEpg, size);
   });
 });

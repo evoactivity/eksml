@@ -1,9 +1,9 @@
-import { decodeXML, decodeHTML } from "entities";
-import { filter } from "#src/utilities/filter.ts";
+import { decodeXML, decodeHTML } from 'entities';
+import { filter } from '#src/utilities/filter.ts';
 import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
-} from "#src/utilities/htmlConstants.ts";
+} from '#src/utilities/htmlConstants.ts';
 // @generated:char-codes:begin
 const LT = 60; // <
 const GT = 62; // >
@@ -162,7 +162,7 @@ export function parse(
   /** Build an error with line/column info for strict mode. */
   function strictError(message: string): Error {
     const before = S.substring(0, pos);
-    const lines = before.split("\n");
+    const lines = before.split('\n');
     const line = lines.length;
     const column = lines[lines.length - 1]!.length + 1;
     return new Error(`${message} at line ${line}, column ${column}`);
@@ -182,7 +182,7 @@ export function parse(
     let hasNonWhitespaceText = false;
     for (let i = 0; i < children.length; i++) {
       const child = children[i]!;
-      if (typeof child !== "string") {
+      if (typeof child !== 'string') {
         hasElement = true;
       } else if (child.trim().length === 0) {
         hasWhitespaceOnlyText = true;
@@ -197,7 +197,7 @@ export function parse(
       let writeIndex = 0;
       for (let i = 0; i < children.length; i++) {
         const child = children[i]!;
-        if (typeof child === "string" && child.trim().length === 0) continue;
+        if (typeof child === 'string' && child.trim().length === 0) continue;
         children[writeIndex++] = child;
       }
       children.length = writeIndex;
@@ -210,10 +210,10 @@ export function parse(
       if (S.charCodeAt(pos) === LT) {
         if (S.charCodeAt(pos + 1) === SLASH) {
           const closeStart = pos + 2;
-          pos = S.indexOf(">", pos);
+          pos = S.indexOf('>', pos);
 
           if (pos === -1) {
-            if (strict) throw strictError("Unclosed close tag");
+            if (strict) throw strictError('Unclosed close tag');
             pos = S.length;
             stripIgnorableWhitespace(children);
             return children;
@@ -221,13 +221,13 @@ export function parse(
 
           const closeTag = S.substring(closeStart, pos);
           if (closeTag.indexOf(tagName) === -1) {
-            const parsedText = S.substring(0, pos).split("\n");
+            const parsedText = S.substring(0, pos).split('\n');
             throw new Error(
-              "Unexpected close tag\nLine: " +
+              'Unexpected close tag\nLine: ' +
                 (parsedText.length - 1) +
-                "\nColumn: " +
+                '\nColumn: ' +
                 (parsedText[parsedText.length - 1]!.length + 1) +
-                "\nChar: " +
+                '\nChar: ' +
                 S[pos],
             );
           }
@@ -240,9 +240,9 @@ export function parse(
           if (S.charCodeAt(pos + 2) === DASH) {
             // comment: use indexOf("-->") for fast scanning
             const startCommentPos = pos;
-            pos = S.indexOf("-->", pos + 3);
+            pos = S.indexOf('-->', pos + 3);
             if (pos === -1) {
-              if (strict) throw strictError("Unclosed comment");
+              if (strict) throw strictError('Unclosed comment');
               pos = S.length;
               if (keepComments) {
                 children.push(S.substring(startCommentPos));
@@ -256,12 +256,12 @@ export function parse(
           } else if (
             S.charCodeAt(pos + 2) === LBRACKET &&
             S.charCodeAt(pos + 8) === LBRACKET &&
-            S.substring(pos + 3, pos + 8).toLowerCase() === "cdata"
+            S.substring(pos + 3, pos + 8).toLowerCase() === 'cdata'
           ) {
             // cdata
-            const cdataEndIndex = S.indexOf("]]>", pos);
+            const cdataEndIndex = S.indexOf(']]>', pos);
             if (cdataEndIndex === -1) {
-              if (strict) throw strictError("Unclosed CDATA section");
+              if (strict) throw strictError('Unclosed CDATA section');
               children.push(S.substring(pos + 9));
               pos = S.length;
             } else {
@@ -287,15 +287,15 @@ export function parse(
               const cc = S.charCodeAt(pos);
               if (cc === GT || cc === LBRACKET) break;
               // Skip whitespace
-              if (cc <= 32) { pos++; continue; }
+              if (cc <= 32) {
+                pos++;
+                continue;
+              }
               // Quoted token — capture including quotes as the key
               if (cc === SQUOTE || cc === DQUOTE) {
-                const closePos = S.indexOf(
-                  cc === SQUOTE ? "'" : '"',
-                  pos + 1,
-                );
+                const closePos = S.indexOf(cc === SQUOTE ? "'" : '"', pos + 1);
                 if (closePos === -1) {
-                  if (strict) throw strictError("Unclosed declaration");
+                  if (strict) throw strictError('Unclosed declaration');
                   pos = S.length;
                   break;
                 }
@@ -345,7 +345,7 @@ export function parse(
             }
 
             if (strict && (pos >= S.length || S.charCodeAt(pos) !== GT))
-              throw strictError("Unclosed declaration");
+              throw strictError('Unclosed declaration');
 
             children.push({
               tagName,
@@ -379,7 +379,7 @@ export function parse(
       }
     }
     // If we exit the loop for a named tag, input ended without a close tag
-    if (strict && tagName !== "") {
+    if (strict && tagName !== '') {
       throw strictError(`Unclosed tag <${tagName}>`);
     }
     stripIgnorableWhitespace(children);
@@ -388,7 +388,7 @@ export function parse(
 
   function parseText(): string {
     const start = pos;
-    pos = S.indexOf("<", pos) - 1;
+    pos = S.indexOf('<', pos) - 1;
     if (pos === -2) pos = S.length;
     return S.substring(start, pos + 1);
   }
@@ -472,7 +472,7 @@ export function parse(
     ) {
       if (rawContentSet !== null && rawContentSet.has(tagName)) {
         // Raw content tag: scan for the matching close tag and emit content as raw text
-        const closeTag = "</" + tagName + ">";
+        const closeTag = '</' + tagName + '>';
         const start = pos + 1;
         pos = S.indexOf(closeTag, start);
         if (pos === -1) {
@@ -506,11 +506,11 @@ export function parse(
   function findElements(): number {
     if (!resolvedOptions.attrName || !resolvedOptions.attrValue) return -1;
     const matchResult = new RegExp(
-      "\\s" +
+      '\\s' +
         resolvedOptions.attrName +
-        "\\s*=['\"]" +
+        '\\s*=[\'"]' +
         resolvedOptions.attrValue +
-        "['\"]",
+        '[\'"]',
     ).exec(S);
     if (matchResult) {
       return matchResult.index;
@@ -522,11 +522,11 @@ export function parse(
   let out: (TNode | string)[] | TNode;
 
   if (resolvedOptions.attrValue !== undefined) {
-    resolvedOptions.attrName = resolvedOptions.attrName || "id";
+    resolvedOptions.attrName = resolvedOptions.attrName || 'id';
     const results: (TNode | string)[] = [];
 
     while ((pos = findElements()) !== -1) {
-      pos = S.lastIndexOf("<", pos);
+      pos = S.lastIndexOf('<', pos);
       if (pos !== -1) {
         results.push(parseNode());
       }
@@ -537,7 +537,7 @@ export function parse(
   } else if (resolvedOptions.parseNode) {
     out = parseNode();
   } else {
-    out = parseChildren("");
+    out = parseChildren('');
   }
 
   if (resolvedOptions.filter && Array.isArray(out)) {
@@ -546,7 +546,7 @@ export function parse(
 
   if (
     resolvedOptions.setPos &&
-    typeof out === "object" &&
+    typeof out === 'object' &&
     !Array.isArray(out)
   ) {
     (out as TNodeWithPos).pos = pos;

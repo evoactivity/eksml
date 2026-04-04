@@ -34,27 +34,24 @@
  * ```
  */
 
-import type { TNode, ParseOptions } from "#src/parser.ts";
-import type { WriterOptions } from "#src/writer.ts";
-import type {
-  FastStreamHandlers,
-  Attributes,
-} from "#src/fastStream.ts";
-import type { LossyValue } from "#src/converters/lossy.ts";
-import type { LosslessEntry } from "#src/converters/lossless.ts";
-import { parse } from "#src/parser.ts";
-import { writer } from "#src/writer.ts";
-import { fastStream } from "#src/fastStream.ts";
-import { transformStream } from "#src/transformStream.ts";
-import type { TransformStreamOptions } from "#src/transformStream.ts";
-import { lossy } from "#src/converters/lossy.ts";
-import { lossless } from "#src/converters/lossless.ts";
-import { fromLossy } from "#src/converters/fromLossy.ts";
-import { fromLossless } from "#src/converters/fromLossless.ts";
+import type { TNode, ParseOptions } from '#src/parser.ts';
+import type { WriterOptions } from '#src/writer.ts';
+import type { FastStreamHandlers, Attributes } from '#src/fastStream.ts';
+import type { LossyValue } from '#src/converters/lossy.ts';
+import type { LosslessEntry } from '#src/converters/lossless.ts';
+import { parse } from '#src/parser.ts';
+import { writer } from '#src/writer.ts';
+import { fastStream } from '#src/fastStream.ts';
+import { transformStream } from '#src/transformStream.ts';
+import type { TransformStreamOptions } from '#src/transformStream.ts';
+import { lossy } from '#src/converters/lossy.ts';
+import { lossless } from '#src/converters/lossless.ts';
+import { fromLossy } from '#src/converters/fromLossy.ts';
+import { fromLossless } from '#src/converters/fromLossless.ts';
 import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
-} from "#src/utilities/htmlConstants.ts";
+} from '#src/utilities/htmlConstants.ts';
 
 // ---------------------------------------------------------------------------
 // SAX event types
@@ -90,14 +87,16 @@ export interface SaxParser {
 // ---------------------------------------------------------------------------
 
 /** Output format for `Eksml.parse()`. */
-export type OutputMode = "dom" | "lossy" | "lossless";
+export type OutputMode = 'dom' | 'lossy' | 'lossless';
 
 /** Maps an output mode to its parse return type. */
-export type OutputType<M extends OutputMode> =
-  M extends "dom" ? (TNode | string)[] :
-  M extends "lossy" ? LossyValue | LossyValue[] :
-  M extends "lossless" ? LosslessEntry[] :
-  never;
+export type OutputType<M extends OutputMode> = M extends 'dom'
+  ? (TNode | string)[]
+  : M extends 'lossy'
+    ? LossyValue | LossyValue[]
+    : M extends 'lossless'
+      ? LosslessEntry[]
+      : never;
 
 // ---------------------------------------------------------------------------
 // Eksml options
@@ -119,13 +118,13 @@ export interface EksmlOptions extends ParseOptions {
 // Eksml class
 // ---------------------------------------------------------------------------
 
-export class Eksml<M extends OutputMode = "dom"> {
+export class Eksml<M extends OutputMode = 'dom'> {
   private readonly defaults: ParseOptions;
   private readonly outputMode: M;
 
   constructor(options?: EksmlOptions & { output?: M }) {
-    const { output, ...parseOptions } = options ?? {} as EksmlOptions;
-    this.outputMode = (output ?? "dom") as M;
+    const { output, ...parseOptions } = options ?? ({} as EksmlOptions);
+    this.outputMode = (output ?? 'dom') as M;
     this.defaults = parseOptions;
   }
 
@@ -149,9 +148,9 @@ export class Eksml<M extends OutputMode = "dom"> {
     const merged = this.mergeParseOptions(overrides);
     const dom = parse(xml, merged);
     switch (this.outputMode) {
-      case "lossy":
+      case 'lossy':
         return lossy(dom) as OutputType<M>;
-      case "lossless":
+      case 'lossless':
         return lossless(dom) as OutputType<M>;
       default:
         return dom as OutputType<M>;
@@ -176,7 +175,12 @@ export class Eksml<M extends OutputMode = "dom"> {
   write(input: LossyValue | LossyValue[], options?: WriterOptions): string;
   write(input: LosslessEntry[], options?: WriterOptions): string;
   write(
-    input: TNode | (TNode | string)[] | LossyValue | LossyValue[] | LosslessEntry[],
+    input:
+      | TNode
+      | (TNode | string)[]
+      | LossyValue
+      | LossyValue[]
+      | LosslessEntry[],
     options?: WriterOptions,
   ): string {
     const dom = toDom(input);
@@ -267,7 +271,8 @@ export class Eksml<M extends OutputMode = "dom"> {
         for (const handler of listeners.comment) handler(comment);
       },
       onprocessinginstruction(name: string, body: string) {
-        for (const handler of listeners.processinginstruction) handler(name, body);
+        for (const handler of listeners.processinginstruction)
+          handler(name, body);
       },
     };
 
@@ -329,17 +334,22 @@ export class Eksml<M extends OutputMode = "dom"> {
  * 4. Anything else (including `null`, bare strings, objects without `tagName`) → lossy
  */
 function toDom(
-  input: TNode | (TNode | string)[] | LossyValue | LossyValue[] | LosslessEntry[],
+  input:
+    | TNode
+    | (TNode | string)[]
+    | LossyValue
+    | LossyValue[]
+    | LosslessEntry[],
 ): TNode | (TNode | string)[] {
   if (input === null || input === undefined) return [];
 
   // Single TNode — pass through
-  if (!Array.isArray(input) && typeof input === "object" && isTNode(input)) {
+  if (!Array.isArray(input) && typeof input === 'object' && isTNode(input)) {
     return input as TNode;
   }
 
   // Non-object, non-array: bare string (lossy top-level string)
-  if (!Array.isArray(input) && typeof input !== "object") {
+  if (!Array.isArray(input) && typeof input !== 'object') {
     return fromLossy(input as LossyValue);
   }
 
@@ -355,7 +365,7 @@ function toDom(
   // Find the first non-string element to inspect
   let sample: unknown = undefined;
   for (let i = 0; i < array.length; i++) {
-    if (typeof array[i] !== "string") {
+    if (typeof array[i] !== 'string') {
       sample = array[i];
       break;
     }
@@ -365,12 +375,16 @@ function toDom(
   if (sample === undefined) return array as string[];
 
   // TNode in the array → DOM format
-  if (typeof sample === "object" && sample !== null && isTNode(sample)) {
+  if (typeof sample === 'object' && sample !== null && isTNode(sample)) {
     return array as (TNode | string)[];
   }
 
   // Lossless entry: has $text, $comment, $attr, or single key → array value
-  if (typeof sample === "object" && sample !== null && isLosslessEntry(sample)) {
+  if (
+    typeof sample === 'object' &&
+    sample !== null &&
+    isLosslessEntry(sample)
+  ) {
     return fromLossless(array as LosslessEntry[]);
   }
 
@@ -381,22 +395,25 @@ function toDom(
 /** Check if a value looks like a TNode (has tagName string + children array). */
 function isTNode(value: unknown): value is TNode {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    typeof (value as TNode).tagName === "string" &&
+    typeof (value as TNode).tagName === 'string' &&
     Array.isArray((value as TNode).children)
   );
 }
 
 /** Check if a value looks like a LosslessEntry. */
 function isLosslessEntry(value: unknown): value is LosslessEntry {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== 'object' || value === null) return false;
   const keys = Object.keys(value);
   if (keys.length === 0) return false;
   // Known lossless marker keys
-  if ("$text" in value || "$comment" in value || "$attr" in value) return true;
+  if ('$text' in value || '$comment' in value || '$attr' in value) return true;
   // Single key mapping to an array → element entry
-  if (keys.length === 1 && Array.isArray((value as Record<string, unknown>)[keys[0]!])) {
+  if (
+    keys.length === 1 &&
+    Array.isArray((value as Record<string, unknown>)[keys[0]!])
+  ) {
     return true;
   }
   return false;

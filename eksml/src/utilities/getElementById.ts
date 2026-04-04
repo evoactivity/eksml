@@ -1,6 +1,6 @@
-import type { TNode } from "#src/parser.ts";
-import { parse } from "#src/parser.ts";
-import { filter } from "#src/utilities/filter.ts";
+import type { TNode } from '#src/parser.ts';
+import { parse } from '#src/parser.ts';
+import { filter } from '#src/utilities/filter.ts';
 
 /**
  * Find an element by ID attribute
@@ -12,7 +12,7 @@ export function getElementById(
   input: string | (TNode | string)[],
   id: string,
 ): TNode | undefined {
-  if (typeof input === "string") {
+  if (typeof input === 'string') {
     const out = parse(input, { attrValue: id });
     return out[0] as TNode | undefined;
   }

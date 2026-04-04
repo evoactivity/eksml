@@ -1,26 +1,26 @@
-import { init } from "modern-monaco";
-import { writer } from "#src/writer.ts";
-import type { WriterOptions } from "#src/writer.ts";
-import { fromLossy } from "#src/converters/fromLossy.ts";
-import { fromLossless } from "#src/converters/fromLossless.ts";
-import type { TNode } from "#src/parser.ts";
-import type { LossyValue } from "#src/converters/lossy.ts";
-import type { LosslessEntry } from "#src/converters/lossless.ts";
+import { init } from 'modern-monaco';
+import { writer } from '#src/writer.ts';
+import type { WriterOptions } from '#src/writer.ts';
+import { fromLossy } from '#src/converters/fromLossy.ts';
+import { fromLossless } from '#src/converters/fromLossless.ts';
+import type { TNode } from '#src/parser.ts';
+import type { LossyValue } from '#src/converters/lossy.ts';
+import type { LosslessEntry } from '#src/converters/lossless.ts';
 
 // ---------------------------------------------------------------------------
 // DOM refs
 // ---------------------------------------------------------------------------
 
-const inputEditorContainer = document.getElementById("input-editor")!;
-const outputEditorContainer = document.getElementById("output-editor")!;
-const errorOverlay = document.getElementById("error-overlay") as HTMLDivElement;
-const timingEl = document.getElementById("timing") as HTMLSpanElement;
-const formatEl = document.getElementById("format") as HTMLSelectElement;
-const prettyEl = document.getElementById("pretty") as HTMLInputElement;
-const entitiesEl = document.getElementById("entities") as HTMLInputElement;
-const htmlEl = document.getElementById("html") as HTMLInputElement;
-const writeBtn = document.getElementById("write-btn") as HTMLButtonElement;
-const tabsEl = document.getElementById("tabs") as HTMLDivElement;
+const inputEditorContainer = document.getElementById('input-editor')!;
+const outputEditorContainer = document.getElementById('output-editor')!;
+const errorOverlay = document.getElementById('error-overlay') as HTMLDivElement;
+const timingEl = document.getElementById('timing') as HTMLSpanElement;
+const formatEl = document.getElementById('format') as HTMLSelectElement;
+const prettyEl = document.getElementById('pretty') as HTMLInputElement;
+const entitiesEl = document.getElementById('entities') as HTMLInputElement;
+const htmlEl = document.getElementById('html') as HTMLInputElement;
+const writeBtn = document.getElementById('write-btn') as HTMLButtonElement;
+const tabsEl = document.getElementById('tabs') as HTMLDivElement;
 
 // ---------------------------------------------------------------------------
 // Sample data per format
@@ -28,59 +28,59 @@ const tabsEl = document.getElementById("tabs") as HTMLDivElement;
 
 interface Sample {
   label: string;
-  format: "dom" | "lossy" | "lossless";
+  format: 'dom' | 'lossy' | 'lossless';
   content: string;
 }
 
 const DOM_SAMPLES: Sample[] = [
   {
-    label: "Bookstore",
-    format: "dom",
+    label: 'Bookstore',
+    format: 'dom',
     content: JSON.stringify(
       [
         {
-          tagName: "?xml",
-          attributes: { version: "1.0", encoding: "UTF-8" },
+          tagName: '?xml',
+          attributes: { version: '1.0', encoding: 'UTF-8' },
           children: [],
         },
         {
-          tagName: "bookstore",
+          tagName: 'bookstore',
           attributes: null,
           children: [
             {
-              tagName: "book",
-              attributes: { category: "fiction" },
+              tagName: 'book',
+              attributes: { category: 'fiction' },
               children: [
                 {
-                  tagName: "title",
-                  attributes: { lang: "en" },
-                  children: ["The Great Gatsby"],
+                  tagName: 'title',
+                  attributes: { lang: 'en' },
+                  children: ['The Great Gatsby'],
                 },
                 {
-                  tagName: "author",
+                  tagName: 'author',
                   attributes: null,
-                  children: ["F. Scott Fitzgerald"],
+                  children: ['F. Scott Fitzgerald'],
                 },
-                { tagName: "year", attributes: null, children: ["1925"] },
-                { tagName: "price", attributes: null, children: ["10.99"] },
+                { tagName: 'year', attributes: null, children: ['1925'] },
+                { tagName: 'price', attributes: null, children: ['10.99'] },
               ],
             },
             {
-              tagName: "book",
-              attributes: { category: "non-fiction" },
+              tagName: 'book',
+              attributes: { category: 'non-fiction' },
               children: [
                 {
-                  tagName: "title",
-                  attributes: { lang: "en" },
-                  children: ["Sapiens"],
+                  tagName: 'title',
+                  attributes: { lang: 'en' },
+                  children: ['Sapiens'],
                 },
                 {
-                  tagName: "author",
+                  tagName: 'author',
                   attributes: null,
-                  children: ["Yuval Noah Harari"],
+                  children: ['Yuval Noah Harari'],
                 },
-                { tagName: "year", attributes: null, children: ["2011"] },
-                { tagName: "price", attributes: null, children: ["14.99"] },
+                { tagName: 'year', attributes: null, children: ['2011'] },
+                { tagName: 'price', attributes: null, children: ['14.99'] },
               ],
             },
           ],
@@ -91,57 +91,57 @@ const DOM_SAMPLES: Sample[] = [
     ),
   },
   {
-    label: "HTML Fragment",
-    format: "dom",
+    label: 'HTML Fragment',
+    format: 'dom',
     content: JSON.stringify(
       [
-        { tagName: "!DOCTYPE", attributes: { html: null }, children: [] },
+        { tagName: '!DOCTYPE', attributes: { html: null }, children: [] },
         {
-          tagName: "html",
-          attributes: { lang: "en" },
+          tagName: 'html',
+          attributes: { lang: 'en' },
           children: [
             {
-              tagName: "head",
+              tagName: 'head',
               attributes: null,
               children: [
                 {
-                  tagName: "meta",
-                  attributes: { charset: "UTF-8" },
+                  tagName: 'meta',
+                  attributes: { charset: 'UTF-8' },
                   children: [],
                 },
                 {
-                  tagName: "title",
+                  tagName: 'title',
                   attributes: null,
-                  children: ["Hello World"],
+                  children: ['Hello World'],
                 },
               ],
             },
             {
-              tagName: "body",
+              tagName: 'body',
               attributes: null,
               children: [
                 {
-                  tagName: "h1",
+                  tagName: 'h1',
                   attributes: null,
-                  children: ["Hello World"],
+                  children: ['Hello World'],
                 },
                 {
-                  tagName: "p",
+                  tagName: 'p',
                   attributes: null,
                   children: [
-                    "This is a ",
+                    'This is a ',
                     {
-                      tagName: "strong",
+                      tagName: 'strong',
                       attributes: null,
-                      children: ["simple"],
+                      children: ['simple'],
                     },
-                    " page.",
+                    ' page.',
                   ],
                 },
-                { tagName: "br", attributes: null, children: [] },
+                { tagName: 'br', attributes: null, children: [] },
                 {
-                  tagName: "img",
-                  attributes: { src: "photo.jpg", alt: "A photo" },
+                  tagName: 'img',
+                  attributes: { src: 'photo.jpg', alt: 'A photo' },
                   children: [],
                 },
               ],
@@ -154,52 +154,52 @@ const DOM_SAMPLES: Sample[] = [
     ),
   },
   {
-    label: "Mixed Content",
-    format: "dom",
+    label: 'Mixed Content',
+    format: 'dom',
     content: JSON.stringify(
       [
         {
-          tagName: "article",
-          attributes: { id: "intro" },
+          tagName: 'article',
+          attributes: { id: 'intro' },
           children: [
             {
-              tagName: "p",
+              tagName: 'p',
               attributes: null,
               children: [
-                "Welcome to ",
+                'Welcome to ',
                 {
-                  tagName: "em",
+                  tagName: 'em',
                   attributes: null,
-                  children: ["eksml"],
+                  children: ['eksml'],
                 },
-                ", a ",
+                ', a ',
                 {
-                  tagName: "strong",
+                  tagName: 'strong',
                   attributes: null,
-                  children: ["high-performance"],
+                  children: ['high-performance'],
                 },
-                " XML parser.",
+                ' XML parser.',
               ],
             },
-            "<!-- This is a comment -->",
+            '<!-- This is a comment -->',
             {
-              tagName: "ul",
+              tagName: 'ul',
               attributes: null,
               children: [
                 {
-                  tagName: "li",
+                  tagName: 'li',
                   attributes: null,
-                  children: ["Fast parsing"],
+                  children: ['Fast parsing'],
                 },
                 {
-                  tagName: "li",
+                  tagName: 'li',
                   attributes: null,
-                  children: ["Streaming support"],
+                  children: ['Streaming support'],
                 },
                 {
-                  tagName: "li",
+                  tagName: 'li',
                   attributes: null,
-                  children: ["Multiple output formats"],
+                  children: ['Multiple output formats'],
                 },
               ],
             },
@@ -214,30 +214,30 @@ const DOM_SAMPLES: Sample[] = [
 
 const LOSSY_SAMPLES: Sample[] = [
   {
-    label: "Catalog",
-    format: "lossy",
+    label: 'Catalog',
+    format: 'lossy',
     content: JSON.stringify(
       {
         catalog: {
           product: [
             {
-              $id: "p1",
-              $category: "electronics",
-              name: "Wireless Mouse",
-              price: "29.99",
+              $id: 'p1',
+              $category: 'electronics',
+              name: 'Wireless Mouse',
+              price: '29.99',
               specs: {
-                weight: "85g",
-                battery: "AA",
+                weight: '85g',
+                battery: 'AA',
               },
             },
             {
-              $id: "p2",
-              $category: "accessories",
-              name: "USB-C Hub",
-              price: "49.99",
+              $id: 'p2',
+              $category: 'accessories',
+              name: 'USB-C Hub',
+              price: '49.99',
               specs: {
-                ports: "7",
-                weight: "120g",
+                ports: '7',
+                weight: '120g',
               },
             },
           ],
@@ -248,18 +248,18 @@ const LOSSY_SAMPLES: Sample[] = [
     ),
   },
   {
-    label: "Mixed Content",
-    format: "lossy",
+    label: 'Mixed Content',
+    format: 'lossy',
     content: JSON.stringify(
       {
         div: {
-          $class: "content",
+          $class: 'content',
           $$: [
-            "Hello ",
-            { strong: "world" },
-            "! Visit ",
-            { a: { $href: "https://example.com", $$: ["our site"] } },
-            " for more.",
+            'Hello ',
+            { strong: 'world' },
+            '! Visit ',
+            { a: { $href: 'https://example.com', $$: ['our site'] } },
+            ' for more.',
           ],
         },
       },
@@ -268,26 +268,26 @@ const LOSSY_SAMPLES: Sample[] = [
     ),
   },
   {
-    label: "Config",
-    format: "lossy",
+    label: 'Config',
+    format: 'lossy',
     content: JSON.stringify(
       {
         config: {
-          $version: "2.0",
+          $version: '2.0',
           database: {
-            host: "localhost",
-            port: "5432",
-            name: "myapp",
-            pool: { $min: "2", $max: "10" },
+            host: 'localhost',
+            port: '5432',
+            name: 'myapp',
+            pool: { $min: '2', $max: '10' },
           },
           cache: {
             $enabled: null,
-            ttl: "3600",
-            backend: "redis",
+            ttl: '3600',
+            backend: 'redis',
           },
           logging: {
-            level: "info",
-            format: "json",
+            level: 'info',
+            format: 'json',
           },
         },
       },
@@ -299,45 +299,45 @@ const LOSSY_SAMPLES: Sample[] = [
 
 const LOSSLESS_SAMPLES: Sample[] = [
   {
-    label: "Order",
-    format: "lossless",
+    label: 'Order',
+    format: 'lossless',
     content: JSON.stringify(
       [
         {
           order: [
-            { $attr: { id: "ORD-001", status: "shipped" } },
+            { $attr: { id: 'ORD-001', status: 'shipped' } },
             {
               customer: [
-                { $attr: { tier: "gold" } },
-                { name: [{ $text: "Alice Johnson" }] },
-                { email: [{ $text: "alice@example.com" }] },
+                { $attr: { tier: 'gold' } },
+                { name: [{ $text: 'Alice Johnson' }] },
+                { email: [{ $text: 'alice@example.com' }] },
               ],
             },
             {
               items: [
                 {
                   item: [
-                    { $attr: { sku: "SKU-100" } },
-                    { name: [{ $text: "Widget Pro" }] },
-                    { quantity: [{ $text: "3" }] },
-                    { price: [{ $text: "29.99" }] },
+                    { $attr: { sku: 'SKU-100' } },
+                    { name: [{ $text: 'Widget Pro' }] },
+                    { quantity: [{ $text: '3' }] },
+                    { price: [{ $text: '29.99' }] },
                   ],
                 },
                 {
                   item: [
-                    { $attr: { sku: "SKU-200" } },
-                    { name: [{ $text: "Gadget Plus" }] },
-                    { quantity: [{ $text: "1" }] },
-                    { price: [{ $text: "79.99" }] },
+                    { $attr: { sku: 'SKU-200' } },
+                    { name: [{ $text: 'Gadget Plus' }] },
+                    { quantity: [{ $text: '1' }] },
+                    { price: [{ $text: '79.99' }] },
                   ],
                 },
               ],
             },
-            { $comment: " Shipping info " },
+            { $comment: ' Shipping info ' },
             {
               shipping: [
-                { method: [{ $text: "express" }] },
-                { tracking: [{ $text: "1Z999AA10123456784" }] },
+                { method: [{ $text: 'express' }] },
+                { tracking: [{ $text: '1Z999AA10123456784' }] },
               ],
             },
           ],
@@ -348,24 +348,24 @@ const LOSSLESS_SAMPLES: Sample[] = [
     ),
   },
   {
-    label: "SOAP Message",
-    format: "lossless",
+    label: 'SOAP Message',
+    format: 'lossless',
     content: JSON.stringify(
       [
         {
-          "soap:Envelope": [
+          'soap:Envelope': [
             {
               $attr: {
-                "xmlns:soap": "http://schemas.xmlsoap.org/soap/envelope/",
-                "xmlns:ord": "http://example.com/orders",
+                'xmlns:soap': 'http://schemas.xmlsoap.org/soap/envelope/',
+                'xmlns:ord': 'http://example.com/orders',
               },
             },
             {
-              "soap:Body": [
+              'soap:Body': [
                 {
-                  "ord:GetOrder": [
-                    { "ord:OrderId": [{ $text: "12345" }] },
-                    { "ord:Format": [{ $text: "full" }] },
+                  'ord:GetOrder': [
+                    { 'ord:OrderId': [{ $text: '12345' }] },
+                    { 'ord:Format': [{ $text: 'full' }] },
                   ],
                 },
               ],
@@ -384,8 +384,8 @@ const LOSSLESS_SAMPLES: Sample[] = [
 // ---------------------------------------------------------------------------
 
 function getSamples(format: string): Sample[] {
-  if (format === "lossy") return LOSSY_SAMPLES;
-  if (format === "lossless") return LOSSLESS_SAMPLES;
+  if (format === 'lossy') return LOSSY_SAMPLES;
+  if (format === 'lossless') return LOSSLESS_SAMPLES;
   return DOM_SAMPLES;
 }
 
@@ -393,7 +393,7 @@ function getSamples(format: string): Sample[] {
 // Monaco editor setup
 // ---------------------------------------------------------------------------
 
-const EDITOR_THEME = "vitesse-dark";
+const EDITOR_THEME = 'vitesse-dark';
 
 const monaco = await init();
 
@@ -410,7 +410,7 @@ const inputEditor: MonacoEditor = monaco.editor.create(inputEditorContainer, {
   tabSize: 2,
 });
 
-const inputModel = monaco.editor.createModel("", "json");
+const inputModel = monaco.editor.createModel('', 'json');
 inputEditor.setModel(inputModel);
 
 const outputEditor: MonacoEditor = monaco.editor.create(outputEditorContainer, {
@@ -425,7 +425,7 @@ const outputEditor: MonacoEditor = monaco.editor.create(outputEditorContainer, {
   tabSize: 2,
 });
 
-const outputModel = monaco.editor.createModel("", "xml");
+const outputModel = monaco.editor.createModel('', 'xml');
 outputEditor.setModel(outputModel);
 
 // ---------------------------------------------------------------------------
@@ -436,12 +436,12 @@ let activeTab = 0;
 
 function renderTabs(): void {
   const samples = getSamples(formatEl.value);
-  tabsEl.innerHTML = "";
+  tabsEl.innerHTML = '';
   for (let i = 0; i < samples.length; i++) {
-    const btn = document.createElement("button");
-    btn.className = "tab" + (i === activeTab ? " active" : "");
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i === activeTab ? ' active' : '');
     btn.textContent = samples[i]!.label;
-    btn.addEventListener("click", () => switchTab(i));
+    btn.addEventListener('click', () => switchTab(i));
     tabsEl.appendChild(btn);
   }
 }
@@ -461,10 +461,10 @@ function switchTab(index: number): void {
 // ---------------------------------------------------------------------------
 
 function toDom(json: unknown, format: string): TNode | (TNode | string)[] {
-  if (format === "lossy") {
+  if (format === 'lossy') {
     return fromLossy(json as LossyValue | LossyValue[]);
   }
-  if (format === "lossless") {
+  if (format === 'lossless') {
     return fromLossless(json as LosslessEntry[]);
   }
   // DOM: already TNode | (TNode | string)[]
@@ -497,11 +497,11 @@ function run(): void {
     outputModel.setValue(xml);
 
     const micro = elapsed * 1000;
-    timingEl.textContent = micro < 1000 ? "< 1 ms" : formatDuration(micro);
+    timingEl.textContent = micro < 1000 ? '< 1 ms' : formatDuration(micro);
   } catch (err: unknown) {
     errorOverlay.hidden = false;
     errorOverlay.textContent = (err as Error).message;
-    timingEl.textContent = "";
+    timingEl.textContent = '';
   }
 }
 
@@ -515,12 +515,12 @@ function formatDuration(microseconds: number): string {
 // Event listeners
 // ---------------------------------------------------------------------------
 
-writeBtn.addEventListener("click", run);
+writeBtn.addEventListener('click', run);
 inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
   run();
 });
 
-formatEl.addEventListener("change", () => {
+formatEl.addEventListener('change', () => {
   activeTab = 0;
   const samples = getSamples(formatEl.value);
   inputModel.setValue(samples[0]!.content);

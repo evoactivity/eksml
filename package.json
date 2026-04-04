@@ -6,7 +6,11 @@
   "type:": "module",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "pnpm --filter eksml test",
+    "build": "pnpm --filter eksml build",
+    "build:demo": "pnpm --filter demo build",
+    "dev:demo": "pnpm --filter demo dev",
+    "format": "prettier --write ."
   },
   "keywords": [],
   "author": "Liam Potter",

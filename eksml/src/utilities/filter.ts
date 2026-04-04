@@ -1,5 +1,5 @@
-import type { TNode } from "#src/parser.ts";
-import { parse } from "#src/parser.ts";
+import type { TNode } from '#src/parser.ts';
+import { parse } from '#src/parser.ts';
 
 /**
  * Filter nodes like Array.filter - returns nodes where the filter function returns true
@@ -11,23 +11,28 @@ import { parse } from "#src/parser.ts";
  */
 export function filter(
   input: string | (TNode | string)[],
-  predicate: (node: TNode, index: number, depth: number, path: string) => boolean,
+  predicate: (
+    node: TNode,
+    index: number,
+    depth: number,
+    path: string,
+  ) => boolean,
   depth: number = 0,
-  path: string = "",
+  path: string = '',
 ): TNode[] {
-  const children = typeof input === "string" ? parse(input) : input;
+  const children = typeof input === 'string' ? parse(input) : input;
   let out: TNode[] = [];
 
   children.forEach(function (child, i) {
-    if (typeof child === "object" && predicate(child, i, depth, path)) {
+    if (typeof child === 'object' && predicate(child, i, depth, path)) {
       out.push(child);
     }
-    if (typeof child === "object" && child.children) {
+    if (typeof child === 'object' && child.children) {
       const filteredChildren = filter(
         child.children,
         predicate,
         depth + 1,
-        (path ? path + "." : "") + i + "." + child.tagName,
+        (path ? path + '.' : '') + i + '.' + child.tagName,
       );
       out = out.concat(filteredChildren);
     }

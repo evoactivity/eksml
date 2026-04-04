@@ -23,8 +23,8 @@
  * ```
  */
 
-import type { TNode } from "#src/parser.ts";
-import type { LosslessEntry } from "#src/converters/lossless.ts";
+import type { TNode } from '#src/parser.ts';
+import type { LosslessEntry } from '#src/converters/lossless.ts';
 
 /**
  * Convert a lossless JSON entry array back to a `(TNode | string)[]` DOM tree.
@@ -42,32 +42,34 @@ export function fromLossless(entries: LosslessEntry[]): (TNode | string)[] {
 
 function convertEntry(entry: LosslessEntry): TNode | string {
   // $text → plain string
-  if ("$text" in entry) {
+  if ('$text' in entry) {
     return (entry as { $text: string }).$text;
   }
 
   // $comment → reconstruct comment string as the parser emits it
-  if ("$comment" in entry) {
-    return "<!--" + (entry as { $comment: string }).$comment + "-->";
+  if ('$comment' in entry) {
+    return '<!--' + (entry as { $comment: string }).$comment + '-->';
   }
 
   // $attr should not appear at top level — it's consumed by the element
   // handler below. If we encounter it here, skip it (defensive).
-  if ("$attr" in entry) {
-    return "";
+  if ('$attr' in entry) {
+    return '';
   }
 
   // Element: single key is the tag name, value is children array
   const keys = Object.keys(entry);
   const tagName = keys[0]!;
-  const entryChildren = (entry as { [tagName: string]: LosslessEntry[] })[tagName]!;
+  const entryChildren = (entry as { [tagName: string]: LosslessEntry[] })[
+    tagName
+  ]!;
 
   let attributes: Record<string, string | null> | null = null;
   const children: (TNode | string)[] = [];
 
   for (let i = 0; i < entryChildren.length; i++) {
     const child = entryChildren[i]!;
-    if ("$attr" in child) {
+    if ('$attr' in child) {
       attributes = (child as { $attr: Record<string, string | null> }).$attr;
     } else {
       children.push(convertEntry(child));

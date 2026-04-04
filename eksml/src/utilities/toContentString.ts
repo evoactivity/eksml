@@ -1,4 +1,4 @@
-import type { TNode } from "#src/parser.ts";
+import type { TNode } from '#src/parser.ts';
 
 /**
  * Read the text content of a node, useful for mixed content.
@@ -10,15 +10,15 @@ export function toContentString(
   domContent: TNode | (TNode | string)[] | string,
 ): string {
   if (Array.isArray(domContent)) {
-    let out = "";
+    let out = '';
     domContent.forEach(function (child) {
-      out += " " + toContentString(child);
+      out += ' ' + toContentString(child);
       out = out.trim();
     });
     return out;
-  } else if (typeof domContent === "object" && domContent !== null) {
+  } else if (typeof domContent === 'object' && domContent !== null) {
     return toContentString(domContent.children);
   } else {
-    return " " + domContent;
+    return ' ' + domContent;
   }
 }

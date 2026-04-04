@@ -1,21 +1,21 @@
-import { init } from "modern-monaco";
-import { transformStream } from "#src/transformStream.ts";
-import type { TransformStreamOptions } from "#src/transformStream.ts";
-import type { TNode } from "#src/parser.ts";
+import { init } from 'modern-monaco';
+import { transformStream } from '#src/transformStream.ts';
+import type { TransformStreamOptions } from '#src/transformStream.ts';
+import type { TNode } from '#src/parser.ts';
 
 // ---------------------------------------------------------------------------
 // DOM refs
 // ---------------------------------------------------------------------------
 
-const inputEditorContainer = document.getElementById("input-editor")!;
-const logEl = document.getElementById("log") as HTMLDivElement;
-const statsEl = document.getElementById("stats") as HTMLSpanElement;
-const progressEl = document.getElementById("progress") as HTMLDivElement;
-const throttleEl = document.getElementById("throttle") as HTMLSelectElement;
-const chunkSizeEl = document.getElementById("chunk-size") as HTMLInputElement;
-const selectTagsEl = document.getElementById("select-tags") as HTMLInputElement;
-const startBtn = document.getElementById("start-btn") as HTMLButtonElement;
-const stopBtn = document.getElementById("stop-btn") as HTMLButtonElement;
+const inputEditorContainer = document.getElementById('input-editor')!;
+const logEl = document.getElementById('log') as HTMLDivElement;
+const statsEl = document.getElementById('stats') as HTMLSpanElement;
+const progressEl = document.getElementById('progress') as HTMLDivElement;
+const throttleEl = document.getElementById('throttle') as HTMLSelectElement;
+const chunkSizeEl = document.getElementById('chunk-size') as HTMLInputElement;
+const selectTagsEl = document.getElementById('select-tags') as HTMLInputElement;
+const startBtn = document.getElementById('start-btn') as HTMLButtonElement;
+const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement;
 
 // ---------------------------------------------------------------------------
 // Default XML sample
@@ -58,7 +58,7 @@ const DEFAULT_XML = `\
 // Monaco editor setup
 // ---------------------------------------------------------------------------
 
-const EDITOR_THEME = "vitesse-dark";
+const EDITOR_THEME = 'vitesse-dark';
 
 const monaco = await init();
 
@@ -73,13 +73,13 @@ const inputEditor = monaco.editor.create(inputEditorContainer, {
   tabSize: 2,
 });
 
-const inputModel = monaco.editor.createModel(DEFAULT_XML, "xml");
+const inputModel = monaco.editor.createModel(DEFAULT_XML, 'xml');
 inputEditor.setModel(inputModel);
 
 // Trigger JSON grammar loading so monaco.editor.colorize("...", "json") works.
 // modern-monaco loads grammars lazily via onLanguage; creating a model forces the load.
-const jsonWarmupModel = monaco.editor.createModel("{}", "json");
-await monaco.editor.colorize("{}", "json", { tabSize: 2 });
+const jsonWarmupModel = monaco.editor.createModel('{}', 'json');
+await monaco.editor.colorize('{}', 'json', { tabSize: 2 });
 jsonWarmupModel.dispose();
 
 // ---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ jsonWarmupModel.dispose();
 let abortController: AbortController | null = null;
 
 function escapeHtml(str: string): string {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function formatNode(node: TNode): string {
@@ -104,7 +104,7 @@ function formatNode(node: TNode): string {
           return `<span class="node-attr-key">${escapeHtml(k)}</span>`;
         return `<span class="node-attr-key">${escapeHtml(k)}</span>=<span class="node-attr-val">"${escapeHtml(v)}"</span>`;
       });
-      html += ` { ${parts.join(", ")} }`;
+      html += ` { ${parts.join(', ')} }`;
     }
   }
 
@@ -115,12 +115,12 @@ function formatNode(node: TNode): string {
 }
 
 function appendNode(node: TNode | string): void {
-  const isText = typeof node === "string";
-  const entry = document.createElement("div");
-  entry.className = `log-entry collapsible ${isText ? "node-text" : "node-element"}`;
+  const isText = typeof node === 'string';
+  const entry = document.createElement('div');
+  entry.className = `log-entry collapsible ${isText ? 'node-text' : 'node-element'}`;
 
   const summary = isText
-    ? `<span class="node-text-val">text</span> "${escapeHtml(node.length > 80 ? node.slice(0, 80) + "..." : node)}"`
+    ? `<span class="node-text-val">text</span> "${escapeHtml(node.length > 80 ? node.slice(0, 80) + '...' : node)}"`
     : formatNode(node);
 
   const jsonRaw = JSON.stringify(node, null, 2);
@@ -129,15 +129,17 @@ function appendNode(node: TNode | string): void {
     `<div class="node-summary">${summary} <span class="expand-hint">click to expand</span></div>` +
     `<div class="json-body">${escapeHtml(jsonRaw)}</div>`;
 
-  const jsonBody = entry.querySelector(".json-body") as HTMLDivElement;
+  const jsonBody = entry.querySelector('.json-body') as HTMLDivElement;
 
   // Colorize the JSON asynchronously using Monaco's built-in tokenizer
-  monaco.editor.colorize(jsonRaw, "json", { tabSize: 2 }).then((colorizedHtml) => {
-    jsonBody.innerHTML = colorizedHtml;
-  });
+  monaco.editor
+    .colorize(jsonRaw, 'json', { tabSize: 2 })
+    .then((colorizedHtml) => {
+      jsonBody.innerHTML = colorizedHtml;
+    });
 
-  entry.addEventListener("click", () => {
-    entry.classList.toggle("expanded");
+  entry.addEventListener('click', () => {
+    entry.classList.toggle('expanded');
   });
 
   logEl.appendChild(entry);
@@ -145,16 +147,16 @@ function appendNode(node: TNode | string): void {
 }
 
 function appendChunkMarker(index: number, content: string): void {
-  const entry = document.createElement("div");
-  entry.className = "log-entry chunk-marker";
+  const entry = document.createElement('div');
+  entry.className = 'log-entry chunk-marker';
   entry.textContent = `--- chunk ${index} (${content.length} bytes) ---`;
   logEl.appendChild(entry);
   logEl.scrollTop = logEl.scrollHeight;
 }
 
 function appendDone(nodeCount: number, elapsed: number): void {
-  const entry = document.createElement("div");
-  entry.className = "log-entry node-done";
+  const entry = document.createElement('div');
+  entry.className = 'log-entry node-done';
   entry.innerHTML = `<span class="node-tag" style="color:#6366f1">done</span> ${nodeCount} nodes in ${elapsed.toFixed(1)} ms`;
   logEl.appendChild(entry);
   logEl.scrollTop = logEl.scrollHeight;
@@ -175,7 +177,7 @@ async function run(): Promise<void> {
 
   // Parse the select input: comma-separated tag names, trimmed, empty strings removed
   const selectRaw = selectTagsEl.value
-    .split(",")
+    .split(',')
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 
@@ -185,9 +187,9 @@ async function run(): Promise<void> {
   }
 
   // Reset
-  logEl.innerHTML = "";
-  statsEl.textContent = "";
-  progressEl.style.width = "0%";
+  logEl.innerHTML = '';
+  statsEl.textContent = '';
+  progressEl.style.width = '0%';
 
   abortController = new AbortController();
   const signal = abortController.signal;
@@ -229,7 +231,7 @@ async function run(): Promise<void> {
     await streamWriter.write(chunks[i]!);
 
     const pct = ((i + 1) / totalChunks) * 100;
-    progressEl.style.width = pct + "%";
+    progressEl.style.width = pct + '%';
 
     if (delay > 0 && i < totalChunks - 1) {
       await sleep(delay);
@@ -242,7 +244,7 @@ async function run(): Promise<void> {
 
     const elapsed = performance.now() - startTime;
     appendDone(nodeCount, elapsed);
-    progressEl.style.width = "100%";
+    progressEl.style.width = '100%';
     statsEl.textContent = `${nodeCount} nodes | ${elapsed.toFixed(1)} ms`;
   }
 
@@ -254,8 +256,8 @@ async function run(): Promise<void> {
 function stop(): void {
   if (abortController) {
     abortController.abort();
-    const entry = document.createElement("div");
-    entry.className = "log-entry node-done";
+    const entry = document.createElement('div');
+    entry.className = 'log-entry node-done';
     entry.innerHTML = `<span class="node-tag" style="color:#dc2626">stopped</span> aborted by user`;
     logEl.appendChild(entry);
     startBtn.disabled = false;
@@ -263,8 +265,8 @@ function stop(): void {
   }
 }
 
-startBtn.addEventListener("click", run);
-stopBtn.addEventListener("click", stop);
+startBtn.addEventListener('click', run);
+stopBtn.addEventListener('click', stop);
 
 inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
   run();

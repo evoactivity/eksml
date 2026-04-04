@@ -1,11 +1,11 @@
-import { buildMacros } from "@embroider/macros/babel";
+import { buildMacros } from '@embroider/macros/babel';
 
 const macros = buildMacros();
 
 export default {
   plugins: [
     [
-      "@babel/plugin-transform-typescript",
+      '@babel/plugin-transform-typescript',
       {
         allExtensions: true,
         onlyRemoveTypeImports: true,
@@ -13,21 +13,21 @@ export default {
       },
     ],
     [
-      "babel-plugin-ember-template-compilation",
+      'babel-plugin-ember-template-compilation',
       {
         transforms: [...macros.templateMacros],
       },
     ],
     [
-      "module:decorator-transforms",
+      'module:decorator-transforms',
       {
         runtime: {
-          import: import.meta.resolve("decorator-transforms/runtime-esm"),
+          import: import.meta.resolve('decorator-transforms/runtime-esm'),
         },
       },
     ],
     [
-      "@babel/plugin-transform-runtime",
+      '@babel/plugin-transform-runtime',
       {
         absoluteRuntime: import.meta.dirname,
         useESModules: true,

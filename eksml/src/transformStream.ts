@@ -1,10 +1,10 @@
-import type { TNode } from "#src/parser.ts";
-import { fastStream } from "#src/fastStream.ts";
-import type { Attributes } from "#src/fastStream.ts";
+import type { TNode } from '#src/parser.ts';
+import { fastStream } from '#src/fastStream.ts';
+import type { Attributes } from '#src/fastStream.ts';
 import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
-} from "#src/utilities/htmlConstants.ts";
+} from '#src/utilities/htmlConstants.ts';
 
 // ---------------------------------------------------------------------------
 // Options
@@ -80,7 +80,12 @@ function parsePIAttributes(body: string): Record<string, string | null> {
   while (i < bodyLength) {
     // Skip whitespace
     let charCode = body.charCodeAt(i);
-    if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) {
+    if (
+      charCode === SPACE ||
+      charCode === TAB ||
+      charCode === LF ||
+      charCode === CR
+    ) {
       i++;
       continue;
     }
@@ -89,16 +94,32 @@ function parsePIAttributes(body: string): Record<string, string | null> {
     const nameStart = i;
     while (i < bodyLength) {
       charCode = body.charCodeAt(i);
-      if (charCode === EQ || charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) break;
+      if (
+        charCode === EQ ||
+        charCode === SPACE ||
+        charCode === TAB ||
+        charCode === LF ||
+        charCode === CR
+      )
+        break;
       i++;
     }
-    if (i === nameStart) { i++; continue; }
+    if (i === nameStart) {
+      i++;
+      continue;
+    }
     const name = body.substring(nameStart, i);
 
     // Skip whitespace
     while (i < bodyLength) {
       charCode = body.charCodeAt(i);
-      if (charCode !== SPACE && charCode !== TAB && charCode !== LF && charCode !== CR) break;
+      if (
+        charCode !== SPACE &&
+        charCode !== TAB &&
+        charCode !== LF &&
+        charCode !== CR
+      )
+        break;
       i++;
     }
 
@@ -108,7 +129,13 @@ function parsePIAttributes(body: string): Record<string, string | null> {
       // Skip whitespace
       while (i < bodyLength) {
         charCode = body.charCodeAt(i);
-        if (charCode !== SPACE && charCode !== TAB && charCode !== LF && charCode !== CR) break;
+        if (
+          charCode !== SPACE &&
+          charCode !== TAB &&
+          charCode !== LF &&
+          charCode !== CR
+        )
+          break;
         i++;
       }
       // Read value
@@ -131,7 +158,13 @@ function parsePIAttributes(body: string): Record<string, string | null> {
           const valueStartIndex = i;
           while (i < bodyLength) {
             charCode = body.charCodeAt(i);
-            if (charCode === SPACE || charCode === TAB || charCode === LF || charCode === CR) break;
+            if (
+              charCode === SPACE ||
+              charCode === TAB ||
+              charCode === LF ||
+              charCode === CR
+            )
+              break;
             i++;
           }
           attributes[name] = body.substring(valueStartIndex, i);
@@ -169,7 +202,7 @@ export function transformStream(
 ): TransformStream<string, TNode | string> {
   const resolvedOptions = options ?? {};
   let skipBytes: number =
-    typeof offset === "string" ? offset.length : offset || 0;
+    typeof offset === 'string' ? offset.length : offset || 0;
 
   // Resolve HTML-mode defaults (same logic as parse())
   const isHtml = resolvedOptions.html === true;
@@ -183,15 +216,16 @@ export function transformStream(
   const selectSet: Set<string> | null =
     resolvedOptions.select == null
       ? null
-      : typeof resolvedOptions.select === "string"
+      : typeof resolvedOptions.select === 'string'
         ? new Set([resolvedOptions.select])
         : resolvedOptions.select.length > 0
           ? new Set(resolvedOptions.select)
           : null;
 
   // --- Tree-construction state ---
-  let streamController: TransformStreamDefaultController<TNode | string> | null =
-    null;
+  let streamController: TransformStreamDefaultController<
+    TNode | string
+  > | null = null;
 
   // When `select` is null (default mode): stack holds all open TNodes.
   // Emission happens when stack.length returns to 0.
@@ -286,7 +320,7 @@ export function transformStream(
 
   function defaultOnprocessinginstruction(name: string, body: string): void {
     const node: TNode = {
-      tagName: "?" + name,
+      tagName: '?' + name,
       attributes: parsePIAttributes(body),
       children: [],
     };
@@ -379,7 +413,7 @@ export function transformStream(
   function selectOnprocessinginstruction(name: string, body: string): void {
     if (!insideSelection()) return;
     const node: TNode = {
-      tagName: "?" + name,
+      tagName: '?' + name,
       attributes: parsePIAttributes(body),
       children: [],
     };
@@ -438,9 +472,7 @@ export function transformStream(
       parser.write(chunk);
     },
 
-    flush(
-      controller: TransformStreamDefaultController<TNode | string>,
-    ): void {
+    flush(controller: TransformStreamDefaultController<TNode | string>): void {
       streamController = controller;
       parser.close();
     },

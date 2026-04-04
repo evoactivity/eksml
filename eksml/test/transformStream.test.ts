@@ -1,15 +1,15 @@
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { describe, it, expect } from "vitest";
-import { transformStream } from "#src/transformStream.ts";
-import { type TNode } from "#src/parser.ts";
-import { isElementNode } from "#src/utilities/isElementNode.ts";
-import assert from "node:assert";
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, it, expect } from 'vitest';
+import { transformStream } from '#src/transformStream.ts';
+import { type TNode } from '#src/parser.ts';
+import { isElementNode } from '#src/utilities/isElementNode.ts';
+import assert from 'node:assert';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
-  readFileSync(resolve(__dirname, "fixtures", name), "utf-8");
+  readFileSync(resolve(__dirname, 'fixtures', name), 'utf-8');
 
 /** Collect all chunks emitted by a TransformStream fed with the given input chunks. */
 async function collect(
@@ -36,258 +36,256 @@ async function collect(
   return results;
 }
 
-describe("transformStream", () => {
-  it("parses all nodes from a single chunk", async () => {
+describe('transformStream', () => {
+  it('parses all nodes from a single chunk', async () => {
     const stream = transformStream();
-    const results = await collect(stream, ["<a>1</a><b>2</b><c>3</c>"]);
+    const results = await collect(stream, ['<a>1</a><b>2</b><c>3</c>']);
     const tags = results
-      .filter((r): r is TNode => typeof r === "object")
+      .filter((r): r is TNode => typeof r === 'object')
       .map((r) => r.tagName);
-    expect(tags).toEqual(["a", "b", "c"]);
+    expect(tags).toEqual(['a', 'b', 'c']);
   });
 
-  it("parses a complete XML document in a single chunk", async () => {
+  it('parses a complete XML document in a single chunk', async () => {
     const stream = transformStream();
-    const results = await collect(stream, ["<root><item>hello</item></root>"]);
+    const results = await collect(stream, ['<root><item>hello</item></root>']);
     expect(results).toHaveLength(1);
     const root = results[0] as TNode;
-    expect(root.tagName).toBe("root");
+    expect(root.tagName).toBe('root');
     const item = root.children[0] as TNode;
-    expect(item.tagName).toBe("item");
-    expect(item.children).toEqual(["hello"]);
+    expect(item.tagName).toBe('item');
+    expect(item.children).toEqual(['hello']);
   });
 
-  it("parses XML split across multiple chunks", async () => {
+  it('parses XML split across multiple chunks', async () => {
     const stream = transformStream();
-    const results = await collect(stream, ["<a>1</a><b>he", "llo</b><c>3</c>"]);
+    const results = await collect(stream, ['<a>1</a><b>he', 'llo</b><c>3</c>']);
     const tags = results
-      .filter((r): r is TNode => typeof r === "object")
+      .filter((r): r is TNode => typeof r === 'object')
       .map((r) => r.tagName);
-    expect(tags).toEqual(["a", "b", "c"]);
+    expect(tags).toEqual(['a', 'b', 'c']);
     const b = results.find(
-      (r) => typeof r === "object" && r.tagName === "b",
+      (r) => typeof r === 'object' && r.tagName === 'b',
     ) as TNode;
-    expect(b.children).toEqual(["hello"]);
+    expect(b.children).toEqual(['hello']);
   });
 
-  it("accepts a numeric offset", async () => {
-    const prefix = "JUNK";
+  it('accepts a numeric offset', async () => {
+    const prefix = 'JUNK';
     const stream = transformStream(prefix.length);
-    const results = await collect(stream, [prefix + "<a>text</a>"]);
+    const results = await collect(stream, [prefix + '<a>text</a>']);
     const a = results.find(
-      (r) => typeof r === "object" && r.tagName === "a",
+      (r) => typeof r === 'object' && r.tagName === 'a',
     ) as TNode;
     expect(a).toBeDefined();
-    expect(a.children).toEqual(["text"]);
+    expect(a.children).toEqual(['text']);
   });
 
-  it("accepts a string offset (uses its length)", async () => {
-    const prefix = "PREFIX";
+  it('accepts a string offset (uses its length)', async () => {
+    const prefix = 'PREFIX';
     const stream = transformStream(prefix);
-    const results = await collect(stream, [prefix + "<a>ok</a>"]);
+    const results = await collect(stream, [prefix + '<a>ok</a>']);
     const a = results.find(
-      (r) => typeof r === "object" && r.tagName === "a",
+      (r) => typeof r === 'object' && r.tagName === 'a',
     ) as TNode;
     expect(a).toBeDefined();
-    expect(a.children).toEqual(["ok"]);
+    expect(a.children).toEqual(['ok']);
   });
 
-  it("skips comments by default", async () => {
+  it('skips comments by default', async () => {
     const stream = transformStream();
-    const results = await collect(stream, ["<!-- comment --><a>val</a>"]);
+    const results = await collect(stream, ['<!-- comment --><a>val</a>']);
     const strings = results.filter(
-      (r) => typeof r === "string" && r.startsWith("<!--"),
+      (r) => typeof r === 'string' && r.startsWith('<!--'),
     );
     expect(strings).toHaveLength(0);
     const a = results.find(
-      (r) => typeof r === "object" && r.tagName === "a",
+      (r) => typeof r === 'object' && r.tagName === 'a',
     ) as TNode;
     expect(a).toBeDefined();
-    expect(a.children).toEqual(["val"]);
+    expect(a.children).toEqual(['val']);
   });
 
-  it("emits comments when keepComments is true", async () => {
+  it('emits comments when keepComments is true', async () => {
     const stream = transformStream(0, { keepComments: true });
-    const results = await collect(stream, ["<!-- hello --><a>val</a>"]);
+    const results = await collect(stream, ['<!-- hello --><a>val</a>']);
     const comments = results.filter(
-      (r) => typeof r === "string" && r.startsWith("<!--"),
+      (r) => typeof r === 'string' && r.startsWith('<!--'),
     );
     expect(comments).toHaveLength(1);
-    expect(comments[0]).toBe("<!-- hello -->");
+    expect(comments[0]).toBe('<!-- hello -->');
   });
 
-  it("handles an incomplete element across chunks", async () => {
+  it('handles an incomplete element across chunks', async () => {
     const stream = transformStream();
     const results = await collect(stream, [
       '<item id="1">fir',
       'st</item><item id="2">second</item>',
     ]);
     const items = results.filter(
-      (r): r is TNode => typeof r === "object" && r.tagName === "item",
+      (r): r is TNode => typeof r === 'object' && r.tagName === 'item',
     );
     expect(items).toHaveLength(2);
-    expect(items[0]!.attributes!.id).toBe("1");
-    expect(items[0]!.children).toEqual(["first"]);
-    expect(items[1]!.attributes!.id).toBe("2");
-    expect(items[1]!.children).toEqual(["second"]);
+    expect(items[0]!.attributes!.id).toBe('1');
+    expect(items[0]!.children).toEqual(['first']);
+    expect(items[1]!.attributes!.id).toBe('2');
+    expect(items[1]!.children).toEqual(['second']);
   });
 
-  it("parses attributes correctly in streamed XML", async () => {
+  it('parses attributes correctly in streamed XML', async () => {
     const stream = transformStream();
     const results = await collect(stream, [
       '<item id="test" class="foo">content</item>',
     ]);
     const item = results.find(
-      (r) => typeof r === "object" && r.tagName === "item",
+      (r) => typeof r === 'object' && r.tagName === 'item',
     ) as TNode;
     expect(item).toBeDefined();
-    expect(item.attributes!.id).toBe("test");
-    expect(item.attributes!.class).toBe("foo");
-    expect(item.children).toEqual(["content"]);
+    expect(item.attributes!.id).toBe('test');
+    expect(item.attributes!.class).toBe('foo');
+    expect(item.children).toEqual(['content']);
   });
 
-  it("handles self-closing tags", async () => {
+  it('handles self-closing tags', async () => {
     const stream = transformStream();
-    const results = await collect(stream, ["<br/><hr/>"]);
+    const results = await collect(stream, ['<br/><hr/>']);
     const tags = results
-      .filter((r): r is TNode => typeof r === "object")
+      .filter((r): r is TNode => typeof r === 'object')
       .map((r) => r.tagName);
-    expect(tags).toContain("br");
-    expect(tags).toContain("hr");
+    expect(tags).toContain('br');
+    expect(tags).toContain('hr');
   });
 
-  it("handles empty input", async () => {
+  it('handles empty input', async () => {
     const stream = transformStream();
-    const results = await collect(stream, [""]);
+    const results = await collect(stream, ['']);
     expect(results).toEqual([]);
   });
 
-  it("handles comment split across chunks", async () => {
+  it('handles comment split across chunks', async () => {
     const stream = transformStream(0, { keepComments: true });
     const results = await collect(stream, [
-      "<!-- com",
-      "ment --><item>ok</item>",
+      '<!-- com',
+      'ment --><item>ok</item>',
     ]);
     const comments = results.filter(
-      (r) => typeof r === "string" && r.startsWith("<!--"),
+      (r) => typeof r === 'string' && r.startsWith('<!--'),
     );
     expect(comments).toHaveLength(1);
-    expect(comments[0]).toBe("<!-- comment -->");
+    expect(comments[0]).toBe('<!-- comment -->');
   });
 
-  it("passes through parseOptions to the parser", async () => {
+  it('passes through parseOptions to the parser', async () => {
     const stream = transformStream(0, {
-      selfClosingTags: ["custom"],
+      selfClosingTags: ['custom'],
     });
-    const results = await collect(stream, ["<custom><a>text</a>"]);
+    const results = await collect(stream, ['<custom><a>text</a>']);
     const tags = results
-      .filter((r): r is TNode => typeof r === "object")
+      .filter((r): r is TNode => typeof r === 'object')
       .map((r) => r.tagName);
-    expect(tags).toContain("custom");
-    expect(tags).toContain("a");
+    expect(tags).toContain('custom');
+    expect(tags).toContain('a');
     const custom = results.find(
-      (r) => typeof r === "object" && r.tagName === "custom",
+      (r) => typeof r === 'object' && r.tagName === 'custom',
     ) as TNode;
     expect(custom.children).toEqual([]);
   });
 
-  it("handles multiple comments interleaved with elements", async () => {
+  it('handles multiple comments interleaved with elements', async () => {
     const stream = transformStream(0, { keepComments: true });
     const results = await collect(stream, [
-      "<!-- c1 --><a>1</a><!-- c2 --><b>2</b><c>3</c>",
+      '<!-- c1 --><a>1</a><!-- c2 --><b>2</b><c>3</c>',
     ]);
     const comments = results.filter(
-      (r) => typeof r === "string" && r.startsWith("<!--"),
+      (r) => typeof r === 'string' && r.startsWith('<!--'),
     );
     expect(comments).toHaveLength(2);
-    expect(comments[0]).toBe("<!-- c1 -->");
-    expect(comments[1]).toBe("<!-- c2 -->");
+    expect(comments[0]).toBe('<!-- c1 -->');
+    expect(comments[1]).toBe('<!-- c2 -->');
     const tags = results
-      .filter((r): r is TNode => typeof r === "object")
+      .filter((r): r is TNode => typeof r === 'object')
       .map((r) => r.tagName);
-    expect(tags).toEqual(["a", "b", "c"]);
+    expect(tags).toEqual(['a', 'b', 'c']);
   });
 
-  it("emits both nodes for two sibling elements", async () => {
+  it('emits both nodes for two sibling elements', async () => {
     const stream = transformStream();
-    const results = await collect(stream, ["<first/><second/>"]);
+    const results = await collect(stream, ['<first/><second/>']);
     const tags = results
-      .filter((r): r is TNode => typeof r === "object")
+      .filter((r): r is TNode => typeof r === 'object')
       .map((r) => r.tagName);
-    expect(tags).toEqual(["first", "second"]);
+    expect(tags).toEqual(['first', 'second']);
   });
 
   // --- DOCTYPE ---
 
-  it("emits DOCTYPE as a TNode", async () => {
+  it('emits DOCTYPE as a TNode', async () => {
     const stream = transformStream();
-    const results = await collect(stream, [
-      "<!DOCTYPE html><html></html>",
-    ]);
+    const results = await collect(stream, ['<!DOCTYPE html><html></html>']);
     expect(results).toHaveLength(2);
     const doctype = results[0] as TNode;
-    expect(doctype.tagName).toBe("!DOCTYPE");
+    expect(doctype.tagName).toBe('!DOCTYPE');
     expect(doctype.attributes).toEqual({ html: null });
     expect(doctype.children).toEqual([]);
     const html = results[1] as TNode;
-    expect(html.tagName).toBe("html");
+    expect(html.tagName).toBe('html');
   });
 
-  it("emits DOCTYPE with quoted identifiers", async () => {
+  it('emits DOCTYPE with quoted identifiers', async () => {
     const stream = transformStream();
     const results = await collect(stream, [
       '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html/>',
     ]);
     const doctype = results.find(
-      (r): r is TNode => typeof r === "object" && r.tagName === "!DOCTYPE",
+      (r): r is TNode => typeof r === 'object' && r.tagName === '!DOCTYPE',
     )!;
     expect(doctype).toBeDefined();
     expect(doctype.attributes).toEqual({
       html: null,
       PUBLIC: null,
-      "-//W3C//DTD XHTML 1.0 Strict//EN": null,
-      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd": null,
+      '-//W3C//DTD XHTML 1.0 Strict//EN': null,
+      'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd': null,
     });
   });
 
-  it("emits DOCTYPE with internal subset discarded", async () => {
+  it('emits DOCTYPE with internal subset discarded', async () => {
     const stream = transformStream();
     const results = await collect(stream, [
-      "<!DOCTYPE root [<!ELEMENT root (#PCDATA)>]><root>text</root>",
+      '<!DOCTYPE root [<!ELEMENT root (#PCDATA)>]><root>text</root>',
     ]);
     const doctype = results.find(
-      (r): r is TNode => typeof r === "object" && r.tagName === "!DOCTYPE",
+      (r): r is TNode => typeof r === 'object' && r.tagName === '!DOCTYPE',
     )!;
     expect(doctype).toBeDefined();
     expect(doctype.attributes).toEqual({ root: null });
     const root = results.find(
-      (r): r is TNode => typeof r === "object" && r.tagName === "root",
+      (r): r is TNode => typeof r === 'object' && r.tagName === 'root',
     )!;
-    expect(root.children).toEqual(["text"]);
+    expect(root.children).toEqual(['text']);
   });
 
-  it("emits DOCTYPE split across chunks", async () => {
+  it('emits DOCTYPE split across chunks', async () => {
     const stream = transformStream();
     const results = await collect(stream, [
-      "<!DOCT",
-      "YPE html>",
-      "<html></html>",
+      '<!DOCT',
+      'YPE html>',
+      '<html></html>',
     ]);
     const doctype = results.find(
-      (r): r is TNode => typeof r === "object" && r.tagName === "!DOCTYPE",
+      (r): r is TNode => typeof r === 'object' && r.tagName === '!DOCTYPE',
     )!;
     expect(doctype).toBeDefined();
     expect(doctype.attributes).toEqual({ html: null });
   });
 
-  it("flushes a trailing comment when keepComments is true", async () => {
+  it('flushes a trailing comment when keepComments is true', async () => {
     const stream = transformStream(0, { keepComments: true });
-    const results = await collect(stream, ["<a>1</a><!-- trailing -->"]);
+    const results = await collect(stream, ['<a>1</a><!-- trailing -->']);
     const comments = results.filter(
-      (r) => typeof r === "string" && r.startsWith("<!--"),
+      (r) => typeof r === 'string' && r.startsWith('<!--'),
     );
     expect(comments).toHaveLength(1);
-    expect(comments[0]).toBe("<!-- trailing -->");
+    expect(comments[0]).toBe('<!-- trailing -->');
   });
 });
 
@@ -305,50 +303,50 @@ function chunkString(str: string, size: number): string[] {
 // =================================================================
 // Streaming tests with complex fixture documents
 // =================================================================
-describe("transformStream with large fixtures", () => {
-  const rssFeed = fixture("rss-feed.xml");
-  const soapEnvelope = fixture("soap-envelope.xml");
-  const atomFeed = fixture("atom-feed.xml");
-  const xhtmlPage = fixture("xhtml-page.xml");
-  const pomXml = fixture("pom.xml");
+describe('transformStream with large fixtures', () => {
+  const rssFeed = fixture('rss-feed.xml');
+  const soapEnvelope = fixture('soap-envelope.xml');
+  const atomFeed = fixture('atom-feed.xml');
+  const xhtmlPage = fixture('xhtml-page.xml');
+  const pomXml = fixture('pom.xml');
 
-  describe("rss-feed.xml", () => {
-    it("streams entire document as a single chunk", async () => {
+  describe('rss-feed.xml', () => {
+    it('streams entire document as a single chunk', async () => {
       const stream = transformStream();
       const results = await collect(stream, [rssFeed]);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
       expect(nodes.length).toBeGreaterThanOrEqual(1);
       // Should emit the rss root (possibly preceded by a processing instruction)
-      const rss = nodes.find((n) => n.tagName === "rss");
+      const rss = nodes.find((n) => n.tagName === 'rss');
       expect(rss).toBeDefined();
-      expect(rss!.attributes!.version).toBe("2.0");
+      expect(rss!.attributes!.version).toBe('2.0');
     });
 
-    it("streams in small chunks (64 bytes) and still produces valid nodes", async () => {
+    it('streams in small chunks (64 bytes) and still produces valid nodes', async () => {
       const stream = transformStream();
       const chunks = chunkString(rssFeed, 64);
       const results = await collect(stream, chunks);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const rss = nodes.find((n) => n.tagName === "rss");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const rss = nodes.find((n) => n.tagName === 'rss');
       expect(rss).toBeDefined();
     });
 
-    it("streams in medium chunks (256 bytes)", async () => {
+    it('streams in medium chunks (256 bytes)', async () => {
       const stream = transformStream();
       const chunks = chunkString(rssFeed, 256);
       const results = await collect(stream, chunks);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
       expect(nodes.length).toBeGreaterThanOrEqual(1);
     });
 
-    it("produces consistent results across different chunk sizes", async () => {
+    it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [32, 128, 512, rssFeed.length]) {
         const stream = transformStream();
         const chunks = chunkString(rssFeed, size);
         const results = await collect(stream, chunks);
         const tags = results
-          .filter((r): r is TNode => typeof r === "object")
+          .filter((r): r is TNode => typeof r === 'object')
           .map((r) => r.tagName);
         tagSets.push(tags);
       }
@@ -359,59 +357,59 @@ describe("transformStream with large fixtures", () => {
     });
   });
 
-  describe("soap-envelope.xml", () => {
-    it("streams entire document as a single chunk", async () => {
+  describe('soap-envelope.xml', () => {
+    it('streams entire document as a single chunk', async () => {
       const stream = transformStream();
       const results = await collect(stream, [soapEnvelope]);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const envelope = nodes.find((n) => n.tagName === "soap:Envelope");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const envelope = nodes.find((n) => n.tagName === 'soap:Envelope');
       expect(envelope).toBeDefined();
-      expect(envelope!.attributes!["xmlns:soap"]).toBe(
-        "http://schemas.xmlsoap.org/soap/envelope/",
+      expect(envelope!.attributes!['xmlns:soap']).toBe(
+        'http://schemas.xmlsoap.org/soap/envelope/',
       );
     });
 
-    it("streams in small chunks (48 bytes)", async () => {
+    it('streams in small chunks (48 bytes)', async () => {
       const stream = transformStream();
       const chunks = chunkString(soapEnvelope, 48);
       const results = await collect(stream, chunks);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const envelope = nodes.find((n) => n.tagName === "soap:Envelope");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const envelope = nodes.find((n) => n.tagName === 'soap:Envelope');
       expect(envelope).toBeDefined();
     });
 
-    it("preserves deeply nested structure when streamed", async () => {
+    it('preserves deeply nested structure when streamed', async () => {
       const stream = transformStream();
       const chunks = chunkString(soapEnvelope, 100);
       const results = await collect(stream, chunks);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const envelope = nodes.find((n) => n.tagName === "soap:Envelope");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const envelope = nodes.find((n) => n.tagName === 'soap:Envelope');
       expect(envelope).toBeDefined();
 
       // Drill into Header > Security > Timestamp
       const header = envelope!.children.find(
-        (c) => typeof c === "object" && c.tagName === "soap:Header",
+        (c) => typeof c === 'object' && c.tagName === 'soap:Header',
       ) as TNode;
       expect(header).toBeDefined();
       const security = header.children.find(
-        (c) => typeof c === "object" && c.tagName === "wsse:Security",
+        (c) => typeof c === 'object' && c.tagName === 'wsse:Security',
       ) as TNode;
       expect(security).toBeDefined();
       const timestamp = security.children.find(
-        (c) => typeof c === "object" && c.tagName === "wsu:Timestamp",
+        (c) => typeof c === 'object' && c.tagName === 'wsu:Timestamp',
       ) as TNode;
       expect(timestamp).toBeDefined();
-      expect(timestamp.attributes!["wsu:Id"]).toBe("TS-1");
+      expect(timestamp.attributes!['wsu:Id']).toBe('TS-1');
     });
 
-    it("produces consistent results across different chunk sizes", async () => {
+    it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [50, 200, soapEnvelope.length]) {
         const stream = transformStream();
         const chunks = chunkString(soapEnvelope, size);
         const results = await collect(stream, chunks);
         const tags = results
-          .filter((r): r is TNode => typeof r === "object")
+          .filter((r): r is TNode => typeof r === 'object')
           .map((r) => r.tagName);
         tagSets.push(tags);
       }
@@ -421,33 +419,33 @@ describe("transformStream with large fixtures", () => {
     });
   });
 
-  describe("atom-feed.xml", () => {
-    it("streams entire document as a single chunk", async () => {
+  describe('atom-feed.xml', () => {
+    it('streams entire document as a single chunk', async () => {
       const stream = transformStream();
       const results = await collect(stream, [atomFeed]);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const feed = nodes.find((n) => n.tagName === "feed");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const feed = nodes.find((n) => n.tagName === 'feed');
       expect(feed).toBeDefined();
-      expect(feed!.attributes!.xmlns).toBe("http://www.w3.org/2005/Atom");
+      expect(feed!.attributes!.xmlns).toBe('http://www.w3.org/2005/Atom');
     });
 
-    it("streams in small chunks (80 bytes)", async () => {
+    it('streams in small chunks (80 bytes)', async () => {
       const stream = transformStream();
       const chunks = chunkString(atomFeed, 80);
       const results = await collect(stream, chunks);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const feed = nodes.find((n) => n.tagName === "feed");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const feed = nodes.find((n) => n.tagName === 'feed');
       expect(feed).toBeDefined();
     });
 
-    it("produces consistent results across different chunk sizes", async () => {
+    it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [64, 256, 1024, atomFeed.length]) {
         const stream = transformStream();
         const chunks = chunkString(atomFeed, size);
         const results = await collect(stream, chunks);
         const tags = results
-          .filter((r): r is TNode => typeof r === "object")
+          .filter((r): r is TNode => typeof r === 'object')
           .map((r) => r.tagName);
         tagSets.push(tags);
       }
@@ -457,45 +455,45 @@ describe("transformStream with large fixtures", () => {
     });
   });
 
-  describe("xhtml-page.xml", () => {
-    it("streams entire document as a single chunk", async () => {
+  describe('xhtml-page.xml', () => {
+    it('streams entire document as a single chunk', async () => {
       const stream = transformStream();
       const results = await collect(stream, [xhtmlPage]);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const html = nodes.find((n) => n.tagName === "html");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const html = nodes.find((n) => n.tagName === 'html');
       expect(html).toBeDefined();
     });
 
-    it("streams in small chunks (100 bytes)", async () => {
+    it('streams in small chunks (100 bytes)', async () => {
       const stream = transformStream();
       const chunks = chunkString(xhtmlPage, 100);
       const results = await collect(stream, chunks);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const html = nodes.find((n) => n.tagName === "html");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const html = nodes.find((n) => n.tagName === 'html');
       expect(html).toBeDefined();
     });
 
-    it("streams with keepComments enabled", async () => {
+    it('streams with keepComments enabled', async () => {
       const stream = transformStream(0, { keepComments: true });
       const results = await collect(stream, chunkString(xhtmlPage, 150));
       const comments = results.filter(
-        (r) => typeof r === "string" && r.startsWith("<!--"),
+        (r) => typeof r === 'string' && r.startsWith('<!--'),
       );
       // There should be no top-level comments (they are all inside <html>)
       // but the nodes inside should still have comments preserved
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const html = nodes.find((n) => n.tagName === "html");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const html = nodes.find((n) => n.tagName === 'html');
       expect(html).toBeDefined();
     });
 
-    it("produces consistent results across different chunk sizes", async () => {
+    it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [75, 300, 1000, xhtmlPage.length]) {
         const stream = transformStream();
         const chunks = chunkString(xhtmlPage, size);
         const results = await collect(stream, chunks);
         const tags = results
-          .filter((r): r is TNode => typeof r === "object")
+          .filter((r): r is TNode => typeof r === 'object')
           .map((r) => r.tagName);
         tagSets.push(tags);
       }
@@ -505,57 +503,57 @@ describe("transformStream with large fixtures", () => {
     });
   });
 
-  describe("pom.xml", () => {
-    it("streams entire document as a single chunk", async () => {
+  describe('pom.xml', () => {
+    it('streams entire document as a single chunk', async () => {
       const stream = transformStream();
       const results = await collect(stream, [pomXml]);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const project = nodes.find((n) => n.tagName === "project");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const project = nodes.find((n) => n.tagName === 'project');
       expect(project).toBeDefined();
     });
 
-    it("streams in small chunks (64 bytes)", async () => {
+    it('streams in small chunks (64 bytes)', async () => {
       const stream = transformStream();
       const chunks = chunkString(pomXml, 64);
       const results = await collect(stream, chunks);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const project = nodes.find((n) => n.tagName === "project");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const project = nodes.find((n) => n.tagName === 'project');
       expect(project).toBeDefined();
     });
 
-    it("preserves deeply nested build plugin configuration when streamed", async () => {
+    it('preserves deeply nested build plugin configuration when streamed', async () => {
       const stream = transformStream();
       const chunks = chunkString(pomXml, 128);
       const results = await collect(stream, chunks);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const project = nodes.find((n) => n.tagName === "project");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const project = nodes.find((n) => n.tagName === 'project');
       expect(project).toBeDefined();
 
       // Verify we can drill into build > plugins > plugin
       const build = project!.children.find(
-        (c) => typeof c === "object" && c.tagName === "build",
+        (c) => typeof c === 'object' && c.tagName === 'build',
       );
       expect(build).toBeDefined();
       assert(isElementNode(build!));
       const plugins = build!.children.find(
-        (c) => typeof c === "object" && c.tagName === "plugins",
+        (c) => typeof c === 'object' && c.tagName === 'plugins',
       );
       expect(plugins).toBeDefined();
       assert(isElementNode(plugins!));
       const pluginElements = plugins!.children.filter(
-        (c) => typeof c === "object" && c.tagName === "plugin",
+        (c) => typeof c === 'object' && c.tagName === 'plugin',
       );
       expect(pluginElements.length).toBeGreaterThanOrEqual(3);
     });
 
-    it("produces consistent results across different chunk sizes", async () => {
+    it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [50, 200, 500, pomXml.length]) {
         const stream = transformStream();
         const chunks = chunkString(pomXml, size);
         const results = await collect(stream, chunks);
         const tags = results
-          .filter((r): r is TNode => typeof r === "object")
+          .filter((r): r is TNode => typeof r === 'object')
           .map((r) => r.tagName);
         tagSets.push(tags);
       }
@@ -572,8 +570,8 @@ describe("transformStream with large fixtures", () => {
   // used by TV tuner software (MythTV, TVHeadend, Jellyfin, Plex, etc.).
   // This test simulates receiving an XMLTV feed in chunks over a network
   // connection and incrementally building a channel -> programme mapping.
-  describe("xmltv-epg.xml — real-world EPG streaming", () => {
-    const xmltvFeed = fixture("xmltv-epg.xml");
+  describe('xmltv-epg.xml — real-world EPG streaming', () => {
+    const xmltvFeed = fixture('xmltv-epg.xml');
 
     type Programme = {
       start: string;
@@ -606,14 +604,14 @@ describe("transformStream with large fixtures", () => {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          if (typeof value === "string") continue;
+          if (typeof value === 'string') continue;
 
           const node = value as TNode;
 
-          if (node.tagName === "tv") {
+          if (node.tagName === 'tv') {
             // The root <tv> element — process its children for channels/programmes
             for (const child of node.children) {
-              if (typeof child === "string") continue;
+              if (typeof child === 'string') continue;
               processNode(child);
             }
           } else {
@@ -623,10 +621,10 @@ describe("transformStream with large fixtures", () => {
       })();
 
       function processNode(node: TNode) {
-        if (node.tagName === "channel") {
+        if (node.tagName === 'channel') {
           const id = node.attributes!.id as string;
           const displayName = node.children.find(
-            (c) => typeof c !== "string" && c.tagName === "display-name",
+            (c) => typeof c !== 'string' && c.tagName === 'display-name',
           ) as TNode | undefined;
           if (displayName) {
             channels.set(id, displayName.children[0] as string);
@@ -634,24 +632,24 @@ describe("transformStream with large fixtures", () => {
           if (!epg[id]) epg[id] = [];
         }
 
-        if (node.tagName === "programme") {
+        if (node.tagName === 'programme') {
           const channelId = node.attributes!.channel as string;
           const start = node.attributes!.start as string;
           const end = node.attributes!.stop as string;
 
           const titleNode = node.children.find(
-            (c) => typeof c !== "string" && c.tagName === "title",
+            (c) => typeof c !== 'string' && c.tagName === 'title',
           ) as TNode | undefined;
           const descNode = node.children.find(
-            (c) => typeof c !== "string" && c.tagName === "desc",
+            (c) => typeof c !== 'string' && c.tagName === 'desc',
           ) as TNode | undefined;
 
           if (!epg[channelId]) epg[channelId] = [];
           epg[channelId].push({
             start,
             end,
-            title: titleNode ? (titleNode.children[0] as string) : "",
-            description: descNode ? (descNode.children[0] as string) : "",
+            title: titleNode ? (titleNode.children[0] as string) : '',
+            description: descNode ? (descNode.children[0] as string) : '',
           });
         }
       }
@@ -666,31 +664,31 @@ describe("transformStream with large fixtures", () => {
       return { channels, epg };
     }
 
-    it("builds a complete EPG from a single chunk", async () => {
+    it('builds a complete EPG from a single chunk', async () => {
       const { channels, epg } = await buildEPGFromStream([xmltvFeed]);
 
       // 8 channels
       expect(channels.size).toBe(8);
-      expect(channels.get("bbc1.uk")).toBe("BBC One");
-      expect(channels.get("itv1.uk")).toBe("ITV");
-      expect(channels.get("film4.uk")).toBe("Film4");
+      expect(channels.get('bbc1.uk')).toBe('BBC One');
+      expect(channels.get('itv1.uk')).toBe('ITV');
+      expect(channels.get('film4.uk')).toBe('Film4');
 
       // Correct number of programmes per channel
-      expect(epg["bbc1.uk"]).toHaveLength(5);
-      expect(epg["bbc2.uk"]).toHaveLength(4);
-      expect(epg["itv1.uk"]).toHaveLength(4);
-      expect(epg["ch4.uk"]).toHaveLength(3);
-      expect(epg["five.uk"]).toHaveLength(3);
-      expect(epg["sky-news.uk"]).toHaveLength(3);
-      expect(epg["dave.uk"]).toHaveLength(4);
-      expect(epg["film4.uk"]).toHaveLength(2);
+      expect(epg['bbc1.uk']).toHaveLength(5);
+      expect(epg['bbc2.uk']).toHaveLength(4);
+      expect(epg['itv1.uk']).toHaveLength(4);
+      expect(epg['ch4.uk']).toHaveLength(3);
+      expect(epg['five.uk']).toHaveLength(3);
+      expect(epg['sky-news.uk']).toHaveLength(3);
+      expect(epg['dave.uk']).toHaveLength(4);
+      expect(epg['film4.uk']).toHaveLength(2);
 
       // Total programmes
       const total = Object.values(epg).reduce((sum, p) => sum + p.length, 0);
       expect(total).toBe(28);
     });
 
-    it("builds a complete EPG from small chunks (128 bytes) simulating slow network", async () => {
+    it('builds a complete EPG from small chunks (128 bytes) simulating slow network', async () => {
       const chunks = chunkString(xmltvFeed, 128);
       expect(chunks.length).toBeGreaterThan(10); // many chunks
 
@@ -701,33 +699,33 @@ describe("transformStream with large fixtures", () => {
       expect(total).toBe(28);
     });
 
-    it("preserves programme details when streamed in 256-byte chunks", async () => {
+    it('preserves programme details when streamed in 256-byte chunks', async () => {
       const chunks = chunkString(xmltvFeed, 256);
       const { epg } = await buildEPGFromStream(chunks);
 
       // Verify specific programme details
-      const bbcNews = epg["bbc1.uk"]![0]!;
-      expect(bbcNews.title).toBe("BBC News at Six");
-      expect(bbcNews.start).toBe("20260403180000 +0100");
-      expect(bbcNews.end).toBe("20260403183000 +0100");
-      expect(bbcNews.description).toContain("national and international news");
+      const bbcNews = epg['bbc1.uk']![0]!;
+      expect(bbcNews.title).toBe('BBC News at Six');
+      expect(bbcNews.start).toBe('20260403180000 +0100');
+      expect(bbcNews.end).toBe('20260403183000 +0100');
+      expect(bbcNews.description).toContain('national and international news');
 
       // Film4's Blade Runner 2049
-      const bladeRunner = epg["film4.uk"]![0]!;
-      expect(bladeRunner.title).toBe("Blade Runner 2049");
-      expect(bladeRunner.start).toBe("20260403183000 +0100");
-      expect(bladeRunner.end).toBe("20260403205500 +0100");
-      expect(bladeRunner.description).toContain("Denis Villeneuve");
+      const bladeRunner = epg['film4.uk']![0]!;
+      expect(bladeRunner.title).toBe('Blade Runner 2049');
+      expect(bladeRunner.start).toBe('20260403183000 +0100');
+      expect(bladeRunner.end).toBe('20260403205500 +0100');
+      expect(bladeRunner.description).toContain('Denis Villeneuve');
 
       // ITV's Vera (last programme in slot)
-      const vera = epg["itv1.uk"]!.find((p) => p.title === "Vera")!;
+      const vera = epg['itv1.uk']!.find((p) => p.title === 'Vera')!;
       expect(vera).toBeDefined();
-      expect(vera.start).toBe("20260403200000 +0100");
-      expect(vera.end).toBe("20260403220000 +0100");
-      expect(vera.description).toContain("Northumberland");
+      expect(vera.start).toBe('20260403200000 +0100');
+      expect(vera.end).toBe('20260403220000 +0100');
+      expect(vera.description).toContain('Northumberland');
     });
 
-    it("produces identical EPG across different chunk sizes", async () => {
+    it('produces identical EPG across different chunk sizes', async () => {
       const sizes = [64, 128, 256, 512, 1024, xmltvFeed.length];
       const results: EPG[] = [];
 
@@ -743,7 +741,7 @@ describe("transformStream with large fixtures", () => {
       }
     });
 
-    it("handles chunks that split mid-attribute and mid-entity", async () => {
+    it('handles chunks that split mid-attribute and mid-entity', async () => {
       // Use a prime chunk size to maximize splits at awkward boundaries
       const chunks = chunkString(xmltvFeed, 97);
       const { channels, epg } = await buildEPGFromStream(chunks);
@@ -751,18 +749,18 @@ describe("transformStream with large fixtures", () => {
       expect(channels.size).toBe(8);
 
       // Programmes with apostrophes and special characters
-      const oneShow = epg["bbc1.uk"]!.find((p) => p.title === "The One Show");
+      const oneShow = epg['bbc1.uk']!.find((p) => p.title === 'The One Show');
       expect(oneShow).toBeDefined();
 
       // Sky News documentary with long description
-      const climateFiles = epg["sky-news.uk"]!.find((p) =>
-        p.title.includes("Climate Files"),
+      const climateFiles = epg['sky-news.uk']!.find((p) =>
+        p.title.includes('Climate Files'),
       );
       expect(climateFiles).toBeDefined();
-      expect(climateFiles!.description).toContain("leaked documents");
+      expect(climateFiles!.description).toContain('leaked documents');
     });
 
-    it("builds EPG progressively — early channels appear before later programmes", async () => {
+    it('builds EPG progressively — early channels appear before later programmes', async () => {
       // This test verifies the streaming nature: we can start processing
       // channels before all programmes have arrived
       const stream = transformStream();
@@ -776,17 +774,17 @@ describe("transformStream with large fixtures", () => {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          if (typeof value === "string") continue;
+          if (typeof value === 'string') continue;
 
           const node = value as TNode;
           // The root <tv> wraps everything, so drill into its children
-          if (node.tagName === "tv") {
+          if (node.tagName === 'tv') {
             for (const child of node.children) {
-              if (typeof child === "string") continue;
-              if (child.tagName === "channel") {
+              if (typeof child === 'string') continue;
+              if (child.tagName === 'channel') {
                 arrivedChannels.push(child.attributes!.id as string);
               }
-              if (child.tagName === "programme") {
+              if (child.tagName === 'programme') {
                 arrivedProgrammes.push(child.attributes!.channel as string);
               }
             }
@@ -804,46 +802,46 @@ describe("transformStream with large fixtures", () => {
 
       // All 8 channels should have been seen
       expect(arrivedChannels).toHaveLength(8);
-      expect(arrivedChannels[0]).toBe("bbc1.uk");
-      expect(arrivedChannels[7]).toBe("film4.uk");
+      expect(arrivedChannels[0]).toBe('bbc1.uk');
+      expect(arrivedChannels[7]).toBe('film4.uk');
 
       // All 28 programmes should have been seen
       expect(arrivedProgrammes).toHaveLength(28);
     });
   });
 
-  describe("html-page.html", () => {
-    const htmlPage = fixture("html-page.html");
+  describe('html-page.html', () => {
+    const htmlPage = fixture('html-page.html');
 
-    it("streams entire document as a single chunk with html mode", async () => {
+    it('streams entire document as a single chunk with html mode', async () => {
       const stream = transformStream(0, { html: true });
       const results = await collect(stream, [htmlPage]);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const html = nodes.find((n) => n.tagName === "html");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const html = nodes.find((n) => n.tagName === 'html');
       expect(html).toBeDefined();
-      expect(html!.attributes!.lang).toBe("en");
+      expect(html!.attributes!.lang).toBe('en');
     });
 
-    it("streams in small chunks (100 bytes) with html mode", async () => {
+    it('streams in small chunks (100 bytes) with html mode', async () => {
       const stream = transformStream(0, { html: true });
       const chunks = chunkString(htmlPage, 100);
       const results = await collect(stream, chunks);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const html = nodes.find((n) => n.tagName === "html");
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const html = nodes.find((n) => n.tagName === 'html');
       expect(html).toBeDefined();
     });
 
-    it("preserves script content when streamed with html mode", async () => {
+    it('preserves script content when streamed with html mode', async () => {
       const stream = transformStream(0, { html: true });
       const results = await collect(stream, [htmlPage]);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const html = nodes.find((n) => n.tagName === "html")!;
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const html = nodes.find((n) => n.tagName === 'html')!;
       // Find scripts deeply
       const scripts: TNode[] = [];
       function findScripts(children: (TNode | string)[]) {
         for (const c of children) {
-          if (typeof c === "object") {
-            if (c.tagName === "script") scripts.push(c);
+          if (typeof c === 'object') {
+            if (c.tagName === 'script') scripts.push(c);
             findScripts(c.children);
           }
         }
@@ -853,7 +851,7 @@ describe("transformStream with large fixtures", () => {
 
       // JSON-LD should be valid JSON
       const jsonLd = scripts.find(
-        (s) => s.attributes!.type === "application/ld+json",
+        (s) => s.attributes!.type === 'application/ld+json',
       );
       expect(jsonLd).toBeDefined();
       const jsonContent = (jsonLd!.children[0] as string).trim();
@@ -864,20 +862,20 @@ describe("transformStream with large fixtures", () => {
       expect(inlineJs).toBeDefined();
       const jsContent = inlineJs!.children[0] as string;
       expect(jsContent).toContain("createElement('script')");
-      expect(jsContent).toContain("v > 1000 && v < 10000");
+      expect(jsContent).toContain('v > 1000 && v < 10000');
     });
 
-    it("preserves style content when streamed with html mode", async () => {
+    it('preserves style content when streamed with html mode', async () => {
       const stream = transformStream(0, { html: true });
       const results = await collect(stream, [htmlPage]);
-      const nodes = results.filter((r): r is TNode => typeof r === "object");
-      const html = nodes.find((n) => n.tagName === "html")!;
+      const nodes = results.filter((r): r is TNode => typeof r === 'object');
+      const html = nodes.find((n) => n.tagName === 'html')!;
       // Find style deeply
       const styles: TNode[] = [];
       function findStyles(children: (TNode | string)[]) {
         for (const c of children) {
-          if (typeof c === "object") {
-            if (c.tagName === "style") styles.push(c);
+          if (typeof c === 'object') {
+            if (c.tagName === 'style') styles.push(c);
             findStyles(c.children);
           }
         }
@@ -885,18 +883,18 @@ describe("transformStream with large fixtures", () => {
       findStyles(html.children);
       expect(styles.length).toBe(1);
       const css = styles[0]!.children[0] as string;
-      expect(css).toContain(".layout > .sidebar");
-      expect(css).toContain("/* <tag>");
+      expect(css).toContain('.layout > .sidebar');
+      expect(css).toContain('/* <tag>');
     });
 
-    it("produces consistent results across different chunk sizes", async () => {
+    it('produces consistent results across different chunk sizes', async () => {
       const tagSets: string[][] = [];
       for (const size of [80, 256, 1024, htmlPage.length]) {
         const stream = transformStream(0, { html: true });
         const chunks = chunkString(htmlPage, size);
         const results = await collect(stream, chunks);
         const tags = results
-          .filter((r): r is TNode => typeof r === "object")
+          .filter((r): r is TNode => typeof r === 'object')
           .map((r) => r.tagName);
         tagSets.push(tags);
       }
@@ -910,245 +908,241 @@ describe("transformStream with large fixtures", () => {
 // =================================================================
 // select option tests
 // =================================================================
-describe("transformStream with select", () => {
-  it("emits only matching elements from a wrapped root", async () => {
-    const stream = transformStream(undefined, { select: "item" });
+describe('transformStream with select', () => {
+  it('emits only matching elements from a wrapped root', async () => {
+    const stream = transformStream(undefined, { select: 'item' });
     const results = await collect(stream, [
-      "<root><item>1</item><item>2</item><item>3</item></root>",
+      '<root><item>1</item><item>2</item><item>3</item></root>',
     ]);
     expect(results).toHaveLength(3);
     const tags = results
-      .filter((r): r is TNode => typeof r === "object")
+      .filter((r): r is TNode => typeof r === 'object')
       .map((r) => r.tagName);
-    expect(tags).toEqual(["item", "item", "item"]);
-    expect((results[0] as TNode).children).toEqual(["1"]);
-    expect((results[1] as TNode).children).toEqual(["2"]);
-    expect((results[2] as TNode).children).toEqual(["3"]);
+    expect(tags).toEqual(['item', 'item', 'item']);
+    expect((results[0] as TNode).children).toEqual(['1']);
+    expect((results[1] as TNode).children).toEqual(['2']);
+    expect((results[2] as TNode).children).toEqual(['3']);
   });
 
-  it("does not emit the root element", async () => {
-    const stream = transformStream(undefined, { select: "item" });
-    const results = await collect(stream, [
-      "<root><item>a</item></root>",
-    ]);
+  it('does not emit the root element', async () => {
+    const stream = transformStream(undefined, { select: 'item' });
+    const results = await collect(stream, ['<root><item>a</item></root>']);
     const tags = results
-      .filter((r): r is TNode => typeof r === "object")
+      .filter((r): r is TNode => typeof r === 'object')
       .map((r) => r.tagName);
-    expect(tags).toEqual(["item"]);
+    expect(tags).toEqual(['item']);
     // root should NOT appear
-    expect(tags).not.toContain("root");
+    expect(tags).not.toContain('root');
   });
 
-  it("emits nothing when no elements match the selector", async () => {
-    const stream = transformStream(undefined, { select: "missing" });
+  it('emits nothing when no elements match the selector', async () => {
+    const stream = transformStream(undefined, { select: 'missing' });
     const results = await collect(stream, [
-      "<root><item>1</item><entry>2</entry></root>",
+      '<root><item>1</item><entry>2</entry></root>',
     ]);
     expect(results).toHaveLength(0);
   });
 
-  it("preserves subtree structure inside matched elements", async () => {
-    const stream = transformStream(undefined, { select: "item" });
+  it('preserves subtree structure inside matched elements', async () => {
+    const stream = transformStream(undefined, { select: 'item' });
     const results = await collect(stream, [
       '<root><item><name>Widget</name><price currency="USD">9.99</price></item></root>',
     ]);
     expect(results).toHaveLength(1);
     const item = results[0] as TNode;
-    expect(item.tagName).toBe("item");
+    expect(item.tagName).toBe('item');
     expect(item.children).toHaveLength(2);
     const name = item.children[0] as TNode;
-    expect(name.tagName).toBe("name");
-    expect(name.children).toEqual(["Widget"]);
+    expect(name.tagName).toBe('name');
+    expect(name.children).toEqual(['Widget']);
     const price = item.children[1] as TNode;
-    expect(price.tagName).toBe("price");
-    expect(price.attributes!.currency).toBe("USD");
-    expect(price.children).toEqual(["9.99"]);
+    expect(price.tagName).toBe('price');
+    expect(price.attributes!.currency).toBe('USD');
+    expect(price.children).toEqual(['9.99']);
   });
 
-  it("preserves attributes on matched elements", async () => {
-    const stream = transformStream(undefined, { select: "item" });
+  it('preserves attributes on matched elements', async () => {
+    const stream = transformStream(undefined, { select: 'item' });
     const results = await collect(stream, [
       '<root><item id="1" class="active">text</item></root>',
     ]);
     const item = results[0] as TNode;
-    expect(item.attributes!.id).toBe("1");
-    expect(item.attributes!.class).toBe("active");
+    expect(item.attributes!.id).toBe('1');
+    expect(item.attributes!.class).toBe('active');
   });
 
-  it("accepts an array of tag names to select", async () => {
-    const stream = transformStream(undefined, { select: ["item", "entry"] });
+  it('accepts an array of tag names to select', async () => {
+    const stream = transformStream(undefined, { select: ['item', 'entry'] });
     const results = await collect(stream, [
-      "<root><item>1</item><other>skip</other><entry>2</entry></root>",
+      '<root><item>1</item><other>skip</other><entry>2</entry></root>',
     ]);
     expect(results).toHaveLength(2);
     const tags = results
-      .filter((r): r is TNode => typeof r === "object")
+      .filter((r): r is TNode => typeof r === 'object')
       .map((r) => r.tagName);
-    expect(tags).toEqual(["item", "entry"]);
+    expect(tags).toEqual(['item', 'entry']);
   });
 
-  it("emits nested selected elements as part of the outermost match", async () => {
+  it('emits nested selected elements as part of the outermost match', async () => {
     // Nested <item> inside an <item> — the outer one is the selected match;
     // the inner one is just a child in its subtree.
-    const stream = transformStream(undefined, { select: "item" });
+    const stream = transformStream(undefined, { select: 'item' });
     const results = await collect(stream, [
-      "<root><item><item>inner</item></item></root>",
+      '<root><item><item>inner</item></item></root>',
     ]);
     expect(results).toHaveLength(1);
     const outer = results[0] as TNode;
-    expect(outer.tagName).toBe("item");
+    expect(outer.tagName).toBe('item');
     const inner = outer.children[0] as TNode;
-    expect(inner.tagName).toBe("item");
-    expect(inner.children).toEqual(["inner"]);
+    expect(inner.tagName).toBe('item');
+    expect(inner.children).toEqual(['inner']);
   });
 
-  it("handles deeply nested selected elements", async () => {
-    const stream = transformStream(undefined, { select: "item" });
+  it('handles deeply nested selected elements', async () => {
+    const stream = transformStream(undefined, { select: 'item' });
     const results = await collect(stream, [
-      "<a><b><c><item>deep</item></c></b></a>",
+      '<a><b><c><item>deep</item></c></b></a>',
     ]);
     expect(results).toHaveLength(1);
     const item = results[0] as TNode;
-    expect(item.tagName).toBe("item");
-    expect(item.children).toEqual(["deep"]);
+    expect(item.tagName).toBe('item');
+    expect(item.children).toEqual(['deep']);
   });
 
-  it("handles multiple selected elements at different depths", async () => {
-    const stream = transformStream(undefined, { select: "item" });
+  it('handles multiple selected elements at different depths', async () => {
+    const stream = transformStream(undefined, { select: 'item' });
     const results = await collect(stream, [
-      "<root><item>1</item><wrapper><item>2</item></wrapper><item>3</item></root>",
+      '<root><item>1</item><wrapper><item>2</item></wrapper><item>3</item></root>',
     ]);
     expect(results).toHaveLength(3);
-    expect((results[0] as TNode).children).toEqual(["1"]);
-    expect((results[1] as TNode).children).toEqual(["2"]);
-    expect((results[2] as TNode).children).toEqual(["3"]);
+    expect((results[0] as TNode).children).toEqual(['1']);
+    expect((results[1] as TNode).children).toEqual(['2']);
+    expect((results[2] as TNode).children).toEqual(['3']);
   });
 
-  it("discards text outside selected elements", async () => {
-    const stream = transformStream(undefined, { select: "item" });
+  it('discards text outside selected elements', async () => {
+    const stream = transformStream(undefined, { select: 'item' });
     const results = await collect(stream, [
-      "<root>before<item>inside</item>after</root>",
+      '<root>before<item>inside</item>after</root>',
     ]);
     expect(results).toHaveLength(1);
     const item = results[0] as TNode;
-    expect(item.children).toEqual(["inside"]);
+    expect(item.children).toEqual(['inside']);
   });
 
-  it("discards comments outside selected elements", async () => {
+  it('discards comments outside selected elements', async () => {
     const stream = transformStream(undefined, {
-      select: "item",
+      select: 'item',
       keepComments: true,
     });
     const results = await collect(stream, [
-      "<!-- top -->  <root><!-- mid --><item><!-- inner -->val</item></root>",
+      '<!-- top -->  <root><!-- mid --><item><!-- inner -->val</item></root>',
     ]);
     // Only the <item> is emitted, and the comment inside it is preserved
     expect(results).toHaveLength(1);
     const item = results[0] as TNode;
-    expect(item.children).toContain("<!-- inner -->");
-    expect(item.children).toContain("val");
+    expect(item.children).toContain('<!-- inner -->');
+    expect(item.children).toContain('val');
   });
 
-  it("handles chunks that split across selected element boundaries", async () => {
-    const stream = transformStream(undefined, { select: "item" });
+  it('handles chunks that split across selected element boundaries', async () => {
+    const stream = transformStream(undefined, { select: 'item' });
     const results = await collect(stream, [
-      "<root><ite",
-      "m>hel",
-      "lo</it",
-      "em><item>world</item></root>",
+      '<root><ite',
+      'm>hel',
+      'lo</it',
+      'em><item>world</item></root>',
     ]);
     expect(results).toHaveLength(2);
-    expect((results[0] as TNode).children).toEqual(["hello"]);
-    expect((results[1] as TNode).children).toEqual(["world"]);
+    expect((results[0] as TNode).children).toEqual(['hello']);
+    expect((results[1] as TNode).children).toEqual(['world']);
   });
 
-  it("handles self-closing selected elements", async () => {
+  it('handles self-closing selected elements', async () => {
     const stream = transformStream(undefined, {
-      select: "br",
-      selfClosingTags: ["br"],
+      select: 'br',
+      selfClosingTags: ['br'],
     });
     const results = await collect(stream, [
-      "<root><br/><p>text</p><br/></root>",
+      '<root><br/><p>text</p><br/></root>',
     ]);
     expect(results).toHaveLength(2);
-    expect((results[0] as TNode).tagName).toBe("br");
-    expect((results[1] as TNode).tagName).toBe("br");
+    expect((results[0] as TNode).tagName).toBe('br');
+    expect((results[1] as TNode).tagName).toBe('br');
   });
 
-  it("handles HTML void elements with select", async () => {
+  it('handles HTML void elements with select', async () => {
     const stream = transformStream(undefined, {
-      select: "img",
+      select: 'img',
       html: true,
     });
     const results = await collect(stream, [
       '<div><img src="a.png"><p>text</p><img src="b.png"></div>',
     ]);
     expect(results).toHaveLength(2);
-    expect((results[0] as TNode).attributes!.src).toBe("a.png");
-    expect((results[1] as TNode).attributes!.src).toBe("b.png");
+    expect((results[0] as TNode).attributes!.src).toBe('a.png');
+    expect((results[1] as TNode).attributes!.src).toBe('b.png');
   });
 
-  it("works with CDATA inside selected elements", async () => {
-    const stream = transformStream(undefined, { select: "data" });
+  it('works with CDATA inside selected elements', async () => {
+    const stream = transformStream(undefined, { select: 'data' });
     const results = await collect(stream, [
-      "<root><data><![CDATA[<raw>&content</raw>]]></data></root>",
+      '<root><data><![CDATA[<raw>&content</raw>]]></data></root>',
     ]);
     expect(results).toHaveLength(1);
     const data = results[0] as TNode;
-    expect(data.children).toEqual(["<raw>&content</raw>"]);
+    expect(data.children).toEqual(['<raw>&content</raw>']);
   });
 
-  it("falls back to default behavior when select is undefined", async () => {
+  it('falls back to default behavior when select is undefined', async () => {
     // This verifies we didn't break the default path
     const stream = transformStream();
     const results = await collect(stream, [
-      "<root><item>1</item></root><other>2</other>",
+      '<root><item>1</item></root><other>2</other>',
     ]);
     expect(results).toHaveLength(2);
-    expect((results[0] as TNode).tagName).toBe("root");
-    expect((results[1] as TNode).tagName).toBe("other");
+    expect((results[0] as TNode).tagName).toBe('root');
+    expect((results[1] as TNode).tagName).toBe('other');
   });
 
-  it("falls back to default behavior when select is empty array", async () => {
+  it('falls back to default behavior when select is empty array', async () => {
     const stream = transformStream(undefined, { select: [] });
-    const results = await collect(stream, [
-      "<root><item>1</item></root>",
-    ]);
+    const results = await collect(stream, ['<root><item>1</item></root>']);
     expect(results).toHaveLength(1);
-    expect((results[0] as TNode).tagName).toBe("root");
+    expect((results[0] as TNode).tagName).toBe('root');
   });
 
-  it("emits selected elements from RSS feed (channel/item)", async () => {
-    const rssFeed = fixture("rss-feed.xml");
-    const stream = transformStream(undefined, { select: "item" });
+  it('emits selected elements from RSS feed (channel/item)', async () => {
+    const rssFeed = fixture('rss-feed.xml');
+    const stream = transformStream(undefined, { select: 'item' });
     const results = await collect(stream, [rssFeed]);
     const items = results.filter(
-      (r): r is TNode => typeof r === "object" && r.tagName === "item",
+      (r): r is TNode => typeof r === 'object' && r.tagName === 'item',
     );
     expect(items.length).toBeGreaterThanOrEqual(1);
     // Each item should have title, link, description children
     for (const item of items) {
       const childTags = item.children
-        .filter((c): c is TNode => typeof c === "object")
+        .filter((c): c is TNode => typeof c === 'object')
         .map((c) => c.tagName);
-      expect(childTags).toContain("title");
+      expect(childTags).toContain('title');
     }
   });
 
-  it("produces consistent results across chunk sizes with select", async () => {
-    const rssFeed = fixture("rss-feed.xml");
+  it('produces consistent results across chunk sizes with select', async () => {
+    const rssFeed = fixture('rss-feed.xml');
     const tagSets: string[][] = [];
     for (const size of [64, 128, 256, rssFeed.length]) {
-      const stream = transformStream(undefined, { select: "item" });
+      const stream = transformStream(undefined, { select: 'item' });
       const chunks = chunkString(rssFeed, size);
       const results = await collect(stream, chunks);
       const titles = results
-        .filter((r): r is TNode => typeof r === "object")
+        .filter((r): r is TNode => typeof r === 'object')
         .map((r) => {
           const title = r.children.find(
-            (c): c is TNode => typeof c === "object" && c.tagName === "title",
+            (c): c is TNode => typeof c === 'object' && c.tagName === 'title',
           );
-          return title ? (title.children[0] as string) : "";
+          return title ? (title.children[0] as string) : '';
         });
       tagSets.push(titles);
     }
@@ -1157,38 +1151,38 @@ describe("transformStream with select", () => {
     }
   });
 
-  it("selects XMLTV programme elements for incremental EPG building", async () => {
-    const xmltvFeed = fixture("xmltv-epg.xml");
+  it('selects XMLTV programme elements for incremental EPG building', async () => {
+    const xmltvFeed = fixture('xmltv-epg.xml');
     // Select both channel and programme elements for incremental processing
     const stream = transformStream(undefined, {
-      select: ["channel", "programme"],
+      select: ['channel', 'programme'],
     });
     const chunks = chunkString(xmltvFeed, 128);
     const results = await collect(stream, chunks);
 
     const channels = results.filter(
-      (r): r is TNode => typeof r === "object" && r.tagName === "channel",
+      (r): r is TNode => typeof r === 'object' && r.tagName === 'channel',
     );
     const programmes = results.filter(
-      (r): r is TNode => typeof r === "object" && r.tagName === "programme",
+      (r): r is TNode => typeof r === 'object' && r.tagName === 'programme',
     );
 
     expect(channels).toHaveLength(8);
     expect(programmes).toHaveLength(28);
 
     // Verify channel structure
-    expect(channels[0]!.attributes!.id).toBe("bbc1.uk");
+    expect(channels[0]!.attributes!.id).toBe('bbc1.uk');
     const displayName = channels[0]!.children.find(
-      (c): c is TNode => typeof c === "object" && c.tagName === "display-name",
+      (c): c is TNode => typeof c === 'object' && c.tagName === 'display-name',
     );
     expect(displayName).toBeDefined();
-    expect(displayName!.children[0]).toBe("BBC One");
+    expect(displayName!.children[0]).toBe('BBC One');
 
     // Verify programme structure
     const firstProgramme = programmes[0]!;
-    expect(firstProgramme.attributes!.channel).toBe("bbc1.uk");
+    expect(firstProgramme.attributes!.channel).toBe('bbc1.uk');
     const title = firstProgramme.children.find(
-      (c): c is TNode => typeof c === "object" && c.tagName === "title",
+      (c): c is TNode => typeof c === 'object' && c.tagName === 'title',
     );
     expect(title).toBeDefined();
   });

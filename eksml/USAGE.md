@@ -7,7 +7,7 @@ eksml exports three main APIs plus two object converters. They all parse XML (an
 Use when you have the full XML string in memory and want a complete tree of nodes.
 
 ```ts
-import { parse } from "eksml";
+import { parse } from 'eksml';
 
 const nodes = parse('<root><item id="1">hello</item></root>');
 // nodes[0].tagName === "root"
@@ -36,10 +36,10 @@ interface TNode {
 Use when XML arrives in chunks (network response, file stream) and you want `TNode` trees as they complete.
 
 ```ts
-import { transformStream } from "eksml";
+import { transformStream } from 'eksml';
 
 const stream = transformStream();
-const response = await fetch("https://example.com/feed.xml");
+const response = await fetch('https://example.com/feed.xml');
 const nodes = [];
 
 for await (const node of response.body
@@ -63,7 +63,7 @@ Returns a standard `TransformStream<string, TNode | string>` — works in browse
 Use when you need maximum throughput and don't need a tree — or when you want full control over how events are processed.
 
 ```ts
-import { fastStream } from "eksml";
+import { fastStream } from 'eksml';
 
 const parser = fastStream({
   onopentag(name, attrs) {
@@ -95,7 +95,7 @@ Available callbacks: `onopentag`, `onclosetag`, `ontext`, `oncdata`, `oncomment`
 Converts XML into a JSON-friendly structure that preserves element order, mixed content, and attributes losslessly. Each element is `{ tagName: children[] }`, text is `{ $text: "..." }`, attributes are `{ $attr: {...} }`. All marker keys are valid JS identifiers — use dot notation: `entry.$attr.id`, `entry.$text`.
 
 ```ts
-import { lossless } from "eksml";
+import { lossless } from 'eksml';
 
 const result = lossless('<root attr="1"><item>hello</item></root>');
 // [{ "root": [{ $attr: { "attr": "1" } }, { "item": [{ $text: "hello" }] }] }]
@@ -111,9 +111,9 @@ const result = lossless('<root attr="1"><item>hello</item></root>');
 Produces the most compact JS object representation. Text-only elements collapse to strings, empty elements become `null`, repeated siblings become arrays, attributes are `$`-prefixed keys (e.g. `node.$href`), mixed content uses a `$$` array. All marker keys are valid JS identifiers. Sibling order between different tag names is lost.
 
 ```ts
-import { lossy } from "eksml";
+import { lossy } from 'eksml';
 
-const result = lossy("<root><name>Alice</name><age>30</age></root>");
+const result = lossy('<root><name>Alice</name><age>30</age></root>');
 // { root: { name: "Alice", age: "30" } }
 ```
 
@@ -136,7 +136,7 @@ fastStream({
   rawContentTags: HTML_RAW_CONTENT_TAGS,
 });
 
-lossy("<div><br><p>text</p></div>", { html: true });
+lossy('<div><br><p>text</p></div>', { html: true });
 ```
 
 ## Quick reference

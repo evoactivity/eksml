@@ -27,12 +27,12 @@
  * ```
  */
 
-import type { TNode } from "#src/parser.ts";
+import type { TNode } from '#src/parser.ts';
 import type {
   LossyValue,
   LossyObject,
   LossyMixedEntry,
-} from "#src/converters/lossy.ts";
+} from '#src/converters/lossy.ts';
 // @generated:char-codes:begin
 const DOLLAR = 36; // $
 // @generated:char-codes:end
@@ -47,13 +47,15 @@ const DOLLAR = 36; // $
  * @param input - A lossy value or array of lossy values.
  * @returns A DOM array suitable for `writer()` or further processing.
  */
-export function fromLossy(input: LossyValue | LossyValue[]): (TNode | string)[] {
+export function fromLossy(
+  input: LossyValue | LossyValue[],
+): (TNode | string)[] {
   // Array of top-level values
   if (Array.isArray(input)) {
     const result: (TNode | string)[] = [];
     for (let i = 0; i < input.length; i++) {
       const item = input[i]!;
-      if (typeof item === "string") {
+      if (typeof item === 'string') {
         result.push(item);
       } else if (item === null) {
         // Top-level null — unusual, skip
@@ -67,9 +69,9 @@ export function fromLossy(input: LossyValue | LossyValue[]): (TNode | string)[] 
   }
 
   // Single value
-  if (input === null || typeof input === "string") {
+  if (input === null || typeof input === 'string') {
     // Bare null or string at top level — can't form a TNode without a tag name
-    return typeof input === "string" ? [input] : [];
+    return typeof input === 'string' ? [input] : [];
   }
 
   // Single-root object: { rootTag: value }
@@ -106,7 +108,7 @@ function convertElement(
   }
 
   // string → text-only element
-  if (typeof value === "string") {
+  if (typeof value === 'string') {
     return { tagName, attributes: null, children: [value] };
   }
 
@@ -131,20 +133,23 @@ function convertElement(
   for (let i = 0; i < objectKeys.length; i++) {
     const key = objectKeys[i]!;
 
-    if (key === "$$") {
+    if (key === '$$') {
       // Mixed content array
       hasMixed = true;
       const mixedArray = objectValue.$$ as LossyMixedEntry[];
       for (let j = 0; j < mixedArray.length; j++) {
         const mixedEntry = mixedArray[j]!;
-        if (typeof mixedEntry === "string") {
+        if (typeof mixedEntry === 'string') {
           children.push(mixedEntry);
         } else {
           // { tagName: value } — single-key object
           const entryKeys = Object.keys(mixedEntry);
           const entryTagName = entryKeys[0]!;
           children.push(
-            convertElement(entryTagName, (mixedEntry as LossyObject)[entryTagName]!),
+            convertElement(
+              entryTagName,
+              (mixedEntry as LossyObject)[entryTagName]!,
+            ),
           );
         }
       }

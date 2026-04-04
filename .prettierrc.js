@@ -1,4 +1,8 @@
 export default {
-  printWidth: 100,
-  plugins: ["prettier-plugin-ember-template-tag"],
+  singleQuote: true,
+  trailingComma: 'all',
+  printWidth: 80,
+  tabWidth: 2,
+  semi: true,
+  plugins: ['prettier-plugin-ember-template-tag'],
 };

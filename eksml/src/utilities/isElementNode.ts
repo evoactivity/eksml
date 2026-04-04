@@ -1,4 +1,4 @@
-import type { TNode } from "#src/parser.ts";
+import type { TNode } from '#src/parser.ts';
 
 /**
  * Type guard to check if a node is an element node (TNode object).
@@ -15,5 +15,5 @@ import type { TNode } from "#src/parser.ts";
  * });
  */
 export function isElementNode(node: TNode | string): node is TNode {
-  return typeof node === "object" && node !== null && "tagName" in node;
+  return typeof node === 'object' && node !== null && 'tagName' in node;
 }

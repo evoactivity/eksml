@@ -1,4 +1,4 @@
-import type { TNode } from "#src/parser.ts";
+import type { TNode } from '#src/parser.ts';
 
 /**
  * Type guard to check if a node is a text node (string).
@@ -15,5 +15,5 @@ import type { TNode } from "#src/parser.ts";
  * });
  */
 export function isTextNode(node: TNode | string): node is string {
-  return typeof node === "string";
+  return typeof node === 'string';
 }

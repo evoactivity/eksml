@@ -1,22 +1,22 @@
-import { init } from "modern-monaco";
-import { parse } from "#src/parser.ts";
-import { lossy } from "#src/converters/lossy.ts";
-import { lossless } from "#src/converters/lossless.ts";
+import { init } from 'modern-monaco';
+import { parse } from '#src/parser.ts';
+import { lossy } from '#src/converters/lossy.ts';
+import { lossless } from '#src/converters/lossless.ts';
 
 // ---------------------------------------------------------------------------
 // DOM refs
 // ---------------------------------------------------------------------------
 
-const inputEditorContainer = document.getElementById("input-editor")!;
-const outputEditorContainer = document.getElementById("output-editor")!;
-const errorOverlay = document.getElementById("error-overlay") as HTMLDivElement;
-const timingEl = document.getElementById("timing") as HTMLSpanElement;
-const modeEl = document.getElementById("mode") as HTMLSelectElement;
-const entitiesEl = document.getElementById("entities") as HTMLInputElement;
-const htmlEl = document.getElementById("html") as HTMLInputElement;
-const benchEl = document.getElementById("bench") as HTMLInputElement;
-const parseBtn = document.getElementById("parse-btn") as HTMLButtonElement;
-const tabsEl = document.getElementById("tabs") as HTMLDivElement;
+const inputEditorContainer = document.getElementById('input-editor')!;
+const outputEditorContainer = document.getElementById('output-editor')!;
+const errorOverlay = document.getElementById('error-overlay') as HTMLDivElement;
+const timingEl = document.getElementById('timing') as HTMLSpanElement;
+const modeEl = document.getElementById('mode') as HTMLSelectElement;
+const entitiesEl = document.getElementById('entities') as HTMLInputElement;
+const htmlEl = document.getElementById('html') as HTMLInputElement;
+const benchEl = document.getElementById('bench') as HTMLInputElement;
+const parseBtn = document.getElementById('parse-btn') as HTMLButtonElement;
+const tabsEl = document.getElementById('tabs') as HTMLDivElement;
 
 // ---------------------------------------------------------------------------
 // Sample documents
@@ -29,7 +29,7 @@ interface Sample {
 
 const SAMPLES: Sample[] = [
   {
-    label: "Bookstore",
+    label: 'Bookstore',
     content: `\
 <?xml version="1.0" encoding="UTF-8"?>
 <bookstore>
@@ -54,7 +54,7 @@ const SAMPLES: Sample[] = [
 </bookstore>`,
   },
   {
-    label: "SOAP Envelope",
+    label: 'SOAP Envelope',
     content: `\
 <?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
@@ -78,7 +78,7 @@ const SAMPLES: Sample[] = [
 </soap:Envelope>`,
   },
   {
-    label: "RSS Feed",
+    label: 'RSS Feed',
     content: `\
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -121,7 +121,7 @@ const SAMPLES: Sample[] = [
 </rss>`,
   },
   {
-    label: "SVG Chart",
+    label: 'SVG Chart',
     content: `\
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
@@ -158,7 +158,7 @@ const SAMPLES: Sample[] = [
 </svg>`,
   },
   {
-    label: "Config (pom.xml)",
+    label: 'Config (pom.xml)',
     content: `\
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -258,38 +258,38 @@ const SAMPLES: Sample[] = [
 
 function generateLargeCatalog(): string {
   const categories = [
-    "Electronics",
-    "Books",
-    "Clothing",
-    "Home & Garden",
-    "Sports",
-    "Toys",
-    "Automotive",
-    "Health",
+    'Electronics',
+    'Books',
+    'Clothing',
+    'Home & Garden',
+    'Sports',
+    'Toys',
+    'Automotive',
+    'Health',
   ];
   const adjectives = [
-    "Premium",
-    "Ultra",
-    "Pro",
-    "Essential",
-    "Classic",
-    "Advanced",
-    "Compact",
-    "Deluxe",
-    "Eco",
-    "Smart",
+    'Premium',
+    'Ultra',
+    'Pro',
+    'Essential',
+    'Classic',
+    'Advanced',
+    'Compact',
+    'Deluxe',
+    'Eco',
+    'Smart',
   ];
   const nouns = [
-    "Widget",
-    "Gadget",
-    "Device",
-    "Tool",
-    "Kit",
-    "Module",
-    "Sensor",
-    "Adapter",
-    "Controller",
-    "Monitor",
+    'Widget',
+    'Gadget',
+    'Device',
+    'Tool',
+    'Kit',
+    'Module',
+    'Sensor',
+    'Adapter',
+    'Controller',
+    'Monitor',
   ];
 
   const lines: string[] = [];
@@ -307,7 +307,7 @@ function generateLargeCatalog(): string {
     const price = (5 + ((i * 7.31) % 993)).toFixed(2);
     const stock = (i * 13) % 500;
     const rating = (1 + (i % 50) / 10).toFixed(1);
-    const sku = `SKU-${String(i).padStart(6, "0")}`;
+    const sku = `SKU-${String(i).padStart(6, '0')}`;
 
     lines.push(`  <product id="${i}" sku="${sku}">`);
     lines.push(`    <name>${adj} ${noun} ${i}</name>`);
@@ -318,11 +318,11 @@ function generateLargeCatalog(): string {
     lines.push(
       `    <description>The ${adj.toLowerCase()} ${noun.toLowerCase()} is perfect for ${cat.toLowerCase()} enthusiasts. Model #${i}.</description>`,
     );
-    lines.push("  </product>");
+    lines.push('  </product>');
   }
 
-  lines.push("</catalog>");
-  return lines.join("\n");
+  lines.push('</catalog>');
+  return lines.join('\n');
 }
 
 // Add the large sample (generated once, lazily)
@@ -346,7 +346,7 @@ function formatSize(bytes: number): string {
 // Monaco editor setup
 // ---------------------------------------------------------------------------
 
-const EDITOR_THEME = "vitesse-dark";
+const EDITOR_THEME = 'vitesse-dark';
 
 const monaco = await init();
 
@@ -363,7 +363,7 @@ const inputEditor: MonacoEditor = monaco.editor.create(inputEditorContainer, {
   tabSize: 2,
 });
 
-const inputModel = monaco.editor.createModel("", "xml");
+const inputModel = monaco.editor.createModel('', 'xml');
 inputEditor.setModel(inputModel);
 
 const outputEditor: MonacoEditor = monaco.editor.create(outputEditorContainer, {
@@ -378,7 +378,7 @@ const outputEditor: MonacoEditor = monaco.editor.create(outputEditorContainer, {
   tabSize: 2,
 });
 
-const outputModel = monaco.editor.createModel("", "json");
+const outputModel = monaco.editor.createModel('', 'json');
 outputEditor.setModel(outputModel);
 
 // ---------------------------------------------------------------------------
@@ -394,7 +394,7 @@ function getContent(index: number): string {
 
 function getLabel(index: number): string {
   if (index < SAMPLES.length) return SAMPLES[index]!.label;
-  return "Catalog (5K)";
+  return 'Catalog (5K)';
 }
 
 function getTabCount(): number {
@@ -402,14 +402,14 @@ function getTabCount(): number {
 }
 
 function renderTabs(): void {
-  tabsEl.innerHTML = "";
+  tabsEl.innerHTML = '';
   const count = getTabCount();
   for (let i = 0; i < count; i++) {
-    const btn = document.createElement("button");
-    btn.className = "tab" + (i === activeTab ? " active" : "");
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i === activeTab ? ' active' : '');
     const content = getContent(i);
     btn.innerHTML = `${getLabel(i)}<span class="size">${formatSize(content.length)}</span>`;
-    btn.addEventListener("click", () => switchTab(i));
+    btn.addEventListener('click', () => switchTab(i));
     tabsEl.appendChild(btn);
   }
 }
@@ -428,8 +428,8 @@ function switchTab(index: number): void {
 type ParseFn = (xml: string, options: Record<string, boolean>) => unknown;
 
 function selectParser(mode: string): ParseFn {
-  if (mode === "dom") return parse;
-  if (mode === "lossy") return lossy as ParseFn;
+  if (mode === 'dom') return parse;
+  if (mode === 'lossy') return lossy as ParseFn;
   return lossless as ParseFn;
 }
 
@@ -470,8 +470,8 @@ async function run(): Promise<void> {
 
     if (bench) {
       // Show spinner, disable button, yield so the browser paints
-      timingEl.textContent = "benching...";
-      timingEl.classList.add("benching");
+      timingEl.textContent = 'benching...';
+      timingEl.classList.add('benching');
       parseBtn.disabled = true;
       await yieldFrame();
 
@@ -490,22 +490,22 @@ async function run(): Promise<void> {
 
       const avgMicro = (batchMs / iterations) * 1000;
       timingEl.textContent = `${formatDuration(avgMicro)} (avg of ${iterations.toLocaleString()})`;
-      timingEl.classList.remove("benching");
+      timingEl.classList.remove('benching');
       parseBtn.disabled = false;
     } else {
       const micro = singleMs * 1000;
-      timingEl.textContent = micro < 1000 ? "< 1 ms" : formatDuration(micro);
+      timingEl.textContent = micro < 1000 ? '< 1 ms' : formatDuration(micro);
     }
   } catch (err: unknown) {
     errorOverlay.hidden = false;
     errorOverlay.textContent = (err as Error).message;
-    timingEl.textContent = "";
-    timingEl.classList.remove("benching");
+    timingEl.textContent = '';
+    timingEl.classList.remove('benching');
     parseBtn.disabled = false;
   }
 }
 
-parseBtn.addEventListener("click", run);
+parseBtn.addEventListener('click', run);
 inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
   run();
 });

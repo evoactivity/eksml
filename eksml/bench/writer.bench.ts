@@ -5,40 +5,40 @@
  * Each benchmark pre-parses the XML into the library's native representation
  * so that only serialization time is measured.
  */
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { bench, describe } from "vitest";
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { bench, describe } from 'vitest';
 
 // --- eksml ---
-import { parse } from "#src/parser.ts";
-import { writer } from "#src/writer.ts";
+import { parse } from '#src/parser.ts';
+import { writer } from '#src/writer.ts';
 
 // --- competitors ---
-import { XMLParser, XMLBuilder } from "fast-xml-parser";
-import { Builder, parseStringPromise } from "xml2js";
+import { XMLParser, XMLBuilder } from 'fast-xml-parser';
+import { Builder, parseStringPromise } from 'xml2js';
 import {
   parse as txmlParse,
   stringify as txmlStringify,
   type tNode,
   // @ts-ignore
-} from "txml/dist/txml.js";
-import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
-import { parseDocument, DomUtils } from "htmlparser2";
+} from 'txml/dist/txml.js';
+import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
+import { parseDocument, DomUtils } from 'htmlparser2';
 
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
-  readFileSync(resolve(__dirname, "../test/fixtures", name), "utf-8");
+  readFileSync(resolve(__dirname, '../test/fixtures', name), 'utf-8');
 
 const small = `<?xml version="1.0"?><root><item id="1">hello</item><item id="2">world</item></root>`;
-const rssFeed = fixture("rss-feed.xml");
-const soapEnvelope = fixture("soap-envelope.xml");
-const atomFeed = fixture("atom-feed.xml");
-const pomXml = fixture("pom.xml");
-const xmltvEpg = fixture("xmltv-epg.xml");
+const rssFeed = fixture('rss-feed.xml');
+const soapEnvelope = fixture('soap-envelope.xml');
+const atomFeed = fixture('atom-feed.xml');
+const pomXml = fixture('pom.xml');
+const xmltvEpg = fixture('xmltv-epg.xml');
 
 // ---------------------------------------------------------------------------
 // Pre-parse all fixtures into each library's native format
@@ -66,7 +66,7 @@ const fxpEpg = fxpParser.parse(xmltvEpg);
 // xml2js (async parse, sync build)
 const xml2jsBuilder = new Builder({
   headless: true,
-  renderOpts: { pretty: false, indent: "", newline: "" },
+  renderOpts: { pretty: false, indent: '', newline: '' },
 });
 // Pre-parsed objects — filled in before benchmarks run
 let xml2jsSmall: any;
@@ -96,12 +96,12 @@ const txmlEpg = txmlParse(xmltvEpg);
 // @xmldom/xmldom
 const domParser = new DOMParser();
 const xmlSerializer = new XMLSerializer();
-const xmldomSmall = domParser.parseFromString(small, "text/xml");
-const xmldomRss = domParser.parseFromString(rssFeed, "text/xml");
-const xmldomSoap = domParser.parseFromString(soapEnvelope, "text/xml");
-const xmldomAtom = domParser.parseFromString(atomFeed, "text/xml");
-const xmldomPom = domParser.parseFromString(pomXml, "text/xml");
-const xmldomEpg = domParser.parseFromString(xmltvEpg, "text/xml");
+const xmldomSmall = domParser.parseFromString(small, 'text/xml');
+const xmldomRss = domParser.parseFromString(rssFeed, 'text/xml');
+const xmldomSoap = domParser.parseFromString(soapEnvelope, 'text/xml');
+const xmldomAtom = domParser.parseFromString(atomFeed, 'text/xml');
+const xmldomPom = domParser.parseFromString(pomXml, 'text/xml');
+const xmldomEpg = domParser.parseFromString(xmltvEpg, 'text/xml');
 
 // htmlparser2
 const hp2Opts = { xmlMode: true } as const;
@@ -115,28 +115,28 @@ const hp2Epg = parseDocument(xmltvEpg, hp2Opts);
 // ---------------------------------------------------------------------------
 // Small document — ~100 bytes
 // ---------------------------------------------------------------------------
-describe("write: small XML (~100 B)", () => {
-  bench("eksml", () => {
+describe('write: small XML (~100 B)', () => {
+  bench('eksml', () => {
     writer(eksmlSmall);
   });
 
-  bench("fast-xml-parser", () => {
+  bench('fast-xml-parser', () => {
     fxpBuilder.build(fxpSmall);
   });
 
-  bench("xml2js", () => {
+  bench('xml2js', () => {
     xml2jsBuilder.buildObject(xml2jsSmall);
   });
 
-  bench("txml", () => {
+  bench('txml', () => {
     txmlStringify(txmlSmall as unknown as tNode);
   });
 
-  bench("@xmldom/xmldom", () => {
+  bench('@xmldom/xmldom', () => {
     xmlSerializer.serializeToString(xmldomSmall);
   });
 
-  bench("htmlparser2", () => {
+  bench('htmlparser2', () => {
     DomUtils.getOuterHTML(hp2Small, hp2Opts);
   });
 });
@@ -144,26 +144,26 @@ describe("write: small XML (~100 B)", () => {
 // ---------------------------------------------------------------------------
 // RSS feed — ~3 KB
 // ---------------------------------------------------------------------------
-describe("write: RSS feed (~3 KB)", () => {
-  bench("eksml", () => {
+describe('write: RSS feed (~3 KB)', () => {
+  bench('eksml', () => {
     writer(eksmlRss);
   });
 
-  bench("fast-xml-parser", () => {
+  bench('fast-xml-parser', () => {
     fxpBuilder.build(fxpRss);
   });
 
-  bench("xml2js", () => {
+  bench('xml2js', () => {
     xml2jsBuilder.buildObject(xml2jsRss);
   });
 
   // txml crashes on RSS feed — omitted
 
-  bench("@xmldom/xmldom", () => {
+  bench('@xmldom/xmldom', () => {
     xmlSerializer.serializeToString(xmldomRss);
   });
 
-  bench("htmlparser2", () => {
+  bench('htmlparser2', () => {
     DomUtils.getOuterHTML(hp2Rss, hp2Opts);
   });
 });
@@ -171,28 +171,28 @@ describe("write: RSS feed (~3 KB)", () => {
 // ---------------------------------------------------------------------------
 // SOAP envelope — ~3 KB
 // ---------------------------------------------------------------------------
-describe("write: SOAP envelope (~3 KB)", () => {
-  bench("eksml", () => {
+describe('write: SOAP envelope (~3 KB)', () => {
+  bench('eksml', () => {
     writer(eksmlSoap);
   });
 
-  bench("fast-xml-parser", () => {
+  bench('fast-xml-parser', () => {
     fxpBuilder.build(fxpSoap);
   });
 
-  bench("xml2js", () => {
+  bench('xml2js', () => {
     xml2jsBuilder.buildObject(xml2jsSoap);
   });
 
-  bench("txml", () => {
+  bench('txml', () => {
     txmlStringify(txmlSoap as unknown as tNode);
   });
 
-  bench("@xmldom/xmldom", () => {
+  bench('@xmldom/xmldom', () => {
     xmlSerializer.serializeToString(xmldomSoap);
   });
 
-  bench("htmlparser2", () => {
+  bench('htmlparser2', () => {
     DomUtils.getOuterHTML(hp2Soap, hp2Opts);
   });
 });
@@ -200,28 +200,28 @@ describe("write: SOAP envelope (~3 KB)", () => {
 // ---------------------------------------------------------------------------
 // Atom feed — ~6 KB
 // ---------------------------------------------------------------------------
-describe("write: Atom feed (~6 KB)", () => {
-  bench("eksml", () => {
+describe('write: Atom feed (~6 KB)', () => {
+  bench('eksml', () => {
     writer(eksmlAtom);
   });
 
-  bench("fast-xml-parser", () => {
+  bench('fast-xml-parser', () => {
     fxpBuilder.build(fxpAtom);
   });
 
-  bench("xml2js", () => {
+  bench('xml2js', () => {
     xml2jsBuilder.buildObject(xml2jsAtom);
   });
 
-  bench("txml", () => {
+  bench('txml', () => {
     txmlStringify(txmlAtom as unknown as tNode);
   });
 
-  bench("@xmldom/xmldom", () => {
+  bench('@xmldom/xmldom', () => {
     xmlSerializer.serializeToString(xmldomAtom);
   });
 
-  bench("htmlparser2", () => {
+  bench('htmlparser2', () => {
     DomUtils.getOuterHTML(hp2Atom, hp2Opts);
   });
 });
@@ -229,28 +229,28 @@ describe("write: Atom feed (~6 KB)", () => {
 // ---------------------------------------------------------------------------
 // Maven POM — ~8 KB
 // ---------------------------------------------------------------------------
-describe("write: Maven POM (~8 KB)", () => {
-  bench("eksml", () => {
+describe('write: Maven POM (~8 KB)', () => {
+  bench('eksml', () => {
     writer(eksmlPom);
   });
 
-  bench("fast-xml-parser", () => {
+  bench('fast-xml-parser', () => {
     fxpBuilder.build(fxpPom);
   });
 
-  bench("xml2js", () => {
+  bench('xml2js', () => {
     xml2jsBuilder.buildObject(xml2jsPom);
   });
 
-  bench("txml", () => {
+  bench('txml', () => {
     txmlStringify(txmlPom as unknown as tNode);
   });
 
-  bench("@xmldom/xmldom", () => {
+  bench('@xmldom/xmldom', () => {
     xmlSerializer.serializeToString(xmldomPom);
   });
 
-  bench("htmlparser2", () => {
+  bench('htmlparser2', () => {
     DomUtils.getOuterHTML(hp2Pom, hp2Opts);
   });
 });
@@ -258,28 +258,28 @@ describe("write: Maven POM (~8 KB)", () => {
 // ---------------------------------------------------------------------------
 // XMLTV EPG — ~30 KB
 // ---------------------------------------------------------------------------
-describe("write: XMLTV EPG (~30 KB)", () => {
-  bench("eksml", () => {
+describe('write: XMLTV EPG (~30 KB)', () => {
+  bench('eksml', () => {
     writer(eksmlEpg);
   });
 
-  bench("fast-xml-parser", () => {
+  bench('fast-xml-parser', () => {
     fxpBuilder.build(fxpEpg);
   });
 
-  bench("xml2js", () => {
+  bench('xml2js', () => {
     xml2jsBuilder.buildObject(xml2jsEpg);
   });
 
-  bench("txml", () => {
+  bench('txml', () => {
     txmlStringify(txmlEpg as unknown as tNode);
   });
 
-  bench("@xmldom/xmldom", () => {
+  bench('@xmldom/xmldom', () => {
     xmlSerializer.serializeToString(xmldomEpg);
   });
 
-  bench("htmlparser2", () => {
+  bench('htmlparser2', () => {
     DomUtils.getOuterHTML(hp2Epg, hp2Opts);
   });
 });

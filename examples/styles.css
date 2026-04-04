@@ -15,7 +15,10 @@
 /* --- Base --- */
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   background: #0e0e10;
   color: #e0e0e0;
   padding: 24px;
@@ -59,8 +62,8 @@ code {
 
 select,
 button,
-input[type="number"],
-input[type="text"] {
+input[type='number'],
+input[type='text'] {
   font-family: inherit;
   font-size: 0.8rem;
   padding: 6px 12px;
@@ -71,15 +74,15 @@ input[type="text"] {
   cursor: pointer;
 }
 
-input[type="number"] {
+input[type='number'] {
   width: 80px;
   cursor: text;
 }
 
-input[type="text"] {
+input[type='text'] {
   width: 160px;
   cursor: text;
-  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
   font-size: 0.75rem;
 }
 
@@ -167,7 +170,7 @@ button:disabled {
   position: absolute;
   inset: 0;
   padding: 14px;
-  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
   font-size: 0.82rem;
   line-height: 1.5;
   color: #ef4444;
@@ -232,7 +235,7 @@ button:disabled {
   flex: 1;
   overflow-y: auto;
   padding: 0;
-  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
   font-size: 0.78rem;
   line-height: 1.6;
 }

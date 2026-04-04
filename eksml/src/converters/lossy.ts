@@ -51,7 +51,7 @@
  * ```
  */
 
-import { parse, type TNode, type ParseOptions } from "#src/parser.ts";
+import { parse, type TNode, type ParseOptions } from '#src/parser.ts';
 // @generated:char-codes:begin
 const DOLLAR = 36; // $
 // @generated:char-codes:end
@@ -89,7 +89,11 @@ function convertNode(node: TNode): LossyValue {
   }
 
   // --- Text-only element, no attributes ---
-  if (childrenLength === 1 && typeof children[0] === "string" && !hasAttributes) {
+  if (
+    childrenLength === 1 &&
+    typeof children[0] === 'string' &&
+    !hasAttributes
+  ) {
     return children[0];
   }
 
@@ -99,7 +103,7 @@ function convertNode(node: TNode): LossyValue {
 
   if (hasAttributes) {
     for (const key in attributes) {
-      elementObject["$" + key] = attributes[key]!;
+      elementObject['$' + key] = attributes[key]!;
     }
   }
 
@@ -118,7 +122,7 @@ function convertNode(node: TNode): LossyValue {
 
   for (let i = 0; i < childrenLength; i++) {
     const child = children[i]!;
-    if (typeof child === "string") {
+    if (typeof child === 'string') {
       hasText = true;
       if (mixed !== null) {
         // Already in mixed mode
@@ -127,12 +131,13 @@ function convertNode(node: TNode): LossyValue {
         // Upgrade to mixed mode — retroactively convert prior children.
         // Remove element keys that were speculatively added to elementObject.
         for (const propertyKey in elementObject) {
-          if (propertyKey.charCodeAt(0) !== DOLLAR) delete elementObject[propertyKey]; // keep $-prefixed attrs
+          if (propertyKey.charCodeAt(0) !== DOLLAR)
+            delete elementObject[propertyKey]; // keep $-prefixed attrs
         }
         mixed = [];
         for (let j = 0; j < i; j++) {
           const previousChild = children[j]!;
-          if (typeof previousChild === "string") {
+          if (typeof previousChild === 'string') {
             mixed.push(previousChild);
           } else {
             mixed.push({ [previousChild.tagName]: convertNode(previousChild) });
@@ -161,7 +166,10 @@ function convertNode(node: TNode): LossyValue {
         if (!(tag in elementObject)) {
           elementObject[tag] = convertedValue;
         } else if (!Array.isArray(elementObject[tag])) {
-          elementObject[tag] = [elementObject[tag] as LossyValue, convertedValue];
+          elementObject[tag] = [
+            elementObject[tag] as LossyValue,
+            convertedValue,
+          ];
         } else {
           (elementObject[tag] as LossyValue[]).push(convertedValue);
         }
@@ -181,7 +189,7 @@ function convertNode(node: TNode): LossyValue {
   }
 
   // --- Text-only, no attributes, multiple text nodes (edge case) ---
-  let text = "";
+  let text = '';
   for (let i = 0; i < childrenLength; i++) {
     text += children[i] as string;
   }
@@ -198,25 +206,28 @@ function convertNode(node: TNode): LossyValue {
  *          this is typically `{ rootTag: ... }`. For multiple top-level nodes
  *          an array is returned.
  */
-export function lossy(input: string, options?: LossyOptions): LossyValue | LossyValue[];
+export function lossy(
+  input: string,
+  options?: LossyOptions,
+): LossyValue | LossyValue[];
 export function lossy(input: (TNode | string)[]): LossyValue | LossyValue[];
 export function lossy(
   input: string | (TNode | string)[],
   options?: LossyOptions,
 ): LossyValue | LossyValue[] {
-  const dom = typeof input === "string" ? parse(input, { ...options }) : input;
+  const dom = typeof input === 'string' ? parse(input, { ...options }) : input;
 
   // Filter out whitespace-only top-level text and processing instructions
   // (e.g. <?xml version="1.0"?>) which are metadata, not content.
   const nodes: (TNode | string)[] = [];
   for (let i = 0; i < dom.length; i++) {
     const node = dom[i]!;
-    if (typeof node === "string") {
+    if (typeof node === 'string') {
       // Keep non-whitespace text at top level
       if (node.trim().length > 0) {
         nodes.push(node);
       }
-    } else if (node.tagName[0] === "?") {
+    } else if (node.tagName[0] === '?') {
       // Skip processing instructions (<?xml?>, <?xsl?>, etc.)
       continue;
     } else {
@@ -227,7 +238,7 @@ export function lossy(
   // Single root element — return as { rootTag: value }
   if (nodes.length === 1) {
     const node = nodes[0]!;
-    if (typeof node === "string") {
+    if (typeof node === 'string') {
       return node;
     }
     return { [node.tagName]: convertNode(node) } as LossyObject;
@@ -237,7 +248,7 @@ export function lossy(
   const result: LossyValue[] = [];
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i]!;
-    if (typeof node === "string") {
+    if (typeof node === 'string') {
       result.push(node);
     } else {
       result.push({ [node.tagName]: convertNode(node) } as LossyObject);

@@ -29,7 +29,7 @@
  * ```
  */
 
-import { parse, type TNode, type ParseOptions } from "#src/parser.ts";
+import { parse, type TNode, type ParseOptions } from '#src/parser.ts';
 
 /** A single entry in the JSON output array. */
 export type LosslessEntry =
@@ -52,7 +52,7 @@ function convertNode(node: TNode): LosslessEntry {
   // Then child nodes
   for (let i = 0; i < node.children.length; i++) {
     const child = node.children[i]!;
-    if (typeof child === "string") {
+    if (typeof child === 'string') {
       children.push(convertString(child));
     } else {
       children.push(convertNode(child));
@@ -64,7 +64,7 @@ function convertNode(node: TNode): LosslessEntry {
 
 function convertString(text: string): LosslessEntry {
   // Comments from parse() come as "<!-- ... -->"
-  if (text.startsWith("<!--") && text.endsWith("-->")) {
+  if (text.startsWith('<!--') && text.endsWith('-->')) {
     return { $comment: text.substring(4, text.length - 3) };
   }
   return { $text: text };
@@ -78,17 +78,20 @@ function convertString(text: string): LosslessEntry {
  * @param options - Parsing options (only used when `input` is a string)
  * @returns Array of top-level JSON entries
  */
-export function lossless(input: string, options?: LosslessOptions): LosslessEntry[];
+export function lossless(
+  input: string,
+  options?: LosslessOptions,
+): LosslessEntry[];
 export function lossless(input: (TNode | string)[]): LosslessEntry[];
 export function lossless(
   input: string | (TNode | string)[],
   options?: LosslessOptions,
 ): LosslessEntry[] {
-  const dom = typeof input === "string" ? parse(input, { ...options }) : input;
+  const dom = typeof input === 'string' ? parse(input, { ...options }) : input;
   const result: LosslessEntry[] = [];
   for (let i = 0; i < dom.length; i++) {
     const node = dom[i]!;
-    if (typeof node === "string") {
+    if (typeof node === 'string') {
       result.push(convertString(node));
     } else {
       result.push(convertNode(node));

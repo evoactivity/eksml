@@ -1,18 +1,18 @@
-import { init } from "modern-monaco";
-import { fastStream } from "#src/fastStream.ts";
+import { init } from 'modern-monaco';
+import { fastStream } from '#src/fastStream.ts';
 
 // ---------------------------------------------------------------------------
 // DOM refs
 // ---------------------------------------------------------------------------
 
-const inputEditorContainer = document.getElementById("input-editor")!;
-const logEl = document.getElementById("log") as HTMLDivElement;
-const statsEl = document.getElementById("stats") as HTMLSpanElement;
-const progressEl = document.getElementById("progress") as HTMLDivElement;
-const throttleEl = document.getElementById("throttle") as HTMLSelectElement;
-const chunkSizeEl = document.getElementById("chunk-size") as HTMLInputElement;
-const startBtn = document.getElementById("start-btn") as HTMLButtonElement;
-const stopBtn = document.getElementById("stop-btn") as HTMLButtonElement;
+const inputEditorContainer = document.getElementById('input-editor')!;
+const logEl = document.getElementById('log') as HTMLDivElement;
+const statsEl = document.getElementById('stats') as HTMLSpanElement;
+const progressEl = document.getElementById('progress') as HTMLDivElement;
+const throttleEl = document.getElementById('throttle') as HTMLSelectElement;
+const chunkSizeEl = document.getElementById('chunk-size') as HTMLInputElement;
+const startBtn = document.getElementById('start-btn') as HTMLButtonElement;
+const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement;
 
 // ---------------------------------------------------------------------------
 // Default XML sample
@@ -72,7 +72,7 @@ const DEFAULT_XML = `\
 // Monaco editor setup
 // ---------------------------------------------------------------------------
 
-const EDITOR_THEME = "vitesse-dark";
+const EDITOR_THEME = 'vitesse-dark';
 
 const monaco = await init();
 
@@ -87,7 +87,7 @@ const inputEditor = monaco.editor.create(inputEditorContainer, {
   tabSize: 2,
 });
 
-const inputModel = monaco.editor.createModel(DEFAULT_XML, "xml");
+const inputModel = monaco.editor.createModel(DEFAULT_XML, 'xml');
 inputEditor.setModel(inputModel);
 
 // ---------------------------------------------------------------------------
@@ -98,17 +98,17 @@ let abortController: AbortController | null = null;
 let eventCount = 0;
 
 function escapeHtml(str: string): string {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function truncate(str: string, max = 120): string {
   if (str.length <= max) return str;
-  return str.slice(0, max) + "...";
+  return str.slice(0, max) + '...';
 }
 
 function appendLog(className: string, tag: string, detail: string): void {
   eventCount++;
-  const entry = document.createElement("div");
+  const entry = document.createElement('div');
   entry.className = `log-entry ${className}`;
   entry.innerHTML =
     `<span class="event-tag">${tag}</span> ` +
@@ -118,8 +118,8 @@ function appendLog(className: string, tag: string, detail: string): void {
 }
 
 function appendChunkMarker(index: number, content: string): void {
-  const entry = document.createElement("div");
-  entry.className = "log-entry chunk-marker";
+  const entry = document.createElement('div');
+  entry.className = 'log-entry chunk-marker';
   entry.textContent = `--- chunk ${index} (${content.length} bytes) ---`;
   logEl.appendChild(entry);
   logEl.scrollTop = logEl.scrollHeight;
@@ -127,14 +127,14 @@ function appendChunkMarker(index: number, content: string): void {
 
 function formatAttrs(attrs: Record<string, string | null>): string {
   const keys = Object.keys(attrs);
-  if (keys.length === 0) return "";
+  if (keys.length === 0) return '';
   const parts = keys.map((k) => {
     const v = attrs[k];
     return v === null
       ? k
       : `${k}=<span class="event-value">"${escapeHtml(v)}"</span>`;
   });
-  return ` { ${parts.join(", ")} }`;
+  return ` { ${parts.join(', ')} }`;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -151,9 +151,9 @@ async function run(): Promise<void> {
   const chunkSize = Math.max(1, parseInt(chunkSizeEl.value, 10) || 64);
 
   // Reset
-  logEl.innerHTML = "";
-  statsEl.textContent = "";
-  progressEl.style.width = "0%";
+  logEl.innerHTML = '';
+  statsEl.textContent = '';
+  progressEl.style.width = '0%';
   eventCount = 0;
 
   abortController = new AbortController();
@@ -171,50 +171,46 @@ async function run(): Promise<void> {
   const parser = fastStream({
     onopentag(name, attrs) {
       appendLog(
-        "event-opentag",
-        "opentag",
+        'event-opentag',
+        'opentag',
         `&lt;${escapeHtml(name)}&gt;${formatAttrs(attrs)}`,
       );
     },
     onclosetag(name) {
-      appendLog(
-        "event-closetag",
-        "closetag",
-        `&lt;/${escapeHtml(name)}&gt;`,
-      );
+      appendLog('event-closetag', 'closetag', `&lt;/${escapeHtml(name)}&gt;`);
     },
     ontext(text) {
       appendLog(
-        "event-text",
-        "text",
+        'event-text',
+        'text',
         `<span class="event-value">"${escapeHtml(truncate(text))}"</span>`,
       );
     },
     oncdata(data) {
       appendLog(
-        "event-cdata",
-        "cdata",
+        'event-cdata',
+        'cdata',
         `<span class="event-value">${escapeHtml(truncate(data))}</span>`,
       );
     },
     oncomment(comment) {
       appendLog(
-        "event-comment",
-        "comment",
+        'event-comment',
+        'comment',
         `<span class="event-value">${escapeHtml(truncate(comment))}</span>`,
       );
     },
     onprocessinginstruction(name, body) {
       appendLog(
-        "event-pi",
-        "pi",
+        'event-pi',
+        'pi',
         `&lt;?${escapeHtml(name)} ${escapeHtml(truncate(body))}?&gt;`,
       );
     },
     ondoctype(tagName, attrs) {
       appendLog(
-        "event-doctype",
-        "doctype",
+        'event-doctype',
+        'doctype',
         `&lt;${escapeHtml(tagName)}&gt;${formatAttrs(attrs)}`,
       );
     },
@@ -230,7 +226,7 @@ async function run(): Promise<void> {
     parser.write(chunks[i]!);
 
     const pct = ((i + 1) / totalChunks) * 100;
-    progressEl.style.width = pct + "%";
+    progressEl.style.width = pct + '%';
     statsEl.textContent = `chunk ${i + 1}/${totalChunks} | ${eventCount} events`;
 
     if (delay > 0 && i < totalChunks - 1) {
@@ -242,11 +238,11 @@ async function run(): Promise<void> {
     parser.close();
     const elapsed = performance.now() - startTime;
     appendLog(
-      "event-done",
-      "done",
+      'event-done',
+      'done',
       `${eventCount} events in ${elapsed.toFixed(1)} ms`,
     );
-    progressEl.style.width = "100%";
+    progressEl.style.width = '100%';
     statsEl.textContent = `${eventCount} events | ${elapsed.toFixed(1)} ms`;
   }
 
@@ -258,14 +254,14 @@ async function run(): Promise<void> {
 function stop(): void {
   if (abortController) {
     abortController.abort();
-    appendLog("event-done", "stopped", "aborted by user");
+    appendLog('event-done', 'stopped', 'aborted by user');
     startBtn.disabled = false;
     stopBtn.disabled = true;
   }
 }
 
-startBtn.addEventListener("click", run);
-stopBtn.addEventListener("click", stop);
+startBtn.addEventListener('click', run);
+stopBtn.addEventListener('click', stop);
 
 inputEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
   run();

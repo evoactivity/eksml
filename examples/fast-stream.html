@@ -1,68 +1,93 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>eksml - Fast Stream (SAX) Example</title>
-<link rel="stylesheet" href="./styles.css">
-<style>
-  .log-entry { padding: 2px 14px; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>eksml - Fast Stream (SAX) Example</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .log-entry {
+        padding: 2px 14px;
+      }
 
-  .event-tag { font-weight: 600; }
-  .event-opentag .event-tag { color: #34d399; }
-  .event-closetag .event-tag { color: #f87171; }
-  .event-text .event-tag { color: #fbbf24; }
-  .event-cdata .event-tag { color: #a78bfa; }
-  .event-comment .event-tag { color: #6b7280; }
-  .event-pi .event-tag { color: #38bdf8; }
-  .event-doctype .event-tag { color: #fb923c; }
-  .event-done .event-tag { color: #6366f1; }
+      .event-tag {
+        font-weight: 600;
+      }
+      .event-opentag .event-tag {
+        color: #34d399;
+      }
+      .event-closetag .event-tag {
+        color: #f87171;
+      }
+      .event-text .event-tag {
+        color: #fbbf24;
+      }
+      .event-cdata .event-tag {
+        color: #a78bfa;
+      }
+      .event-comment .event-tag {
+        color: #6b7280;
+      }
+      .event-pi .event-tag {
+        color: #38bdf8;
+      }
+      .event-doctype .event-tag {
+        color: #fb923c;
+      }
+      .event-done .event-tag {
+        color: #6366f1;
+      }
 
-  .event-detail { color: #9ca3af; }
-  .event-value { color: #e0e0e0; }
-</style>
-</head>
-<body>
+      .event-detail {
+        color: #9ca3af;
+      }
+      .event-value {
+        color: #e0e0e0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>eksml &mdash; Fast Stream (SAX)</h1>
+    <p class="subtitle">
+      Feeds XML to the SAX parser chunk-by-chunk with configurable throttle and
+      chunk size.
+    </p>
 
-<h1>eksml &mdash; Fast Stream (SAX)</h1>
-<p class="subtitle">Feeds XML to the SAX parser chunk-by-chunk with configurable throttle and chunk size.</p>
+    <div class="controls">
+      <label for="throttle">Throttle</label>
+      <select id="throttle">
+        <option value="0">No delay</option>
+        <option value="16">16 ms (60 fps)</option>
+        <option value="50">50 ms</option>
+        <option value="100" selected>100 ms</option>
+        <option value="250">250 ms</option>
+        <option value="500">500 ms</option>
+        <option value="1000">1000 ms</option>
+      </select>
 
-<div class="controls">
-  <label for="throttle">Throttle</label>
-  <select id="throttle">
-    <option value="0">No delay</option>
-    <option value="16">16 ms (60 fps)</option>
-    <option value="50">50 ms</option>
-    <option value="100" selected>100 ms</option>
-    <option value="250">250 ms</option>
-    <option value="500">500 ms</option>
-    <option value="1000">1000 ms</option>
-  </select>
+      <label for="chunk-size">Chunk size (bytes)</label>
+      <input type="number" id="chunk-size" value="64" min="1" max="100000" />
 
-  <label for="chunk-size">Chunk size (bytes)</label>
-  <input type="number" id="chunk-size" value="64" min="1" max="100000">
-
-  <button class="primary" id="start-btn">Stream</button>
-  <button class="danger" id="stop-btn" disabled>Stop</button>
-</div>
-
-<div class="panes">
-  <div class="pane">
-    <div class="pane-header">Input XML</div>
-    <div class="editor-container" id="input-editor"></div>
-  </div>
-
-  <div class="pane">
-    <div class="pane-header">
-      <span>Events</span>
-      <span class="stats" id="stats"></span>
+      <button class="primary" id="start-btn">Stream</button>
+      <button class="danger" id="stop-btn" disabled>Stop</button>
     </div>
-    <div class="progress-bar"><div class="fill" id="progress"></div></div>
-    <div class="log-area" id="log"></div>
-  </div>
-</div>
 
-<script type="module" src="./fast-stream.ts"></script>
+    <div class="panes">
+      <div class="pane">
+        <div class="pane-header">Input XML</div>
+        <div class="editor-container" id="input-editor"></div>
+      </div>
 
-</body>
+      <div class="pane">
+        <div class="pane-header">
+          <span>Events</span>
+          <span class="stats" id="stats"></span>
+        </div>
+        <div class="progress-bar"><div class="fill" id="progress"></div></div>
+        <div class="log-area" id="log"></div>
+      </div>
+    </div>
+
+    <script type="module" src="./fast-stream.ts"></script>
+  </body>
 </html>

@@ -7,7 +7,7 @@
  * Handles: (G)TS + (G)JS, QUnit, Supporting Node files
  *          for apps and libraries
  */
-import { configs } from "@nullvoxpopuli/eslint-configs";
+import { configs } from '@nullvoxpopuli/eslint-configs';
 
 export default [
   ...configs.ember(import.meta.dirname),

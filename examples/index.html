@@ -1,141 +1,150 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>eksml - Examples</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>eksml - Examples</title>
-  <link rel="stylesheet" href="./styles.css">
-  <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
+      .logo {
+        margin-bottom: 8px;
+      }
 
-    .logo {
-      margin-bottom: 8px;
-    }
+      .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 40px;
+      }
 
-    .subtitle {
-      font-size: 0.9rem;
-      margin-bottom: 40px;
-    }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 16px;
+        width: 100%;
+        max-width: 960px;
+      }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      gap: 16px;
-      width: 100%;
-      max-width: 960px;
-    }
+      a.card {
+        display: block;
+        padding: 24px;
+        background: #16161a;
+        border: 1px solid #2a2a2e;
+        border-radius: 10px;
+        text-decoration: none;
+        color: inherit;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
 
-    a.card {
-      display: block;
-      padding: 24px;
-      background: #16161a;
-      border: 1px solid #2a2a2e;
-      border-radius: 10px;
-      text-decoration: none;
-      color: inherit;
-      transition: border-color 0.15s, background 0.15s;
-    }
+      a.card:hover {
+        border-color: #2563eb;
+        background: #1a1a20;
+      }
 
-    a.card:hover {
-      border-color: #2563eb;
-      background: #1a1a20;
-    }
+      .card h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 8px;
+      }
 
-    .card h2 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 8px;
-    }
+      .card p {
+        font-size: 0.82rem;
+        color: #888;
+        line-height: 1.5;
+      }
 
-    .card p {
-      font-size: 0.82rem;
-      color: #888;
-      line-height: 1.5;
-    }
+      .card .tag {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 3px 10px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
 
-    .card .tag {
-      display: inline-block;
-      margin-top: 12px;
-      padding: 3px 10px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
+      .tag-parse {
+        background: #1e3a5f;
+        color: #60a5fa;
+      }
 
-    .tag-parse {
-      background: #1e3a5f;
-      color: #60a5fa;
-    }
+      .tag-stream {
+        background: #1a3a2a;
+        color: #34d399;
+      }
 
-    .tag-stream {
-      background: #1a3a2a;
-      color: #34d399;
-    }
+      .tag-write {
+        background: #3a2a1a;
+        color: #fb923c;
+      }
 
-    .tag-write {
-      background: #3a2a1a;
-      color: #fb923c;
-    }
+      .note {
+        margin-top: 40px;
+        font-size: 0.78rem;
+        color: #555;
+        text-align: center;
+        max-width: 600px;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
 
-    .note {
-      margin-top: 40px;
-      font-size: 0.78rem;
-      color: #555;
-      text-align: center;
-      max-width: 600px;
-      line-height: 1.6;
-    }
-  </style>
-</head>
+  <body>
+    <img class="logo" src="/logo-dark.svg" alt="eksml" height="250" />
+    <p class="subtitle">Interactive examples for the eksml XML parser</p>
 
-<body>
+    <div class="cards">
+      <a class="card" href="parse.html">
+        <h2>Parse</h2>
+        <p>
+          Enter XML and see it parsed in real time. Switch between DOM
+          (TNode[]), lossy, and lossless output modes.
+        </p>
+        <span class="tag tag-parse">parse / lossy / lossless</span>
+      </a>
 
-  <img class="logo" src="/logo-dark.svg" alt="eksml" height="250">
-  <p class="subtitle">Interactive examples for the eksml XML parser</p>
+      <a class="card" href="writer.html">
+        <h2>Writer</h2>
+        <p>
+          Enter JSON (DOM, lossy, or lossless) and serialize it back to XML.
+          Toggle pretty-print, entity encoding, and HTML mode.
+        </p>
+        <span class="tag tag-write">writer / fromLossy / fromLossless</span>
+      </a>
 
-  <div class="cards">
-    <a class="card" href="parse.html">
-      <h2>Parse</h2>
-      <p>Enter XML and see it parsed in real time. Switch between DOM (TNode[]), lossy, and lossless output modes.</p>
-      <span class="tag tag-parse">parse / lossy / lossless</span>
-    </a>
+      <a class="card" href="fast-stream.html">
+        <h2>Fast Stream (SAX)</h2>
+        <p>
+          Feed XML to the SAX parser chunk-by-chunk. Watch opentag, closetag,
+          text, CDATA, and comment events stream in with configurable throttle
+          and chunk size.
+        </p>
+        <span class="tag tag-stream">fastStream</span>
+      </a>
 
-    <a class="card" href="writer.html">
-      <h2>Writer</h2>
-      <p>Enter JSON (DOM, lossy, or lossless) and serialize it back to XML. Toggle pretty-print, entity encoding, and
-        HTML mode.</p>
-      <span class="tag tag-write">writer / fromLossy / fromLossless</span>
-    </a>
+      <a class="card" href="transform-stream.html">
+        <h2>Transform Stream</h2>
+        <p>
+          Pipe XML through a Web TransformStream. Complete TNode subtrees are
+          emitted as each top-level element closes. Click nodes to expand their
+          full JSON.
+        </p>
+        <span class="tag tag-stream">transformStream</span>
+      </a>
+    </div>
 
-    <a class="card" href="fast-stream.html">
-      <h2>Fast Stream (SAX)</h2>
-      <p>Feed XML to the SAX parser chunk-by-chunk. Watch opentag, closetag, text, CDATA, and comment events stream in
-        with configurable throttle and chunk size.</p>
-      <span class="tag tag-stream">fastStream</span>
-    </a>
-
-    <a class="card" href="transform-stream.html">
-      <h2>Transform Stream</h2>
-      <p>Pipe XML through a Web TransformStream. Complete TNode subtrees are emitted as each top-level element closes.
-        Click nodes to expand their full JSON.</p>
-      <span class="tag tag-stream">transformStream</span>
-    </a>
-  </div>
-
-  <p class="note">
-    Serve from the project root with any static server, e.g.<br>
-    <code>npx serve .</code> or <code>python3 -m http.server</code>
-  </p>
-
-</body>
-
+    <p class="note">
+      Serve from the project root with any static server, e.g.<br />
+      <code>npx serve .</code> or <code>python3 -m http.server</code>
+    </p>
+  </body>
 </html>

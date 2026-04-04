@@ -1,57 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>eksml - Writer Example</title>
-<link rel="stylesheet" href="./styles.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>eksml - Writer Example</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <h1>eksml &mdash; Writer</h1>
+    <p class="subtitle">
+      Enter JSON (DOM, lossy, or lossless) on the left, see serialized XML on
+      the right.
+    </p>
 
-<h1>eksml &mdash; Writer</h1>
-<p class="subtitle">Enter JSON (DOM, lossy, or lossless) on the left, see serialized XML on the right.</p>
+    <div class="controls">
+      <label for="format">Input format</label>
+      <select id="format">
+        <option value="dom" selected>DOM (TNode[])</option>
+        <option value="lossy">Lossy</option>
+        <option value="lossless">Lossless</option>
+      </select>
 
-<div class="controls">
-  <label for="format">Input format</label>
-  <select id="format">
-    <option value="dom" selected>DOM (TNode[])</option>
-    <option value="lossy">Lossy</option>
-    <option value="lossless">Lossless</option>
-  </select>
+      <label for="pretty">
+        <input type="checkbox" id="pretty" /> Pretty-print
+      </label>
 
-  <label for="pretty">
-    <input type="checkbox" id="pretty"> Pretty-print
-  </label>
+      <label for="entities">
+        <input type="checkbox" id="entities" /> Encode entities
+      </label>
 
-  <label for="entities">
-    <input type="checkbox" id="entities"> Encode entities
-  </label>
+      <label for="html"> <input type="checkbox" id="html" /> HTML mode </label>
 
-  <label for="html">
-    <input type="checkbox" id="html"> HTML mode
-  </label>
-
-  <button class="primary" id="write-btn">Write</button>
-</div>
-
-<div class="panes">
-  <div class="pane">
-    <div class="pane-header">Input JSON</div>
-    <div class="tabs" id="tabs"></div>
-    <div class="editor-container" id="input-editor"></div>
-  </div>
-
-  <div class="pane" style="position: relative;">
-    <div class="pane-header">
-      <span>Output XML</span>
-      <span class="timing" id="timing"></span>
+      <button class="primary" id="write-btn">Write</button>
     </div>
-    <div class="editor-container" id="output-editor"></div>
-    <div class="error-overlay" id="error-overlay" hidden></div>
-  </div>
-</div>
 
-<script type="module" src="./writer.ts"></script>
+    <div class="panes">
+      <div class="pane">
+        <div class="pane-header">Input JSON</div>
+        <div class="tabs" id="tabs"></div>
+        <div class="editor-container" id="input-editor"></div>
+      </div>
 
-</body>
+      <div class="pane" style="position: relative">
+        <div class="pane-header">
+          <span>Output XML</span>
+          <span class="timing" id="timing"></span>
+        </div>
+        <div class="editor-container" id="output-editor"></div>
+        <div class="error-overlay" id="error-overlay" hidden></div>
+      </div>
+    </div>
+
+    <script type="module" src="./writer.ts"></script>
+  </body>
 </html>
