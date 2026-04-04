@@ -19,7 +19,6 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src", "test", "bench"],
-  "exclude": ["node_modules", "dist"],
-  "types": ["@types/node"]
+  "include": ["src", "test", "bench", "scripts"],
+  "exclude": ["node_modules", "dist"]
 }
