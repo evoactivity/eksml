@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type:": "module",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "pnpm --filter eksml test",

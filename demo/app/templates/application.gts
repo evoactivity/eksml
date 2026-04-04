@@ -1,5 +1,21 @@
-<template>
-  <h1>Welcome to Ember</h1>
+import { LinkTo } from '@ember/routing';
 
-  {{outlet}}
+<template>
+  <div class='page'>
+    <nav class='nav'>
+      <LinkTo @route='index'>
+        <img class='nav-logo' src='/logo-dark.svg' alt='eksml' height='28' />
+      </LinkTo>
+      <div class='nav-links'>
+        <LinkTo @route='parse'>Parse</LinkTo>
+        <LinkTo @route='writer'>Writer</LinkTo>
+        <LinkTo @route='fast-stream'>Fast Stream</LinkTo>
+        <LinkTo @route='transform-stream'>Transform Stream</LinkTo>
+      </div>
+    </nav>
+
+    <div class='page-content'>
+      {{outlet}}
+    </div>
+  </div>
 </template>

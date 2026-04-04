@@ -1,4 +1,5 @@
 import EmbroiderRouter from '@embroider/router';
+
 import config from '#config';
 
 export default class Router extends EmbroiderRouter {
@@ -6,7 +7,12 @@ export default class Router extends EmbroiderRouter {
   rootURL = config.rootURL;
 }
 
-Router.map(function () {});
+Router.map(function () {
+  this.route('parse');
+  this.route('writer');
+  this.route('fast-stream');
+  this.route('transform-stream');
+});
 
 /**
  * Caveat:

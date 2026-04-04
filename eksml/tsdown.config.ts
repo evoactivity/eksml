@@ -9,6 +9,8 @@ export default defineConfig({
     'src/transformStream.ts',
     'src/converters/lossy.ts',
     'src/converters/lossless.ts',
+    'src/converters/fromLossy.ts',
+    'src/converters/fromLossless.ts',
     'src/utilities/index.ts',
   ],
   format: ['esm'],
