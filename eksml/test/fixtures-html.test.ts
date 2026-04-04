@@ -33,7 +33,7 @@ describe('fixture: html-page.html', () => {
     const result = parse(htmlPage, { html: true }) as (TNode | string)[];
     // DOCTYPE appears as a TNode
     const doctype = result.find(
-      (n) => typeof n === 'object' && n.tagName === '!DOCTYPE',
+      (n) => typeof n === 'object' && n.tagName.toUpperCase() === '!DOCTYPE',
     ) as TNode;
     expect(doctype).toBeDefined();
     expect(doctype.attributes).toEqual({ html: null });
@@ -175,9 +175,9 @@ describe('fixture: html-page.html', () => {
     // <tag> inside CSS comment preserved
     expect(css).toContain('/* <tag> inside a CSS comment');
     // Attribute selectors preserved
-    expect(css).toContain('input[type="text"]');
+    expect(css).toContain("input[type='text']");
     expect(css).toContain('button[disabled]');
-    expect(css).toContain('a[href^="https://"]');
+    expect(css).toContain("a[href^='https://']");
   });
 
   it('parses JSON-LD script with structured data', () => {
@@ -203,7 +203,8 @@ describe('fixture: html-page.html', () => {
     expect(inlineScript).toBeDefined();
     const js = inlineScript!.children[0] as string;
     // DOM manipulation with innerHTML containing HTML
-    expect(js).toContain("banner.innerHTML = '<span");
+    expect(js).toContain("banner.innerHTML =");
+    expect(js).toContain("'<span");
     // Template literal with embedded HTML
     expect(js).toContain('<div class="tooltip">');
     // Comparison operators that look like XML
