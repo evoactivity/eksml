@@ -100,6 +100,7 @@ const SIMPLE_KEYWORD = /^[A-Za-z][A-Za-z0-9_-]*$/;
 
 function compactWrite(input: TNode | (TNode | string)[]): string {
   let out = '';
+  const seen = new WeakSet<TNode>();
 
   function writeChildren(nodes: (TNode | string)[]): void {
     for (let i = 0; i < nodes.length; i++) {
@@ -113,6 +114,10 @@ function compactWrite(input: TNode | (TNode | string)[]): string {
   }
 
   function writeNode(node: TNode): void {
+    if (seen.has(node)) {
+      throw new Error('Circular reference detected in TNode tree');
+    }
+    seen.add(node);
     const tag = node.tagName;
     const attributes = node.attributes;
     const firstChar = tag.charCodeAt(0);
@@ -211,6 +216,7 @@ function fullWriter(
   // Compact path with entities/html support
   if (!indent) {
     let out = '';
+    const seen = new WeakSet<TNode>();
 
     function writeChildren(nodes: (TNode | string)[]): void {
       for (let i = 0; i < nodes.length; i++) {
@@ -224,6 +230,10 @@ function fullWriter(
     }
 
     function writeNode(node: TNode): void {
+      if (seen.has(node)) {
+        throw new Error('Circular reference detected in TNode tree');
+      }
+      seen.add(node);
       const tag = node.tagName;
       const attributes = node.attributes;
       const firstChar = tag.charCodeAt(0);
@@ -299,6 +309,7 @@ function fullWriter(
 
   // Pretty path
   let out = '';
+  const seen = new WeakSet<TNode>();
 
   function hasTextChildren(nodes: (TNode | string)[]): boolean {
     for (let i = 0; i < nodes.length; i++) {
@@ -337,6 +348,10 @@ function fullWriter(
 
   function prettyWriteNode(node: TNode, depth: number): void {
     if (!node) return;
+    if (seen.has(node)) {
+      throw new Error('Circular reference detected in TNode tree');
+    }
+    seen.add(node);
     const padding = indent.repeat(depth);
     const tag = node.tagName;
     const firstChar = tag.charCodeAt(0);

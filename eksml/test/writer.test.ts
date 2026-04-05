@@ -169,6 +169,23 @@ describe('write', () => {
     expect(child.attributes?.data).toBe(`he said "it's"`);
   });
 
+  it('throws a descriptive error for circular references', () => {
+    const node: TNode = { tagName: 'a', attributes: {}, children: [] };
+    node.children.push(node); // circular!
+    expect(() => write(node)).toThrow(
+      'Circular reference detected in TNode tree',
+    );
+  });
+
+  it('throws for circular references in pretty mode', () => {
+    const node: TNode = { tagName: 'a', attributes: {}, children: [] };
+    const child: TNode = { tagName: 'b', attributes: {}, children: [node] };
+    node.children.push(child); // indirect circular
+    expect(() => write(node, { pretty: true })).toThrow(
+      'Circular reference detected in TNode tree',
+    );
+  });
+
   // --- pretty option ---
 
   it('pretty: true uses 2-space indent', () => {
