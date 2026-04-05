@@ -52,8 +52,10 @@ a {
   text-decoration: none;
 }
 
-a:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  a:hover {
+    text-decoration: underline;
+  }
 }
 
 img {
@@ -104,10 +106,16 @@ img {
   transition: color 0.15s;
 }
 
-.nav-links a:hover,
 .nav-links a.active {
   color: #fff;
   text-decoration: none;
+}
+
+@media (hover: hover) {
+  .nav-links a:hover {
+    color: #fff;
+    text-decoration: none;
+  }
 }
 
 /* --- Landing page --- */
@@ -159,9 +167,11 @@ a.card {
     background 0.15s;
 }
 
-a.card:hover {
-  border-color: #2563eb;
-  background: #1a1a20;
+@media (hover: hover) {
+  a.card:hover {
+    border-color: #2563eb;
+    background: #1a1a20;
+  }
 }
 
 .card h2 {
@@ -244,9 +254,11 @@ input[type='text'] {
   font-size: 0.75rem;
 }
 
-select:hover,
-button:hover {
-  border-color: #555;
+@media (hover: hover) {
+  select:hover,
+  button:hover {
+    border-color: #555;
+  }
 }
 
 button.primary {
@@ -256,8 +268,10 @@ button.primary {
   font-weight: 600;
 }
 
-button.primary:hover {
-  background: #1d4ed8;
+@media (hover: hover) {
+  button.primary:hover {
+    background: #1d4ed8;
+  }
 }
 
 button.danger {
@@ -267,8 +281,10 @@ button.danger {
   font-weight: 600;
 }
 
-button.danger:hover {
-  background: #b91c1c;
+@media (hover: hover) {
+  button.danger:hover {
+    background: #b91c1c;
+  }
 }
 
 button:disabled {
@@ -370,9 +386,11 @@ button:disabled {
   white-space: nowrap;
 }
 
-.tab:hover {
-  color: #aaa;
-  background: #1a1a1e;
+@media (hover: hover) {
+  .tab:hover {
+    color: #aaa;
+    background: #1a1a1e;
+  }
 }
 
 .tab.active {
@@ -408,8 +426,10 @@ button:disabled {
   word-break: break-word;
 }
 
-.log-entry:hover {
-  background: #1c1c20;
+@media (hover: hover) {
+  .log-entry:hover {
+    background: #1c1c20;
+  }
 }
 
 .log-entry.chunk-marker {
