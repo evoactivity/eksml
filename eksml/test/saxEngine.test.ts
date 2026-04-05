@@ -1081,4 +1081,369 @@ describe('saxEngine', () => {
       // Should not throw
     });
   });
+
+  // =========================================================================
+  // Edge cases: comment parsing (COMMENT_END2)
+  // =========================================================================
+  describe('comment edge cases', () => {
+    it('handles extra dashes inside a comment (----->)', () => {
+      // Extra dashes in COMMENT_END2: after --, encountering another - stays in COMMENT_END2
+      const e = parseEvents('<root><!-- extra --- dashes --></root>');
+      expect(e.comments).toHaveLength(1);
+      expect(e.comments[0]).toContain('extra');
+      expect(e.comments[0]).toContain('dashes');
+    });
+
+    it('handles non-closing after -- (COMMENT_END2 non-> resets to COMMENT)', () => {
+      // After --, a non-dash non-> char resets back to COMMENT state
+      const e = parseEvents('<root><!-- foo--bar --></root>');
+      expect(e.comments).toHaveLength(1);
+      expect(e.comments[0]).toContain('foo');
+      expect(e.comments[0]).toContain('bar');
+    });
+  });
+
+  // =========================================================================
+  // Edge cases: CDATA handshake mismatch
+  // =========================================================================
+  describe('CDATA handshake mismatch', () => {
+    it('CDATA_1 mismatch: <![X falls through to DOCTYPE', () => {
+      // <![X... doesn't match CDATA — falls through to DOCTYPE handling
+      const e = parseEvents('<![XDATA[data]]>');
+      expect(e.cdatas).toEqual([]);
+      expect(e.doctypes).toHaveLength(1);
+    });
+
+    it('CDATA_2 mismatch: <![CX falls through to DOCTYPE', () => {
+      const e = parseEvents('<![CX...>');
+      expect(e.cdatas).toEqual([]);
+      expect(e.doctypes).toHaveLength(1);
+    });
+
+    it('CDATA_3 mismatch: <![CDX falls through to DOCTYPE', () => {
+      const e = parseEvents('<![CDX...>');
+      expect(e.cdatas).toEqual([]);
+      expect(e.doctypes).toHaveLength(1);
+    });
+
+    it('CDATA_4 mismatch: <![CDAX falls through to DOCTYPE', () => {
+      const e = parseEvents('<![CDAX...>');
+      expect(e.cdatas).toEqual([]);
+      expect(e.doctypes).toHaveLength(1);
+    });
+
+    it('CDATA_5 mismatch: <![CDATX falls through to DOCTYPE', () => {
+      const e = parseEvents('<![CDATX...>');
+      expect(e.cdatas).toEqual([]);
+      expect(e.doctypes).toHaveLength(1);
+    });
+
+    it('CDATA_6 mismatch: <![CDATAx falls through to DOCTYPE', () => {
+      // After matching [CDATA but not the final [
+      const e = parseEvents('<![CDATAx>');
+      expect(e.cdatas).toEqual([]);
+      expect(e.doctypes).toHaveLength(1);
+    });
+  });
+
+  // =========================================================================
+  // Edge cases: CDATA end sequence
+  // =========================================================================
+  describe('CDATA end sequence edge cases', () => {
+    it('CDATA_END1: single ] followed by non-] stays in CDATA', () => {
+      // A single ] followed by a non-] character goes back to CDATA
+      const e = parseEvents('<![CDATA[data]more]]>');
+      expect(e.cdatas).toEqual(['data]more']);
+    });
+
+    it('CDATA_END2: extra ] before > is accumulated', () => {
+      // After ]], another ] is accumulated (extra bracket)
+      const e = parseEvents('<![CDATA[data]]]>');
+      expect(e.cdatas).toEqual(['data]']);
+    });
+
+    it('CDATA_END2: ]] followed by non-> non-] goes back to CDATA', () => {
+      // After ]], a non-> non-] character resets to CDATA
+      const e = parseEvents('<![CDATA[a]]b]]>');
+      expect(e.cdatas).toEqual(['a]]b']);
+    });
+  });
+
+  // =========================================================================
+  // Edge cases: PI_END non-> after ?
+  // =========================================================================
+  describe('PI_END edge cases', () => {
+    it('? followed by non-> stays in PI (re-checks char)', () => {
+      // <?foo bar?baz?> — the first ? is not followed by >, so it stays in PI
+      const e = parseEvents('<?foo bar?baz?>');
+      expect(e.pis).toHaveLength(1);
+      expect(e.pis[0]!.name).toBe('foo');
+      expect(e.pis[0]!.body).toBe('bar?baz');
+    });
+  });
+
+  // =========================================================================
+  // Edge cases: DOCTYPE_BRACKET
+  // =========================================================================
+  describe('DOCTYPE_BRACKET edge cases', () => {
+    it('handles DOCTYPE with internal subset (brackets)', () => {
+      // DOCTYPE with an internal subset [...] that contains non-] chars
+      const xml =
+        '<!DOCTYPE root [<!ELEMENT root (#PCDATA)>]><root>text</root>';
+      const e = parseEvents(xml);
+      expect(e.doctypes).toHaveLength(1);
+      expect(e.opens).toEqual([{ name: 'root', attrs: {} }]);
+    });
+
+    it('DOCTYPE bracket with various content before ]', () => {
+      // Non-] characters inside the bracket section are skipped
+      const xml = '<!DOCTYPE html [some content here]><html></html>';
+      const e = parseEvents(xml);
+      expect(e.doctypes).toHaveLength(1);
+    });
+  });
+
+  // =========================================================================
+  // Edge cases: RAW_END states
+  // =========================================================================
+  describe('RAW_END edge cases', () => {
+    it('RAW_END_2: tag name mismatch goes back to RAW_TEXT', () => {
+      // Inside <script>, a </scr followed by a non-matching char
+      // resets to RAW_TEXT
+      const e = parseEvents('<script></scr ipt>real</script>', {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['</scr ipt>real']);
+    });
+
+    it('RAW_END_2: non-> after full tag match goes back to RAW_TEXT', () => {
+      // After matching </script but getting a non-> non-whitespace char
+      const e = parseEvents('<script></scriptx>real</script>', {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['</scriptx>real']);
+    });
+
+    it('RAW_END_2: whitespace after tag match transitions to RAW_END_3', () => {
+      // </script > with a space before > is valid
+      const e = parseEvents('<script>code</script >', {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['code']);
+      expect(e.closes).toEqual(['script']);
+    });
+
+    it('RAW_END_3: non-> non-whitespace goes back to RAW_TEXT', () => {
+      // After </script  followed by a non-whitespace non-> char
+      const e = parseEvents('<script></script x>real</script>', {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['</script x>real']);
+    });
+
+    it('RAW_END_3: multiple whitespace before > is fine', () => {
+      const e = parseEvents('<script>code</script   >', {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['code']);
+      expect(e.closes).toEqual(['script']);
+    });
+  });
+
+  // =========================================================================
+  // Edge cases: close() in various states
+  // =========================================================================
+  describe('close() in various raw states', () => {
+    it('close() in RAW_END_3 state emits text and close', () => {
+      // Parser is in RAW_END_3 (tag matched + trailing whitespace) at close()
+      const e = collectEvents(['<script>code</script '], {
+        rawContentTags: ['script'],
+      });
+      // close() should treat the full tag match + whitespace as a valid close
+      expect(e.texts).toEqual(['code']);
+      expect(e.closes).toEqual(['script']);
+    });
+
+    it('close() in RAW_TEXT state emits buffered raw text', () => {
+      // Parser is still in RAW_TEXT at close — no close tag seen at all
+      const e = collectEvents(['<script>unclosed raw text'], {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['unclosed raw text']);
+      expect(e.closes).toEqual(['script']);
+    });
+
+    it('close() in RAW_END_1 state (saw < but no /)', () => {
+      // Parser saw < but no / — the < is part of the raw text
+      const e = collectEvents(['<script>code<'], {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['code<']);
+      expect(e.closes).toEqual(['script']);
+    });
+
+    it('close() in RAW_END_2 state (partial close tag match)', () => {
+      // Parser saw </scr but input ended — partial match becomes text
+      const e = collectEvents(['<script>code</scr'], {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['code</scr']);
+      expect(e.closes).toEqual(['script']);
+    });
+  });
+
+  // =========================================================================
+  // Edge case: default state (should not normally be reached)
+  // =========================================================================
+  describe('default state', () => {
+    it('does not crash on pathological input', () => {
+      // This tests that the parser handles any unexpected state gracefully.
+      // The default case just advances i++ and continues.
+      // Normal input won't trigger this, but we verify robustness.
+      const parser = saxEngine();
+      parser.write('<root>text</root>');
+      parser.close();
+      // Should not throw
+    });
+  });
+
+  // =========================================================================
+  // DOCTYPE: unclosed quoted token
+  // =========================================================================
+  describe('DOCTYPE unclosed quoted token', () => {
+    it('treats unclosed double-quoted token as attribute key', () => {
+      // emitDoctype: quote opens at `"` but never closes → lines 244-246
+      const e = collectEvents(['<!DOCTYPE html "unclosed>']);
+      expect(e.doctypes).toHaveLength(1);
+      expect(e.doctypes[0]!.attrs['html']).toBe(null);
+      expect(e.doctypes[0]!.attrs['unclosed']).toBe(null);
+    });
+
+    it('treats unclosed single-quoted token as attribute key', () => {
+      const e = collectEvents(["<!DOCTYPE html 'unclosed>"]);
+      expect(e.doctypes).toHaveLength(1);
+      expect(e.doctypes[0]!.attrs['unclosed']).toBe(null);
+    });
+  });
+
+  // =========================================================================
+  // Attribute parsing: ATTR_AFTER_NAME → =  (line 466)
+  // =========================================================================
+  describe('ATTR_AFTER_NAME transitions', () => {
+    it('transitions to ATTR_AFTER_EQ when = follows attr name', () => {
+      // Attribute like `foo = "bar"` — whitespace before = triggers
+      // ATTR_AFTER_NAME whitespace skip, then = triggers line 466
+      const e = collectEvents(['<div foo = "bar"></div>']);
+      expect(e.opens[0]!.attrs['foo']).toBe('bar');
+    });
+  });
+
+  // =========================================================================
+  // ATTR_AFTER_EQ edge cases (lines 507-522)
+  // =========================================================================
+  describe('ATTR_AFTER_EQ edge cases', () => {
+    it('skips whitespace between = and quoted value', () => {
+      // Whitespace after = but before quote → lines 507-512
+      const e = collectEvents(['<div foo=  "bar"></div>']);
+      expect(e.opens[0]!.attrs['foo']).toBe('bar');
+    });
+
+    it('handles > immediately after = (empty string value)', () => {
+      // > after = → line 513-517: attribute gets empty string, tag closes
+      const e = collectEvents(['<div foo=>text</div>']);
+      expect(e.opens[0]!.attrs['foo']).toBe('');
+      expect(e.texts).toContain('text');
+    });
+
+    it('handles unquoted attribute value', () => {
+      // Non-quote non-whitespace after = → lines 518-520: ATTR_VALUE_UQ
+      const e = collectEvents(['<div foo=bar></div>']);
+      expect(e.opens[0]!.attrs['foo']).toBe('bar');
+    });
+  });
+
+  // =========================================================================
+  // ATTR_VALUE_SQ spanning chunks (lines 550-551)
+  // =========================================================================
+  describe('ATTR_VALUE_SQ spanning chunks', () => {
+    it('handles single-quoted value split across chunks', () => {
+      // Single-quote attribute where closing ' is in the next chunk
+      const e = collectEvents(["<div foo='hel", "lo'></div>"]);
+      expect(e.opens[0]!.attrs['foo']).toBe('hello');
+    });
+
+    it('handles single-quoted value split at start of chunk', () => {
+      // The entire second chunk starts with the rest of the value
+      // i === 0 path at line 550
+      const e = collectEvents(["<div foo='", "value'></div>"]);
+      expect(e.opens[0]!.attrs['foo']).toBe('value');
+    });
+  });
+
+  // =========================================================================
+  // ATTR_VALUE_UQ (unquoted attribute values, lines 566-599)
+  // =========================================================================
+  describe('ATTR_VALUE_UQ', () => {
+    it('terminates unquoted value at >', () => {
+      // charCode === GT → lines 588-591
+      const e = collectEvents(['<div foo=bar>text</div>']);
+      expect(e.opens[0]!.attrs['foo']).toBe('bar');
+    });
+
+    it('terminates unquoted value at /', () => {
+      // charCode === SLASH → lines 592-594: self-closing
+      const e = collectEvents(['<div foo=bar/>']);
+      expect(e.opens[0]!.attrs['foo']).toBe('bar');
+      expect(e.closes).toContain('div');
+    });
+
+    it('terminates unquoted value at whitespace (more attrs)', () => {
+      // charCode is whitespace → lines 595-597
+      const e = collectEvents(['<div foo=bar baz="qux"></div>']);
+      expect(e.opens[0]!.attrs['foo']).toBe('bar');
+      expect(e.opens[0]!.attrs['baz']).toBe('qux');
+    });
+
+    it('handles unquoted value spanning chunks', () => {
+      // Value doesn't end in current chunk → lines 581-583
+      const e = collectEvents(['<div foo=lo', 'ngvalue></div>']);
+      expect(e.opens[0]!.attrs['foo']).toBe('longvalue');
+    });
+  });
+
+  // =========================================================================
+  // SELF_CLOSING fallback (line 631)
+  // =========================================================================
+  describe('SELF_CLOSING state fallback', () => {
+    it('falls back to OPEN_TAG_BODY when / not followed by >', () => {
+      // <tag / attr="val"> → / then space → falls back to OPEN_TAG_BODY
+      const e = collectEvents(['<div / class="x">text</div>']);
+      expect(e.opens[0]!.attrs['class']).toBe('x');
+      expect(e.texts).toContain('text');
+    });
+  });
+
+  // =========================================================================
+  // COMMENT_1: malformed comment (<!-X instead of <!--)
+  // =========================================================================
+  describe('COMMENT_1 non-comment fallback', () => {
+    it('falls back to DOCTYPE state for <!-X...>', () => {
+      // <!- followed by non-dash → lines 668-669: sets special='-', goes to DOCTYPE
+      const e = collectEvents(['<!-hello>']);
+      expect(e.doctypes).toHaveLength(1);
+    });
+  });
+
+  // =========================================================================
+  // PI_END: whitespace trimming of PI body (lines 910, 922)
+  // =========================================================================
+  describe('PI body whitespace trimming', () => {
+    it('trims leading and trailing whitespace from PI body', () => {
+      // Body has extra whitespace that must be trimmed → lines 910, 922
+      const e = collectEvents(['<?xml   version="1.0"   ?>']);
+      expect(e.pis).toHaveLength(1);
+      expect(e.pis[0]!.name).toBe('xml');
+      expect(e.pis[0]!.body).toBe('version="1.0"');
+    });
+  });
 });

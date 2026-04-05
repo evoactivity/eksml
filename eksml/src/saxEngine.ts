@@ -1087,9 +1087,11 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           continue;
         }
 
+        /* v8 ignore start — safety fallback for unhandled state values */
         default:
           i++;
           continue;
+        /* v8 ignore stop */
       }
     }
   }

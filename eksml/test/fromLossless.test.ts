@@ -282,3 +282,16 @@ describe('unicode', () => {
     expect(result).toEqual(dom);
   });
 });
+
+// =================================================================
+// Defensive: $attr at top level
+// =================================================================
+describe('defensive edge cases', () => {
+  it('$attr entry at top level returns empty string', () => {
+    // Normally $attr only appears inside element children, but if
+    // it somehow appears at the top level, fromLossless should handle it
+    const entries = [{ $attr: { id: '1' } }] as any;
+    const result = fromLossless(entries);
+    expect(result).toEqual(['']);
+  });
+});

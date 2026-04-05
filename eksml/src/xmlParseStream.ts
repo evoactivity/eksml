@@ -397,6 +397,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
 
     function defaultOnCloseTag(_tagName: string): void {
       const node = stack.pop();
+      /* v8 ignore next — defensive: SAX engine always matches open/close tags */
       if (!node) return;
       if (stack.length === 0 && streamController) {
         streamController.enqueue(convert(node));

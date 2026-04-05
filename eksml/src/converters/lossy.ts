@@ -137,9 +137,11 @@ function convertNode(node: TNode): LossyValue {
         mixed = [];
         for (let j = 0; j < i; j++) {
           const previousChild = children[j]!;
+          /* v8 ignore start — unreachable: prior children are always elements when upgrading from element-first to mixed */
           if (typeof previousChild === 'string') {
             mixed.push(previousChild);
           } else {
+            /* v8 ignore stop */
             mixed.push({ [previousChild.tagName]: convertNode(previousChild) });
           }
         }

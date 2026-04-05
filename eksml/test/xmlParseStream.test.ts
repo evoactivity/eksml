@@ -1416,3 +1416,271 @@ describe('XmlParseStream with output option', () => {
     });
   });
 });
+
+// =================================================================
+// parsePIAttributes edge cases
+// =================================================================
+describe('XmlParseStream — parsePIAttributes edge cases', () => {
+  it('handles unterminated quoted attribute in PI', async () => {
+    // The quote is opened but never closed → parsePIAttributes takes
+    // the unterminated-quote branch (lines 212-214)
+    const stream = new XmlParseStream();
+    const results = await collect(stream, [
+      '<?custom key="unterminated?><root/>',
+    ]);
+    const pi = results.find(
+      (r): r is TNode => typeof r === 'object' && r.tagName === '?custom',
+    );
+    expect(pi).toBeDefined();
+    // The attribute value should be everything after the opening quote
+    expect(pi!.attributes!.key).toBe('unterminated');
+  });
+
+  it('handles unquoted attribute value in PI', async () => {
+    // value after = starts with a non-quote char → unquoted value branch (lines 219-233)
+    const stream = new XmlParseStream();
+    const results = await collect(stream, [
+      '<?custom key=unquoted?><root/>',
+    ]);
+    const pi = results.find(
+      (r): r is TNode => typeof r === 'object' && r.tagName === '?custom',
+    );
+    expect(pi).toBeDefined();
+    expect(pi!.attributes!.key).toBe('unquoted');
+  });
+
+  it('handles unquoted attribute value followed by more attributes', async () => {
+    const stream = new XmlParseStream();
+    const results = await collect(stream, [
+      '<?custom a=hello b="world"?><root/>',
+    ]);
+    const pi = results.find(
+      (r): r is TNode => typeof r === 'object' && r.tagName === '?custom',
+    );
+    expect(pi).toBeDefined();
+    expect(pi!.attributes!.a).toBe('hello');
+    expect(pi!.attributes!.b).toBe('world');
+  });
+
+  it('handles = at end of PI body (no value)', async () => {
+    // After `=`, skip whitespace reaches end of string → null value (line 236)
+    const stream = new XmlParseStream();
+    const results = await collect(stream, ['<?custom key=?><root/>']);
+    const pi = results.find(
+      (r): r is TNode => typeof r === 'object' && r.tagName === '?custom',
+    );
+    expect(pi).toBeDefined();
+    expect(pi!.attributes!.key).toBe(null);
+  });
+
+  it('handles boolean attribute (no =) in PI', async () => {
+    // Name with no = after it → boolean attribute (line 240)
+    const stream = new XmlParseStream();
+    const results = await collect(stream, [
+      '<?custom standalone?><root/>',
+    ]);
+    const pi = results.find(
+      (r): r is TNode => typeof r === 'object' && r.tagName === '?custom',
+    );
+    expect(pi).toBeDefined();
+    expect(pi!.attributes!.standalone).toBe(null);
+  });
+
+  it('skips non-name characters at start of attribute parsing', async () => {
+    // An `=` at the start of the body is a non-name char; `i === nameStart`
+    // means the char is skipped (lines 167-169)
+    const stream = new XmlParseStream();
+    const results = await collect(stream, [
+      '<?custom = key="val"?><root/>',
+    ]);
+    const pi = results.find(
+      (r): r is TNode => typeof r === 'object' && r.tagName === '?custom',
+    );
+    expect(pi).toBeDefined();
+    expect(pi!.attributes!.key).toBe('val');
+  });
+
+  it('handles whitespace around = in PI attributes', async () => {
+    // Whitespace between name and = → line 186; whitespace between = and value → line 202
+    const stream = new XmlParseStream();
+    const results = await collect(stream, [
+      '<?custom key \t= \t "val"?><root/>',
+    ]);
+    const pi = results.find(
+      (r): r is TNode => typeof r === 'object' && r.tagName === '?custom',
+    );
+    expect(pi).toBeDefined();
+    expect(pi!.attributes!.key).toBe('val');
+  });
+});
+
+// =================================================================
+// Default mode — coverage for defaultOnCdata, defaultOnComment (inside element),
+// emitOrAttach with parent, defaultOnCloseTag empty stack guard
+// =================================================================
+describe('XmlParseStream — default mode branch coverage', () => {
+  it('attaches CDATA to parent element (defaultOnCdata)', async () => {
+    // CDATA inside an element in default mode → lines 413-417
+    const stream = new XmlParseStream();
+    const results = await collect(stream, [
+      '<root><![CDATA[raw <data>]]></root>',
+    ]);
+    const root = results[0] as TNode;
+    expect(root.children).toEqual(['raw <data>']);
+  });
+
+  it('attaches comment to parent when keepComments is true (defaultOnComment)', async () => {
+    // Comment inside a nested element → lines 420-424 (parent branch)
+    const stream = new XmlParseStream({ keepComments: true });
+    const results = await collect(stream, [
+      '<root><!-- inner --></root>',
+    ]);
+    const root = results[0] as TNode;
+    expect(root.children).toContain('<!-- inner -->');
+  });
+
+  it('attaches PI to parent element via emitOrAttach', async () => {
+    // PI inside an element in default mode → emitOrAttach line 361 (parent branch)
+    const stream = new XmlParseStream();
+    const results = await collect(stream, [
+      '<root><?custom attr="val"?></root>',
+    ]);
+    const root = results[0] as TNode;
+    const pi = root.children.find(
+      (c): c is TNode => typeof c === 'object' && c.tagName === '?custom',
+    );
+    expect(pi).toBeDefined();
+    expect(pi!.attributes!.attr).toBe('val');
+  });
+
+  it('attaches DOCTYPE inside element via emitOrAttach', async () => {
+    // Unusual but legal: DOCTYPE inside an element — emitOrAttach parent branch
+    const stream = new XmlParseStream();
+    const results = await collect(stream, [
+      '<root><!DOCTYPE inner></root>',
+    ]);
+    const root = results[0] as TNode;
+    const dt = root.children.find(
+      (c): c is TNode => typeof c === 'object' && c.tagName === '!DOCTYPE',
+    );
+    expect(dt).toBeDefined();
+  });
+});
+
+// =================================================================
+// Select mode — coverage for selectOnCdata, selectOnComment,
+// selectOnProcessingInstruction, selectOnDoctype
+// =================================================================
+describe('XmlParseStream — select mode branch coverage', () => {
+  it('attaches CDATA to selected parent (selectOnCdata)', async () => {
+    // CDATA inside a selected element → lines 512-517
+    const stream = new XmlParseStream({ select: 'item' });
+    const results = await collect(stream, [
+      '<root><item><![CDATA[cdata content]]></item></root>',
+    ]);
+    expect(results).toHaveLength(1);
+    const item = results[0] as TNode;
+    expect(item.children).toEqual(['cdata content']);
+  });
+
+  it('discards CDATA outside selected element (selectOnCdata early return)', async () => {
+    // CDATA outside a selected element → selectOnCdata returns early (line 513)
+    const stream = new XmlParseStream({ select: 'item' });
+    const results = await collect(stream, [
+      '<root><![CDATA[outside]]><item>inside</item></root>',
+    ]);
+    expect(results).toHaveLength(1);
+    const item = results[0] as TNode;
+    expect(item.children).toEqual(['inside']);
+  });
+
+  it('attaches comment to selected parent (selectOnComment)', async () => {
+    // Comment inside a selected element with keepComments → lines 520-526
+    const stream = new XmlParseStream({
+      select: 'item',
+      keepComments: true,
+    });
+    const results = await collect(stream, [
+      '<root><item><!-- selected comment --></item></root>',
+    ]);
+    expect(results).toHaveLength(1);
+    const item = results[0] as TNode;
+    expect(item.children).toContain('<!-- selected comment -->');
+  });
+
+  it('attaches PI to selected parent (selectOnProcessingInstruction)', async () => {
+    // PI inside a selected element → lines 529-539
+    const stream = new XmlParseStream({ select: 'item' });
+    const results = await collect(stream, [
+      '<root><item><?mypi key="val"?></item></root>',
+    ]);
+    expect(results).toHaveLength(1);
+    const item = results[0] as TNode;
+    const pi = item.children.find(
+      (c): c is TNode => typeof c === 'object' && c.tagName === '?mypi',
+    );
+    expect(pi).toBeDefined();
+    expect(pi!.attributes!.key).toBe('val');
+  });
+
+  it('discards PI outside selected element (selectOnProcessingInstruction early return)', async () => {
+    // PI outside selected element → early return at line 530
+    const stream = new XmlParseStream({ select: 'item' });
+    const results = await collect(stream, [
+      '<root><?outside?><item>inside</item></root>',
+    ]);
+    expect(results).toHaveLength(1);
+    expect((results[0] as TNode).children).toEqual(['inside']);
+  });
+
+  it('attaches DOCTYPE to selected parent (selectOnDoctype)', async () => {
+    // DOCTYPE inside a selected element → lines 542-552
+    const stream = new XmlParseStream({ select: 'item' });
+    const results = await collect(stream, [
+      '<root><item><!DOCTYPE inner></item></root>',
+    ]);
+    expect(results).toHaveLength(1);
+    const item = results[0] as TNode;
+    const dt = item.children.find(
+      (c): c is TNode => typeof c === 'object' && c.tagName === '!DOCTYPE',
+    );
+    expect(dt).toBeDefined();
+  });
+
+  it('discards DOCTYPE outside selected element (selectOnDoctype early return)', async () => {
+    // DOCTYPE outside selected element → early return at line 543
+    const stream = new XmlParseStream({ select: 'item' });
+    const results = await collect(stream, [
+      '<!DOCTYPE html><root><item>text</item></root>',
+    ]);
+    expect(results).toHaveLength(1);
+    expect((results[0] as TNode).tagName).toBe('item');
+  });
+});
+
+// =================================================================
+// Offset edge cases
+// =================================================================
+describe('XmlParseStream — offset edge cases', () => {
+  it('skips offset that spans multiple chunks', async () => {
+    // First chunk is entirely within the offset → skip entirely (lines 581-583)
+    // Second chunk starts mid-offset → substring (lines 585-586)
+    const stream = new XmlParseStream({ offset: 10 });
+    const results = await collect(stream, [
+      '12345', // 5 bytes — all skipped (chunk.length <= skipBytes)
+      '67890<a>ok</a>', // first 5 chars skipped, then parse "<a>ok</a>"
+    ]);
+    expect(results).toHaveLength(1);
+    const a = results[0] as TNode;
+    expect(a.tagName).toBe('a');
+    expect(a.children).toEqual(['ok']);
+  });
+
+  it('skips offset that exactly matches first chunk length', async () => {
+    // chunk.length === skipBytes → entire first chunk skipped, skipBytes becomes 0
+    const stream = new XmlParseStream({ offset: 5 });
+    const results = await collect(stream, ['JUNK!', '<b>hi</b>']);
+    expect(results).toHaveLength(1);
+    expect((results[0] as TNode).tagName).toBe('b');
+  });
+});

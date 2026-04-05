@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
-import { lossy } from '#src/converters/lossy.ts';
+import { lossy, convertItemToLossy } from '#src/converters/lossy.ts';
 import type { LossyValue, LossyObject } from '#src/converters/lossy.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -143,6 +143,15 @@ describe('top-level handling', () => {
   it('strips top-level whitespace text', () => {
     expect(lossy('  <root/>  ')).toMatchSnapshot();
   });
+
+  it('accepts pre-parsed DOM array input', () => {
+    // Line 236: typeof input !== 'string' branch — pass array directly
+    const dom = [
+      { tagName: 'root', attributes: null, children: ['hello'] },
+    ] as import('#src/parser.ts').TNode[];
+    const result = lossy(dom);
+    expect(result).toEqual({ root: 'hello' });
+  });
 });
 
 // =================================================================
@@ -275,5 +284,58 @@ describe('edge cases', () => {
     expect(
       lossy('<root><x>simple</x><x><y>nested</y></x></root>'),
     ).toMatchSnapshot();
+  });
+
+  it('retroactive mixed mode when previous string children exist', () => {
+    // We have attributes + text children, then encounter an element,
+    // causing retroactive upgrade to mixed mode. The previous string
+    // children must be replayed into the $$ array.
+    const result = lossy(
+      '<p class="intro">Hello <b>world</b></p>',
+    ) as LossyObject;
+    // p has $class attribute and mixed content
+    expect(result.p).toBeDefined();
+    const p = result.p as LossyObject;
+    expect(p.$class).toBe('intro');
+    expect(p.$$).toBeDefined();
+    const mixed = p.$$ as any[];
+    expect(mixed[0]).toBe('Hello ');
+    expect(mixed[1]).toEqual({ b: 'world' });
+  });
+
+  it('top-level non-whitespace string in multi-node result', () => {
+    // When multiple top-level nodes exist and one is a non-whitespace
+    // text node, the text is pushed to the result array as a string.
+    // This triggers lossy.ts line 258 and 267.
+    const result = lossy('<a>1</a>text<b>2</b>');
+    expect(Array.isArray(result)).toBe(true);
+    const arr = result as LossyValue[];
+    expect(arr).toContainEqual('text');
+  });
+
+  it('single root text-only returns string', () => {
+    // Line 258: when the only non-whitespace top-level node is a string
+    const result = lossy('hello');
+    expect(result).toBe('hello');
+  });
+});
+
+// =================================================================
+// convertItemToLossy — internal helper
+// =================================================================
+describe('convertItemToLossy', () => {
+  it('passes string through', () => {
+    // Line 211: typeof item === 'string'
+    expect(convertItemToLossy('hello')).toBe('hello');
+  });
+
+  it('converts TNode to lossy object', () => {
+    // Line 212: wraps TNode as { tagName: convertNode(item) }
+    const result = convertItemToLossy({
+      tagName: 'name',
+      attributes: null,
+      children: ['Alice'],
+    });
+    expect(result).toEqual({ name: 'Alice' });
   });
 });

@@ -16,4 +16,5 @@ declare global {
 export const escapeRegExp: (s: string) => string =
   typeof RegExp.escape === 'function'
     ? RegExp.escape
-    : (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    : /* v8 ignore next -- fallback for engines without RegExp.escape */
+      (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

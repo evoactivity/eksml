@@ -676,6 +676,7 @@ export function parse(
   }
 
   function findElements(): number {
+    /* v8 ignore next — defensive: caller always defaults attrName to 'id' */
     if (!resolvedOptions.attrName || !resolvedOptions.attrValue) return -1;
     const matchResult = new RegExp(
       '\\s' +

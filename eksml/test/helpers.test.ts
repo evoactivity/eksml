@@ -46,6 +46,15 @@ describe('filter', () => {
     const root = parse('<root><a></a></root>')[0] as TNode;
     expect(filter(root.children, (n) => n.tagName === 'z')).toEqual([]);
   });
+
+  it('accepts a string input and parses it first', () => {
+    const result = filter(
+      '<root><a>1</a><b>2</b></root>',
+      (n) => n.tagName === 'a',
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]!.tagName).toBe('a');
+  });
 });
 
 // =================================================================
@@ -118,6 +127,21 @@ describe('getElementById', () => {
     // Without escaping, id ".*" would match any id value
     const result = getElementById('<div id="something">oops</div>', '.*');
     expect(result).toBeUndefined();
+  });
+
+  it('finds element by id from a pre-parsed DOM array', () => {
+    const dom = parse(
+      '<test><child id="theId">found</child><other>nope</other></test>',
+    );
+    const result = getElementById(dom, 'theId') as TNode;
+    expect(result).toBeDefined();
+    expect(result.tagName).toBe('child');
+    expect(result.children).toEqual(['found']);
+  });
+
+  it('returns undefined from DOM array when id not found', () => {
+    const dom = parse('<div><span>no id</span></div>');
+    expect(getElementById(dom, 'missing')).toBeUndefined();
   });
 });
 

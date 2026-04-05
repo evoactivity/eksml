@@ -375,4 +375,29 @@ describe('edge cases', () => {
       },
     ]);
   });
+
+  it('null in top-level array is skipped', () => {
+    const result = fromLossy([
+      null as unknown as LossyValue,
+      { a: 'text' },
+    ]);
+    expect(result).toHaveLength(1);
+    expect((result[0] as TNode).tagName).toBe('a');
+  });
+
+  it('array value passed directly to convertElement uses first item', () => {
+    // When a value is an array (e.g. from malformed lossy input),
+    // convertElement treats it defensively by using the first item
+    const result = fromLossy({
+      root: { item: [['nested'] as unknown as LossyValue] },
+    });
+    // The array ['nested'] gets passed to convertElement, which calls
+    // convertElement(tagName, value[0]) -> convertElement('item', 'nested')
+    expect(result).toHaveLength(1);
+    const root = result[0] as TNode;
+    expect(root.children).toHaveLength(1);
+    const item = root.children[0] as TNode;
+    expect(item.tagName).toBe('item');
+    expect(item.children).toEqual(['nested']);
+  });
 });

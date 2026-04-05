@@ -180,6 +180,21 @@ describe('createSaxParser()', () => {
     expect(texts2).toEqual(['two']);
   });
 
+  it('fires doctype events', () => {
+    const sax = createSaxParser();
+    const doctypes: Array<{ tagName: string; attributes: Record<string, string | null> }> = [];
+
+    sax.on('doctype', (tagName, attributes) =>
+      doctypes.push({ tagName, attributes: { ...attributes } }),
+    );
+    sax.write('<!DOCTYPE html><html></html>');
+    sax.close();
+
+    expect(doctypes).toHaveLength(1);
+    expect(doctypes[0]!.tagName).toBe('!DOCTYPE');
+    expect(doctypes[0]!.attributes).toHaveProperty('html');
+  });
+
   it('multiple instances with different options', () => {
     const tags1: string[] = [];
     const texts1: string[] = [];

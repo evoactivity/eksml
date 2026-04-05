@@ -115,6 +115,7 @@ function convertElement(
   // Array → this is a repeated-sibling array at the parent level,
   // but convertElement is called per-value, so arrays here shouldn't
   // normally occur. Defensive: treat as first element.
+  /* v8 ignore next 4 — defensive: caller expands arrays before calling convertElement */
   if (Array.isArray(value)) {
     // This case is handled by the caller expanding arrays.
     // If somehow called directly, use first item.

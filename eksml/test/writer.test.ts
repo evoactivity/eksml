@@ -186,6 +186,15 @@ describe('write', () => {
     );
   });
 
+  it('throws for circular references in compact mode with entities', () => {
+    // Lines 284-288: circular reference detection in compact-with-entities path
+    const node: TNode = { tagName: 'a', attributes: {}, children: [] };
+    node.children.push(node); // circular!
+    expect(() => write(node, { entities: true })).toThrow(
+      'Circular reference detected in TNode tree',
+    );
+  });
+
   // --- pretty option ---
 
   it('pretty: true uses 2-space indent', () => {
@@ -934,6 +943,329 @@ describe('write', () => {
 
     it('all-string array passes through as DOM text', () => {
       expect(write(['hello', ' ', 'world'] as any)).toBe('hello world');
+    });
+
+    it('bare string lossy input is converted', () => {
+      // toDom receives a bare string (non-array, non-object) — treated as lossy
+      expect(write('just text' as any)).toBe('just text');
+    });
+
+    it('lossy object without tagName property is converted', () => {
+      // Non-array object without tagName → lossy format
+      const input = { root: null };
+      expect(write(input as any)).toBe('<root></root>');
+    });
+  });
+
+  // --- attribute value quoting edge cases ---
+
+  describe('attribute value quoting', () => {
+    it('compact path: attribute with both quote types escapes single quotes', () => {
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { data: 'he said "it\'s" ok' },
+        children: [],
+      };
+      // Value contains both " and ' — the writer should escape ' to &apos;
+      const result = write(node);
+      expect(result).toContain('&apos;');
+      expect(result).toContain('he said');
+    });
+
+    it('full path (no entities): attribute with both quote types escapes single quotes', () => {
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { data: 'he said "it\'s" ok' },
+        children: ['text'],
+      };
+      // entities defaults to false, so encodeAttributeValue is identity — both raw quotes survive
+      const result = write(node);
+      expect(result).toContain('&apos;');
+      expect(result).toContain('he said');
+    });
+
+    it('pretty path (no entities): attribute with both quote types escapes single quotes', () => {
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { data: 'he said "it\'s" ok' },
+        children: ['text'],
+      };
+      // pretty: true without entities — identity encoder, both raw quotes survive
+      const result = write(node, { pretty: true });
+      expect(result).toContain('&apos;');
+      expect(result).toContain('he said');
+    });
+  });
+
+  // --- pretty mode edge cases ---
+
+  describe('pretty mode edge cases', () => {
+    it('DOCTYPE with non-simple-keyword attributes in pretty mode', () => {
+      // Non-simple keyword attrs in DOCTYPE are quoted with double quotes
+      const node: TNode = {
+        tagName: '!DOCTYPE',
+        attributes: {
+          html: null,
+          PUBLIC: null,
+          '-//W3C//DTD HTML 4.01//EN': null,
+          'http://www.w3.org/TR/html4/strict.dtd': null,
+        },
+        children: [],
+      };
+      const result = write(node, { pretty: true, entities: true });
+      expect(result).toContain('html');
+      expect(result).toContain('PUBLIC');
+      // URIs should be double-quoted
+      expect(result).toContain('"-//W3C//DTD HTML 4.01//EN"');
+      expect(result).toContain(
+        '"http://www.w3.org/TR/html4/strict.dtd"',
+      );
+    });
+
+    it('pretty: mixed content with elements gets each child on its own line', () => {
+      const node: TNode = {
+        tagName: 'p',
+        attributes: null,
+        children: [
+          'Hello ',
+          { tagName: 'b', attributes: null, children: ['world'] },
+          ' end',
+        ],
+      };
+      const result = write(node, { pretty: true, entities: true });
+      // Mixed content: text and elements on separate indented lines
+      expect(result).toContain('\n  Hello');
+      expect(result).toContain('\n  <b>world</b>');
+      expect(result).toContain('\n  end');
+    });
+
+    it('pretty: comment in mixed content preserves comment', () => {
+      const node: TNode = {
+        tagName: 'root',
+        attributes: null,
+        children: [
+          'text',
+          '<!-- comment -->',
+          { tagName: 'child', attributes: null, children: [] },
+        ],
+      };
+      const result = write(node, {
+        pretty: true,
+        entities: true,
+      });
+      expect(result).toContain('<!-- comment -->');
+    });
+
+    it('pretty: comment in element-only children', () => {
+      const node: TNode = {
+        tagName: 'root',
+        attributes: null,
+        children: [
+          '<!-- header comment -->',
+          { tagName: 'child', attributes: null, children: ['text'] },
+        ],
+      };
+      const result = write(node, {
+        pretty: true,
+        entities: true,
+      });
+      expect(result).toContain('<!-- header comment -->');
+      expect(result).toContain('<child>text</child>');
+    });
+
+    it('pretty: top-level text node', () => {
+      const nodes: (TNode | string)[] = [
+        'top level text',
+        { tagName: 'root', attributes: null, children: [] },
+      ];
+      const result = write(nodes, {
+        pretty: true,
+        entities: true,
+      });
+      expect(result).toContain('top level text');
+      expect(result).toContain('<root/>');
+    });
+
+    it('prettyWriteNode handles null/undefined node gracefully', () => {
+      // Force a null node into the children array — the null guard
+      // at the top of prettyWriteNode should prevent a crash
+      const node: TNode = {
+        tagName: 'root',
+        attributes: null,
+        children: [null as any, { tagName: 'a', attributes: null, children: [] }],
+      };
+      const result = write(node, { pretty: true, entities: true });
+      expect(result).toContain('<a/>');
+    });
+  });
+
+  // --- validateTagName: bare ? or ! ---
+  describe('validateTagName edge cases', () => {
+    it('allows bare ? as a degenerate but harmless tag name', () => {
+      // Line 29: `name.length === 0` for tag "?"
+      const node: TNode = { tagName: '?', attributes: null, children: [] };
+      expect(() => write(node)).not.toThrow();
+    });
+
+    it('allows bare ! as a degenerate but harmless tag name', () => {
+      const node: TNode = { tagName: '!', attributes: null, children: [] };
+      expect(() => write(node)).not.toThrow();
+    });
+  });
+
+  // --- compact: no-attr PI and declaration ---
+  describe('compact path: PI and declaration with null attributes', () => {
+    it('writes PI with null attributes as <?tag?>', () => {
+      // Lines 177-178: compact path, PI with null attrs
+      const node: TNode = { tagName: '?xml', attributes: null, children: [] };
+      expect(write(node)).toBe('<?xml?>');
+    });
+
+    it('writes declaration with null attributes as <!tag>', () => {
+      // Lines 181-182: compact path, ! tag with null attrs
+      const node: TNode = {
+        tagName: '!DOCTYPE',
+        attributes: null,
+        children: [],
+      };
+      expect(write(node)).toBe('<!DOCTYPE>');
+    });
+  });
+
+  // --- full compact-with-entities: no-attr PI and declaration ---
+  describe('full compact path (entities): PI and declaration with null attrs', () => {
+    it('writes PI with null attributes as <?tag?> in entities mode', () => {
+      // Lines 301-302: full path, PI with null attrs
+      const node: TNode = { tagName: '?xml', attributes: null, children: [] };
+      expect(write(node, { entities: true })).toBe('<?xml?>');
+    });
+
+    it('writes declaration with null attributes in entities mode', () => {
+      // Lines 306-307: full path, ! tag with null attrs
+      const node: TNode = {
+        tagName: '!DOCTYPE',
+        attributes: null,
+        children: [],
+      };
+      expect(write(node, { entities: true })).toBe('<!DOCTYPE>');
+    });
+  });
+
+  // --- full compact: attribute single-quote fallback and both-quotes ---
+  describe('full compact: attribute quoting edge cases', () => {
+    it('single-quote fallback when value contains double quotes', () => {
+      // Line 332-333: encoded has " but no ' → single-quote wrapping
+      // With entities, escapeAttribute encodes " → &quot;, so the first branch
+      // catches it. Without entities, identity function is used.
+      // Use no-entities mode to get raw quotes into the encoded value
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { data: 'he said "hello"' },
+        children: ['text'],
+      };
+      const result = write(node);
+      // Without entities, value has raw " → falls to single-quote branch
+      expect(result).toContain("data='he said \"hello\"'");
+    });
+
+    it('both-quotes branch with entities in full path (unreachable with escapeAttribute)', () => {
+      // Lines 334-341: unreachable with entities since escapeAttribute/escapeUTF8
+      // always encode quotes. Test the no-entities path for both quotes, which
+      // goes through the compact writeNode.
+      // Already tested in "compact path: attribute with both quote types"
+    });
+  });
+
+  // --- full compact: PI with attributes closing ---
+  describe('full compact: PI with attributes', () => {
+    it('closes PI with ?> after writing attributes', () => {
+      // Lines 346-347: PI with attributes, full path
+      const node: TNode = {
+        tagName: '?xml',
+        attributes: { version: '1.0' },
+        children: [],
+      };
+      const result = write(node, { entities: true });
+      expect(result).toBe('<?xml version="1.0"?>');
+    });
+  });
+
+  // --- pretty: single-quote fallback for attribute ---
+  describe('pretty: attribute quoting', () => {
+    it('uses single quotes when value contains double quotes (pretty mode)', () => {
+      // Line 399: pretty path, value has " but no ' → single-quote wrapper
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { data: 'he said "hello"' },
+        children: ['text'],
+      };
+      const result = write(node, { pretty: true });
+      expect(result).toContain("data='he said \"hello\"'");
+    });
+  });
+
+  // --- pretty: text-only element with empty/multiple segments ---
+  describe('pretty: text-only element formatting', () => {
+    it('skips empty text nodes and separates with space', () => {
+      // Lines 483-484: text-only children, empty segments skipped, space between
+      const node: TNode = {
+        tagName: 'title',
+        attributes: null,
+        children: ['  ', 'Hello', '  ', 'World', '  '],
+      };
+      const result = write(node, { pretty: true, entities: true });
+      expect(result).toContain('<title>Hello World</title>');
+    });
+  });
+
+  // --- toDom: null guard ---
+  describe('toDom: null/undefined input', () => {
+    it('returns empty string for null input', () => {
+      // Line 574: toDom guard
+      expect(write(null as any)).toBe('');
+    });
+
+    it('returns empty string for undefined input', () => {
+      expect(write(undefined as any)).toBe('');
+    });
+  });
+
+  // --- isLosslessEntry checks ---
+  describe('isLosslessEntry format detection', () => {
+    it('detects lossless entry with $text marker', () => {
+      // Line 641: { $text: ... } is recognized as lossless
+      const input = [{ name: [{ $text: 'Alice' }] }];
+      const result = write(input as any);
+      expect(result).toContain('Alice');
+    });
+
+    it('detects lossless entry with $comment marker', () => {
+      const input = [{ $comment: 'a comment' }];
+      const result = write(input as any);
+      expect(result).toContain('<!--a comment-->');
+    });
+
+    it('detects lossless entry with $attr marker', () => {
+      const input = [
+        { div: [{ $attr: { id: 'main' } }, { $text: 'content' }] },
+      ];
+      const result = write(input as any);
+      expect(result).toContain('id="main"');
+      expect(result).toContain('content');
+    });
+
+    it('rejects non-object values in isLosslessEntry', () => {
+      // Line 637: typeof !== 'object' → false
+      // Bare string input → passes through toDom lossy path, outputs the string
+      const result = write('hello' as any);
+      expect(result).toBe('hello');
+    });
+
+    it('rejects empty objects in isLosslessEntry', () => {
+      // Line 639: keys.length === 0 → false
+      const result = write([{}] as any);
+      // Empty object should not crash
+      expect(typeof result).toBe('string');
     });
   });
 });

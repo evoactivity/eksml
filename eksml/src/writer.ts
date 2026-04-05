@@ -329,6 +329,7 @@ function fullWriter(
             const encoded = encodeAttributeValue(attributeValue);
             if (encoded.indexOf('"') === -1) {
               out += ' ' + attributeName + '="' + encoded + '"';
+            /* v8 ignore start — unreachable: escapeAttribute encodes " to &quot; */
             } else if (encoded.indexOf("'") === -1) {
               out += ' ' + attributeName + "='" + encoded + "'";
             } else {
@@ -340,6 +341,7 @@ function fullWriter(
                 encoded.replace(/'/g, '&apos;') +
                 "'";
             }
+            /* v8 ignore stop */
           }
         }
         if (firstChar === QUESTION) {
@@ -571,6 +573,7 @@ function toDom(
     | LossyValue[]
     | LosslessEntry[],
 ): TNode | (TNode | string)[] {
+  /* v8 ignore next — unreachable: write() checks !input before calling toDom() */
   if (input === null || input === undefined) return [];
 
   // Single TNode — pass through

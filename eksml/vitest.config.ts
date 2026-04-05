@@ -7,7 +7,7 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.ts'],
       exclude: ['src/utilities/index.ts'],
-      reporter: ['text', 'json-summary'],
+      reporter: ['text', 'json-summary', 'json'],
     },
     benchmark: {
       include: ['bench/**/*.bench.ts'],

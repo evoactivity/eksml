@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
-import { lossless, type LosslessEntry } from '#src/converters/lossless.ts';
+import {
+  lossless,
+  convertItemToLossless,
+  type LosslessEntry,
+} from '#src/converters/lossless.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) =>
@@ -278,5 +282,20 @@ describe('JSON serialization', () => {
     const json = JSON.stringify(result);
     const parsed = JSON.parse(json);
     expect(parsed).toEqual(result);
+  });
+});
+
+// =================================================================
+// convertItemToLossless — internal helper
+// =================================================================
+describe('convertItemToLossless', () => {
+  it('converts a string to $text entry', () => {
+    expect(convertItemToLossless('hello')).toEqual({ $text: 'hello' });
+  });
+
+  it('converts a comment string to $comment entry', () => {
+    expect(convertItemToLossless('<!-- a comment -->')).toEqual({
+      $comment: ' a comment ',
+    });
   });
 });
