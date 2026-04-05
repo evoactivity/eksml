@@ -12,7 +12,7 @@ import RunDuration from '#components/run-duration.gts';
 import TabStrip from '#components/tab-strip.gts';
 import TwoPaneLayout from '#components/two-pane-layout.gts';
 
-import type { WriterModel } from '../routes/writer';
+import type { WriterModel } from '../routes/write';
 import type Owner from '@ember/owner';
 import type { init as monacoInit } from 'modern-monaco';
 
@@ -163,8 +163,8 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
   }
 
   <template>
-    {{pageTitle 'Writer'}}
-    <h1>Writer</h1>
+    {{pageTitle 'Write'}}
+    <h1>Write</h1>
     <p class='subtitle'>
       Enter JSON (DOM, lossy, or lossless) on the left, see serialized XML on
       the right.

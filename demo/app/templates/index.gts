@@ -22,8 +22,8 @@ import Card from '#components/card.gts';
         <:tag><span class='tag tag-parse'>parse / lossy / lossless</span></:tag>
       </Card>
 
-      <Card @route='writer'>
-        <:title>Writer</:title>
+      <Card @route='write'>
+        <:title>Write</:title>
         <:content>
           Enter JSON (DOM, lossy, or lossless) and serialize it back to XML.
           Toggle pretty-print, entity encoding, and HTML mode.

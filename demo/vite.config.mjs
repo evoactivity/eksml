@@ -11,7 +11,7 @@ export default defineConfig({
       extensions,
     }),
     emberSsg({
-      routes: ['index', 'parse', 'writer', 'sax', 'stream', 'benchmark'],
+      routes: ['index', 'parse', 'write', 'sax', 'stream', 'benchmark'],
       rehydrate: true,
     }),
   ],
