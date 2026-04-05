@@ -685,8 +685,12 @@ button:disabled {
 @media (max-width: 768px) {
   .page {
     padding: 16px;
-    height: 100vh;
-    max-height: 100vh;
+    height: auto;
+    max-height: none;
+  }
+
+  .page-content {
+    grid-template-rows: min-content min-content min-content auto;
   }
 
   .nav {
@@ -728,10 +732,14 @@ button:disabled {
 
   .panes {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
 
   .pane {
-    min-height: 0;
+    height: 400px;
+    max-height: none;
   }
 }
