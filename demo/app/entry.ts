@@ -6,7 +6,12 @@ import config from './config.ts';
 if (shouldRehydrate()) {
   const app = Application.create({ ...config.APP, autoboot: false });
 
-  void app.visit(window.location.pathname + window.location.search, {
+  const buildUrl = (window.location.pathname + window.location.search).replace(
+    config.rootURL,
+    '/',
+  );
+
+  void app.visit(buildUrl, {
     _renderMode: 'rehydrate',
   });
 } else {
