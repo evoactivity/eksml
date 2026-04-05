@@ -508,7 +508,7 @@ export function parse(
     if (!resolvedOptions.attrName || !resolvedOptions.attrValue) return -1;
     const matchResult = new RegExp(
       '\\s' +
-        resolvedOptions.attrName +
+        escapeRegExp(resolvedOptions.attrName) +
         '\\s*=[\'"]' +
         escapeRegExp(resolvedOptions.attrValue) +
         '[\'"]',
