@@ -1,7 +1,7 @@
 {
   "name": "eksml",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "Fast, lightweight XML/HTML parser, serializer, and streaming toolkit",
   "type": "module",
   "sideEffects": false,
   "imports": {
@@ -46,7 +46,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "build": "tsdown",
@@ -57,8 +58,24 @@
     "examples": "vite",
     "examples:build": "vite build"
   },
-  "keywords": [],
-  "author": "Liam Potter",
+  "keywords": [
+    "xml",
+    "html",
+    "parser",
+    "serializer",
+    "sax",
+    "streaming",
+    "transform-stream",
+    "dom",
+    "fast",
+    "lightweight"
+  ],
+  "author": "Liam Potter <liam@liampotter.co.uk>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evoactivity/eksml",
+    "directory": "eksml"
+  },
   "license": "MIT",
   "packageManager": "pnpm@10.33.0",
   "devDependencies": {
