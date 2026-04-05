@@ -2,8 +2,8 @@ import { htmlSafe } from '@ember/template';
 
 import pageTitle from 'ember-page-title/helpers/page-title';
 
-import Card from '#components/card.gts';
 import logoDark from '/logo-dark.svg?url';
+import Card from '#components/card.gts';
 
 <template>
   {{pageTitle 'Home'}}

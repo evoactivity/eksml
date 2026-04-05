@@ -150,7 +150,7 @@ class SaxTemplate extends Component<SaxTemplateSignature> {
     const parser = createSaxParser();
 
     parser.on(
-      'opentag',
+      'openTag',
       (name: string, attrs: Record<string, string | null>) => {
         this.appendLog(
           'event-opentag',
@@ -159,7 +159,7 @@ class SaxTemplate extends Component<SaxTemplateSignature> {
         );
       },
     );
-    parser.on('closetag', (name: string) => {
+    parser.on('closeTag', (name: string) => {
       this.appendLog(
         'event-closetag',
         'closetag',
@@ -187,7 +187,7 @@ class SaxTemplate extends Component<SaxTemplateSignature> {
         `<span class="event-value">${escapeHtml(truncate(comment))}</span>`,
       );
     });
-    parser.on('processinginstruction', (name: string, body: string) => {
+    parser.on('processingInstruction', (name: string, body: string) => {
       this.appendLog(
         'event-pi',
         'pi',

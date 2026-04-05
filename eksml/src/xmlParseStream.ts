@@ -292,6 +292,8 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
   constructor(options: XmlParseStreamOptions & { output: 'lossy' });
   /** Lossless output — each item is converted to `LosslessEntry`. */
   constructor(options: XmlParseStreamOptions & { output: 'lossless' });
+  /** Dynamic output — when the `output` option is not a literal, returns the widest type. */
+  constructor(options: XmlParseStreamOptions);
   constructor(options?: XmlParseStreamOptions) {
     const resolvedOptions = options ?? {};
     let skipBytes: number =

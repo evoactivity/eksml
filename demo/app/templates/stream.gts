@@ -4,7 +4,6 @@ import { on } from '@ember/modifier';
 import { trackedArray } from '@ember/reactive/collections';
 
 import { XmlParseStream } from 'eksml/stream';
-import type { XmlParseStreamOptions } from 'eksml/stream';
 import pageTitle from 'ember-page-title/helpers/page-title';
 import { init } from 'modern-monaco';
 
@@ -17,6 +16,7 @@ import { NodeEntry } from '#utils/node-log.ts';
 
 import type { StreamModel } from '../routes/stream';
 import type { LogItem } from '#utils/node-log.ts';
+import type { XmlParseStreamOptions } from 'eksml/stream';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -142,11 +142,10 @@ class StreamTemplate extends Component<StreamTemplateSignature> {
 
     if (isDom) {
       const isText = typeof node === 'string';
+
       summary = isText
         ? `<span class="node-text-val">text</span> "${escapeHtml(
-            (node as string).length > 80
-              ? (node as string).slice(0, 80) + '...'
-              : (node as string),
+            node.length > 80 ? node.slice(0, 80) + '...' : node,
           )}"`
         : formatNode(node as TNode);
     } else {
