@@ -1,7 +1,7 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./logo-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="./logo.svg">
-  <img alt="Eksml" src="./logo.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/evoactivity/eksml/main/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/evoactivity/eksml/main/logo.svg">
+  <img alt="Eksml" src="https://raw.githubusercontent.com/evoactivity/eksml/main/logo.svg">
 </picture>
 
 # Eksml
