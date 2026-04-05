@@ -658,14 +658,11 @@ describe('parse', () => {
 
     it('parseNode: unclosed raw content tag', () => {
       // parseNode with rawContentTags and an unclosed raw content tag
-      const result = parse(
-        '<div id="x"><script>unclosed code',
-        {
-          attrName: 'id',
-          attrValue: 'x',
-          rawContentTags: ['script'],
-        },
-      );
+      const result = parse('<div id="x"><script>unclosed code', {
+        attrName: 'id',
+        attrValue: 'x',
+        rawContentTags: ['script'],
+      });
       expect(result).toHaveLength(1);
       const div = result[0] as TNode;
       expect(div.tagName).toBe('div');
@@ -875,7 +872,7 @@ describe('parse', () => {
 
     it('raw content tag (unclosed) in parseNode non-strict', () => {
       // Lines 650-654: unclosed raw content tag
-      const result = parse("<script>var x = 1;", {
+      const result = parse('<script>var x = 1;', {
         parseNode: true,
         strict: false,
         rawContentTags: ['script'],
@@ -888,7 +885,7 @@ describe('parse', () => {
     it('raw content tag (unclosed) in parseNode strict', () => {
       // Line 651: strict mode throws for unclosed raw content tag in parseNode
       expect(() => {
-        parse("<script>var x = 1;", {
+        parse('<script>var x = 1;', {
           parseNode: true,
           strict: true,
           rawContentTags: ['script'],

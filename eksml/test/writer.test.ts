@@ -1017,9 +1017,7 @@ describe('write', () => {
       expect(result).toContain('PUBLIC');
       // URIs should be double-quoted
       expect(result).toContain('"-//W3C//DTD HTML 4.01//EN"');
-      expect(result).toContain(
-        '"http://www.w3.org/TR/html4/strict.dtd"',
-      );
+      expect(result).toContain('"http://www.w3.org/TR/html4/strict.dtd"');
     });
 
     it('pretty: mixed content with elements gets each child on its own line', () => {
@@ -1092,7 +1090,10 @@ describe('write', () => {
       const node: TNode = {
         tagName: 'root',
         attributes: null,
-        children: [null as any, { tagName: 'a', attributes: null, children: [] }],
+        children: [
+          null as any,
+          { tagName: 'a', attributes: null, children: [] },
+        ],
       };
       const result = write(node, { pretty: true, entities: true });
       expect(result).toContain('<a/>');
@@ -1165,7 +1166,7 @@ describe('write', () => {
       };
       const result = write(node);
       // Without entities, value has raw " → falls to single-quote branch
-      expect(result).toContain("data='he said \"hello\"'");
+      expect(result).toContain('data=\'he said "hello"\'');
     });
 
     it('both-quotes branch with entities in full path (unreachable with escapeAttribute)', () => {
@@ -1200,7 +1201,7 @@ describe('write', () => {
         children: ['text'],
       };
       const result = write(node, { pretty: true });
-      expect(result).toContain("data='he said \"hello\"'");
+      expect(result).toContain('data=\'he said "hello"\'');
     });
   });
 

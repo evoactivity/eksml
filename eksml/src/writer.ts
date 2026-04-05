@@ -329,7 +329,7 @@ function fullWriter(
             const encoded = encodeAttributeValue(attributeValue);
             if (encoded.indexOf('"') === -1) {
               out += ' ' + attributeName + '="' + encoded + '"';
-            /* v8 ignore start — unreachable: escapeAttribute encodes " to &quot; */
+              /* v8 ignore start — unreachable: escapeAttribute encodes " to &quot; */
             } else if (encoded.indexOf("'") === -1) {
               out += ' ' + attributeName + "='" + encoded + "'";
             } else {

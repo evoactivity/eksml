@@ -1439,9 +1439,7 @@ describe('XmlParseStream — parsePIAttributes edge cases', () => {
   it('handles unquoted attribute value in PI', async () => {
     // value after = starts with a non-quote char → unquoted value branch (lines 219-233)
     const stream = new XmlParseStream();
-    const results = await collect(stream, [
-      '<?custom key=unquoted?><root/>',
-    ]);
+    const results = await collect(stream, ['<?custom key=unquoted?><root/>']);
     const pi = results.find(
       (r): r is TNode => typeof r === 'object' && r.tagName === '?custom',
     );
@@ -1476,9 +1474,7 @@ describe('XmlParseStream — parsePIAttributes edge cases', () => {
   it('handles boolean attribute (no =) in PI', async () => {
     // Name with no = after it → boolean attribute (line 240)
     const stream = new XmlParseStream();
-    const results = await collect(stream, [
-      '<?custom standalone?><root/>',
-    ]);
+    const results = await collect(stream, ['<?custom standalone?><root/>']);
     const pi = results.find(
       (r): r is TNode => typeof r === 'object' && r.tagName === '?custom',
     );
@@ -1490,9 +1486,7 @@ describe('XmlParseStream — parsePIAttributes edge cases', () => {
     // An `=` at the start of the body is a non-name char; `i === nameStart`
     // means the char is skipped (lines 167-169)
     const stream = new XmlParseStream();
-    const results = await collect(stream, [
-      '<?custom = key="val"?><root/>',
-    ]);
+    const results = await collect(stream, ['<?custom = key="val"?><root/>']);
     const pi = results.find(
       (r): r is TNode => typeof r === 'object' && r.tagName === '?custom',
     );
@@ -1532,9 +1526,7 @@ describe('XmlParseStream — default mode branch coverage', () => {
   it('attaches comment to parent when keepComments is true (defaultOnComment)', async () => {
     // Comment inside a nested element → lines 420-424 (parent branch)
     const stream = new XmlParseStream({ keepComments: true });
-    const results = await collect(stream, [
-      '<root><!-- inner --></root>',
-    ]);
+    const results = await collect(stream, ['<root><!-- inner --></root>']);
     const root = results[0] as TNode;
     expect(root.children).toContain('<!-- inner -->');
   });
@@ -1556,9 +1548,7 @@ describe('XmlParseStream — default mode branch coverage', () => {
   it('attaches DOCTYPE inside element via emitOrAttach', async () => {
     // Unusual but legal: DOCTYPE inside an element — emitOrAttach parent branch
     const stream = new XmlParseStream();
-    const results = await collect(stream, [
-      '<root><!DOCTYPE inner></root>',
-    ]);
+    const results = await collect(stream, ['<root><!DOCTYPE inner></root>']);
     const root = results[0] as TNode;
     const dt = root.children.find(
       (c): c is TNode => typeof c === 'object' && c.tagName === '!DOCTYPE',

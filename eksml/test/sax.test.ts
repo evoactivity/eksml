@@ -182,7 +182,10 @@ describe('createSaxParser()', () => {
 
   it('fires doctype events', () => {
     const sax = createSaxParser();
-    const doctypes: Array<{ tagName: string; attributes: Record<string, string | null> }> = [];
+    const doctypes: Array<{
+      tagName: string;
+      attributes: Record<string, string | null>;
+    }> = [];
 
     sax.on('doctype', (tagName, attributes) =>
       doctypes.push({ tagName, attributes: { ...attributes } }),

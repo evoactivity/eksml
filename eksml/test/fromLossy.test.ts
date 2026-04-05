@@ -377,10 +377,7 @@ describe('edge cases', () => {
   });
 
   it('null in top-level array is skipped', () => {
-    const result = fromLossy([
-      null as unknown as LossyValue,
-      { a: 'text' },
-    ]);
+    const result = fromLossy([null as unknown as LossyValue, { a: 'text' }]);
     expect(result).toHaveLength(1);
     expect((result[0] as TNode).tagName).toBe('a');
   });
