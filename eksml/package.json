@@ -53,6 +53,7 @@
     "build": "tsdown",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:smoke": "node scripts/smoke-test.mjs",
     "bench": "vitest bench",
     "typecheck": "tsc --noEmit",
     "examples": "vite",
