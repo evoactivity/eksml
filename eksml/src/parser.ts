@@ -248,14 +248,8 @@ export function parse(
 
           const closeTag = S.substring(closeStart, pos).trimEnd();
           if (closeTag !== currentTagName) {
-            const parsedText = S.substring(0, pos).split('\n');
-            throw new Error(
-              'Unexpected close tag\nLine: ' +
-                (parsedText.length - 1) +
-                '\nColumn: ' +
-                (parsedText[parsedText.length - 1]!.length + 1) +
-                '\nChar: ' +
-                S[pos],
+            throw strictError(
+              `Unexpected close tag </${closeTag}> (expected </${currentTagName}>)`,
             );
           }
 
