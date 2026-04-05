@@ -1,4 +1,4 @@
-import { XmlParseStream } from 'eksml/stream';
+import { XmlParseStream } from '@eksml/xml/stream';
 
 // Fetch an RSS feed and stream-parse it, emitting each <item> as it arrives
 const response = await fetch('https://feeds.bbci.co.uk/news/rss.xml');

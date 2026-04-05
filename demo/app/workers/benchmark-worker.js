@@ -12,8 +12,8 @@
  */
 
 import { parseXml } from '@rgrove/parse-xml';
-import { parse } from 'eksml/parser';
-import { createSaxParser } from 'eksml/sax';
+import { parse } from '@eksml/xml/parser';
+import { createSaxParser } from '@eksml/xml/sax';
 import { XMLParser } from 'fast-xml-parser';
 import { parseDocument, Parser as HtmlParser } from 'htmlparser2';
 import sax from 'sax';

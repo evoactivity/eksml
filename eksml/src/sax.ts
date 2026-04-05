@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * import { createSaxParser } from 'eksml/sax';
+ * import { createSaxParser } from '@eksml/xml/sax';
  *
  * const parser = createSaxParser({ html: true });
  *

@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 
-import { createSaxParser } from 'eksml/sax';
+import { createSaxParser } from '@eksml/xml/sax';
 import pageTitle from 'ember-page-title/helpers/page-title';
 
 import LogArea from '#components/log-area.gts';

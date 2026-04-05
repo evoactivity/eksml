@@ -3,7 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { trackedArray } from '@ember/reactive/collections';
 
-import { XmlParseStream } from 'eksml/stream';
+import { XmlParseStream } from '@eksml/xml/stream';
 import pageTitle from 'ember-page-title/helpers/page-title';
 import { init } from 'modern-monaco';
 
@@ -16,7 +16,7 @@ import { NodeEntry } from '#utils/node-log.ts';
 
 import type { StreamModel } from '../routes/stream';
 import type { LogItem } from '#utils/node-log.ts';
-import type { XmlParseStreamOptions } from 'eksml/stream';
+import type { XmlParseStreamOptions } from '@eksml/xml/stream';
 
 // ---------------------------------------------------------------------------
 // Types

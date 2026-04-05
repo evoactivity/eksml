@@ -1,5 +1,5 @@
-import { parse } from 'eksml/parser';
-import { write } from 'eksml/writer';
+import { parse } from '@eksml/xml/parser';
+import { write } from '@eksml/xml/writer';
 
 const xml =
   '<root><item id="1"><name>First</name></item><item id="2"><name>Second</name></item></root>';

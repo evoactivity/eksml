@@ -7,8 +7,8 @@
 # Eksml
 
 [![CI](https://github.com/evoactivity/eksml/actions/workflows/ci.yml/badge.svg)](https://github.com/evoactivity/eksml/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/eksml)](https://www.npmjs.com/package/eksml)
-[![license](https://img.shields.io/npm/l/eksml)](https://github.com/evoactivity/eksml/blob/main/LICENSE)
+[![npm](https://img.shields.io/npm/v/@eksml/xml)](https://www.npmjs.com/package/@eksml/xml)
+[![license](https://img.shields.io/npm/l/@eksml/xml)](https://github.com/evoactivity/eksml/blob/main/LICENSE)
 
 A fast, lightweight XML/HTML parser, serializer, and streaming toolkit for JavaScript and TypeScript. Import only what you need — tree parsing, SAX streaming, object conversion, or serialization — each as a standalone export.
 
@@ -19,15 +19,15 @@ Built on the same core parsing architecture as [tXml](https://github.com/tobiasN
 ## Installation
 
 ```bash
-pnpm add eksml
+pnpm add @eksml/xml
 ```
 
 ```bash
-npm install eksml
+npm install @eksml/xml
 ```
 
 ```bash
-yarn add eksml
+yarn add @eksml/xml
 ```
 
 Eksml is **ESM-only**. It requires Node.js 18+ and a runtime that supports ES modules. There are no CommonJS exports.
@@ -35,8 +35,8 @@ Eksml is **ESM-only**. It requires Node.js 18+ and a runtime that supports ES mo
 ## Quick Start
 
 ```ts
-import { parse } from 'eksml/parser';
-import { write } from 'eksml/writer';
+import { parse } from '@eksml/xml/parser';
+import { write } from '@eksml/xml/writer';
 
 const dom = parse('<root><item id="1">Hello</item></root>');
 const str = write(dom);
@@ -47,7 +47,7 @@ const str = write(dom);
 ## API
 
 ```ts
-import { parse } from 'eksml/parser';
+import { parse } from '@eksml/xml/parser';
 
 const dom = parse('<root><item>Hello</item></root>');
 ```
@@ -150,7 +150,7 @@ Serialize a DOM tree, lossy object, or lossless entries back to an XML/HTML stri
 Input format is auto-detected — no manual conversion needed.
 
 ```ts
-import { write } from 'eksml/writer';
+import { write } from '@eksml/xml/writer';
 
 // DOM input
 const xml = write(dom);
@@ -211,7 +211,7 @@ const fromEntries = write([
 A high-performance EventEmitter-style SAX parser. Feed it chunks of XML and receive events via `.on()` / `.off()` handlers. Handlers can be added and removed dynamically at any time.
 
 ```ts
-import { createSaxParser } from 'eksml/sax';
+import { createSaxParser } from '@eksml/xml/sax';
 
 const parser = createSaxParser();
 
@@ -311,7 +311,7 @@ parser.off('openTag', myHandler);
 A Web Streams `TransformStream` that parses XML chunks into `TNode` subtrees. Works in browsers, Node.js 18+, Deno, and Bun. Follows the platform stream class convention (`TextDecoderStream`, `DecompressionStream`, etc.).
 
 ```ts
-import { XmlParseStream } from 'eksml/stream';
+import { XmlParseStream } from '@eksml/xml/stream';
 
 const response = await fetch('/feed.xml');
 const reader = response.body
@@ -395,7 +395,7 @@ Convert XML into compact JavaScript objects. Ideal when you need a simple JS rep
 `input` is `string | (TNode | string)[]` — pass a raw XML string, or a pre-parsed DOM array (from `parse()` or `stream()`).
 
 ```ts
-import { lossy } from 'eksml/lossy';
+import { lossy } from '@eksml/xml/lossy';
 
 lossy('<user><name>Alice</name><age>30</age></user>');
 // => { user: { name: "Alice", age: "30" } }
@@ -419,7 +419,7 @@ Convert XML into an order-preserving JSON-friendly structure. Every node, attrib
 `input` is `string | (TNode | string)[]` — pass a raw XML string, or a pre-parsed DOM array (from `parse()` or `stream()`).
 
 ```ts
-import { lossless } from 'eksml/lossless';
+import { lossless } from '@eksml/xml/lossless';
 
 lossless('<user id="1"><name>Alice</name></user>');
 // => [{ user: [{ $attr: { id: "1" } }, { name: [{ $text: "Alice" }] }] }]
@@ -446,9 +446,9 @@ Convert lossy or lossless representations back into `TNode` DOM trees.
 > or further manipulation before serializing.
 
 ```ts
-import { fromLossy } from 'eksml/from-lossy';
-import { fromLossless } from 'eksml/from-lossless';
-import { write } from 'eksml/writer';
+import { fromLossy } from '@eksml/xml/from-lossy';
+import { fromLossless } from '@eksml/xml/from-lossless';
+import { write } from '@eksml/xml/writer';
 
 // Explicit conversion (when you need the DOM tree)
 const dom = fromLossy({ user: { name: 'Alice' } });
@@ -472,7 +472,7 @@ import {
   isElementNode,
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
-} from 'eksml/utilities';
+} from '@eksml/xml/utilities';
 ```
 
 <table>
@@ -537,7 +537,7 @@ Eksml can parse and serialize HTML, but it is **not an HTML spec-compliant parse
 
 What Eksml does provide is a set of **HTML-aware options** that cover the most common differences between XML and HTML:
 
-- **Void elements** — `<br>`, `<img>`, `<input>`, etc. are recognized as self-closing when `html: true` is set (or when you provide a custom `selfClosingTags` list). The full list is exported as `HTML_VOID_ELEMENTS` from `eksml/utilities`.
+- **Void elements** — `<br>`, `<img>`, `<input>`, etc. are recognized as self-closing when `html: true` is set (or when you provide a custom `selfClosingTags` list). The full list is exported as `HTML_VOID_ELEMENTS` from `@eksml/xml/utilities`.
 - **Raw content tags** — `<script>` and `<style>` content is treated as raw text (not parsed for child elements) when `html: true` is set. Customizable via `rawContentTags`. Exported as `HTML_RAW_CONTENT_TAGS`.
 - **Entity encoding** — The writer uses HTML named entities (e.g. `&nbsp;`, `&copy;`) instead of numeric references when `html: true` and `entities: true` are both set.
 - **Serialization style** — Void elements serialize as `<br>` instead of `<br/>` in HTML mode.

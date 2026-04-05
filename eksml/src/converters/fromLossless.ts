@@ -13,9 +13,9 @@
  *
  * @example
  * ```ts
- * import { fromLossless } from "eksml/from-lossless";
- * import { lossless } from "eksml/lossless";
- * import { write } from "eksml/writer";
+ * import { fromLossless } from "@eksml/xml/from-lossless";
+ * import { lossless } from "@eksml/xml/lossless";
+ * import { write } from "@eksml/xml/writer";
  *
  * const entries = lossless('<root attr="1"><item>hello</item></root>');
  * const dom = fromLossless(entries);

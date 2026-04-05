@@ -267,7 +267,7 @@ function parsePIAttributes(body: string): Record<string, string | null> | null {
  *
  * @example
  * ```ts
- * import { XmlParseStream } from 'eksml/stream';
+ * import { XmlParseStream } from '@eksml/xml/stream';
  *
  * const response = await fetch('/feed.xml');
  * const reader = response.body

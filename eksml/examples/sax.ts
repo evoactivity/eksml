@@ -1,4 +1,4 @@
-import { createSaxParser } from 'eksml/sax';
+import { createSaxParser } from '@eksml/xml/sax';
 
 const xml = `
 <catalog>

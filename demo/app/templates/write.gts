@@ -2,9 +2,9 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 
-import { fromLossless } from 'eksml/from-lossless';
-import { fromLossy } from 'eksml/from-lossy';
-import { write } from 'eksml/writer';
+import { fromLossless } from '@eksml/xml/from-lossless';
+import { fromLossy } from '@eksml/xml/from-lossy';
+import { write } from '@eksml/xml/writer';
 import pageTitle from 'ember-page-title/helpers/page-title';
 
 import MonacoEditor from '#components/monaco-editor.gts';

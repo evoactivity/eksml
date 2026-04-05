@@ -14,4 +14,4 @@
 
 - [ ] Existing tests pass (`pnpm test` in `eksml/`)
 - [ ] New tests added (if applicable)
-- [ ] Typecheck passes (`pnpm --filter eksml typecheck`)
+- [ ] Typecheck passes (`pnpm --filter @eksml/xml typecheck`)

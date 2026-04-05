@@ -5,7 +5,7 @@ All benchmarks run via [Vitest bench](https://vitest.dev/guide/features.html#ben
 Run them yourself:
 
 ```sh
-pnpm --filter eksml bench
+pnpm --filter @eksml/xml bench
 ```
 
 ## DOM Parsing

@@ -1,6 +1,6 @@
-import { parse } from 'eksml/parser';
-import { lossy } from 'eksml/lossy';
-import { lossless } from 'eksml/lossless';
+import { parse } from '@eksml/xml/parser';
+import { lossy } from '@eksml/xml/lossy';
+import { lossless } from '@eksml/xml/lossless';
 
 const xml = `
 <bookstore>

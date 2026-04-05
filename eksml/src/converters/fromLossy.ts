@@ -17,9 +17,9 @@
  *
  * @example
  * ```ts
- * import { fromLossy } from "eksml/from-lossy";
- * import { lossy } from "eksml/lossy";
- * import { write } from "eksml/writer";
+ * import { fromLossy } from "@eksml/xml/from-lossy";
+ * import { lossy } from "@eksml/xml/lossy";
+ * import { write } from "@eksml/xml/writer";
  *
  * const obj = lossy('<root><item>hello</item><item>world</item></root>');
  * const dom = fromLossy(obj);

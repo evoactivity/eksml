@@ -14,7 +14,7 @@
  *
  * @example
  * ```ts
- * import { lossless } from "eksml/lossless";
+ * import { lossless } from "@eksml/xml/lossless";
  *
  * const result = lossless('<root attr="1"><item>hell<b>o</b></item></root>');
  * // [

@@ -22,19 +22,19 @@ The repo is a pnpm monorepo with two workspaces:
 
 All day-to-day commands can be run from the repo root:
 
-| Task                      | Command                          |
-| ------------------------- | -------------------------------- |
-| Run tests                 | `pnpm test`                      |
-| Watch tests               | `pnpm --filter eksml test:watch` |
-| Run benchmarks            | `pnpm --filter eksml bench`      |
-| Type-check the library    | `pnpm --filter eksml typecheck`  |
-| Build the library         | `pnpm build`                     |
-| Check formatting          | `pnpm prettier --check .`        |
-| Fix formatting            | `pnpm format`                    |
-| Start the demo dev server | `pnpm demo`                      |
-| Build the demo (SSG)      | `pnpm build:demo`                |
+| Task                      | Command                               |
+| ------------------------- | ------------------------------------- |
+| Run tests                 | `pnpm test`                           |
+| Watch tests               | `pnpm --filter @eksml/xml test:watch` |
+| Run benchmarks            | `pnpm --filter @eksml/xml bench`      |
+| Type-check the library    | `pnpm --filter @eksml/xml typecheck`  |
+| Build the library         | `pnpm build`                          |
+| Check formatting          | `pnpm prettier --check .`             |
+| Fix formatting            | `pnpm format`                         |
+| Start the demo dev server | `pnpm demo`                           |
+| Build the demo (SSG)      | `pnpm build:demo`                     |
 
-There is no top-level `lint` script. Use `pnpm prettier --check .` and `pnpm --filter eksml typecheck` instead.
+There is no top-level `lint` script. Use `pnpm prettier --check .` and `pnpm --filter @eksml/xml typecheck` instead.
 
 ## Code style
 
@@ -78,7 +78,7 @@ Tests use [Vitest](https://vitest.dev/) with `describe`/`it`/`expect`:
 pnpm test
 
 # Watch mode (re-runs on save)
-pnpm --filter eksml test:watch
+pnpm --filter @eksml/xml test:watch
 ```
 
 Test files live in `eksml/test/` and follow the naming convention `*.test.ts`. Fixtures are in `eksml/test/fixtures/` and are excluded from Prettier.
@@ -118,7 +118,7 @@ Benchmarks use [Vitest bench](https://vitest.dev/guide/features.html#benchmarkin
 Run them:
 
 ```sh
-pnpm --filter eksml bench
+pnpm --filter @eksml/xml bench
 ```
 
 ### Performance guidelines
@@ -131,7 +131,7 @@ pnpm --filter eksml bench
 ## Type checking
 
 ```sh
-pnpm --filter eksml typecheck
+pnpm --filter @eksml/xml typecheck
 ```
 
 This runs `tsc --noEmit` with strict mode. All public API types should be explicit — avoid `any` and prefer narrowing over type assertions.
@@ -163,7 +163,7 @@ Demo components use `.gts` template-tag format. Prefer arrow functions over `@ac
 Before opening a PR, verify:
 
 - [ ] `pnpm test` passes (all 1,400+ tests)
-- [ ] `pnpm --filter eksml typecheck` has no errors
+- [ ] `pnpm --filter @eksml/xml typecheck` has no errors
 - [ ] `pnpm prettier --check .` is clean
 - [ ] Benchmarks show no regression (if touching parser/tokenizer/writer/stream code)
 - [ ] New features include tests

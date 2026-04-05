@@ -6,8 +6,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "pnpm --filter eksml test",
-    "build": "pnpm --filter eksml build",
+    "test": "pnpm --filter @eksml/xml test",
+    "build": "pnpm --filter @eksml/xml build",
     "build:demo": "pnpm --filter demo build",
     "dev:demo": "pnpm --filter demo dev",
     "format": "prettier --write .",
