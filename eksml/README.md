@@ -10,6 +10,8 @@ A fast, lightweight XML/HTML parser, serializer, and streaming toolkit for JavaS
 
 Built on the same core parsing architecture as [tXml](https://github.com/tobiasNickel/tXml) by Tobias Nickel, Eksml improves the performance and extends it with additional features.
 
+**[Try the interactive demo](https://evoactivity.github.io/eksml/)**
+
 ## Installation
 
 ```bash
@@ -510,252 +512,38 @@ import {
 
 ## Benchmarks
 
-All benchmarks run via [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) on Node.js. Fixtures range from ~100 B to ~30 KB of real-world XML (RSS feeds, Atom feeds, SOAP envelopes, Maven POMs, XMLTV EPGs). Full benchmark source is in [`bench/`](./bench/).
+Eksml is consistently the fastest across parsing, streaming, and serialization. Benchmarks run via [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) against real-world XML fixtures from ~100 B to ~30 KB.
 
-### DOM Parsing
+- **DOM parsing**: 1.2-1.5x faster than tXml, 3-4x faster than htmlparser2, 7-15x faster than fast-xml-parser/xml2js/xmldom
+- **SAX streaming**: 1.6-2.5x faster than htmlparser2/saxes, 3-6x faster than sax
+- **Raw tokenization**: 2-2.5x faster than saxes, 2-3x faster than htmlparser2, 4-6x faster than sax
+- **Serialization**: Trades top position with tXml; both are 3-7x faster than xmldom and 7-13x faster than fast-xml-parser/xml2js
 
-Parse an XML string into a tree structure.
+Full results with per-fixture op/s tables: **[BENCHMARKS.md](./BENCHMARKS.md)**
 
-<table>
-  <tr>
-    <th>Library</th>
-    <th align="right">small (~100 B)</th>
-    <th align="right">RSS (~3 KB)</th>
-    <th align="right">SOAP (~2 KB)</th>
-    <th align="right">Atom (~3 KB)</th>
-    <th align="right">POM (~5 KB)</th>
-    <th align="right">EPG (~9 KB)</th>
-  </tr>
-  <tr>
-    <td><strong>Eksml</strong></td>
-    <td align="right"><strong>1,361,164 op/s</strong></td>
-    <td align="right"><strong>86,551 op/s</strong></td>
-    <td align="right"><strong>61,091 op/s</strong></td>
-    <td align="right"><strong>33,542 op/s</strong></td>
-    <td align="right"><strong>12,916 op/s</strong></td>
-    <td align="right"><strong>17,004 op/s</strong></td>
-  </tr>
-  <tr>
-    <td>tXml</td>
-    <td align="right">906,585 op/s</td>
-    <td align="right">--</td>
-    <td align="right">48,017 op/s</td>
-    <td align="right">26,981 op/s</td>
-    <td align="right">11,032 op/s</td>
-    <td align="right">13,317 op/s</td>
-  </tr>
-  <tr>
-    <td>htmlparser2</td>
-    <td align="right">470,327 op/s</td>
-    <td align="right">24,047 op/s</td>
-    <td align="right">16,455 op/s</td>
-    <td align="right">9,791 op/s</td>
-    <td align="right">3,442 op/s</td>
-    <td align="right">4,732 op/s</td>
-  </tr>
-  <tr>
-    <td>fast-xml-parser</td>
-    <td align="right">169,185 op/s</td>
-    <td align="right">9,412 op/s</td>
-    <td align="right">7,133 op/s</td>
-    <td align="right">3,482 op/s</td>
-    <td align="right">1,313 op/s</td>
-    <td align="right">2,279 op/s</td>
-  </tr>
-  <tr>
-    <td>xml2js</td>
-    <td align="right">130,322 op/s</td>
-    <td align="right">8,832 op/s</td>
-    <td align="right">6,414 op/s</td>
-    <td align="right">3,833 op/s</td>
-    <td align="right">1,556 op/s</td>
-    <td align="right">2,015 op/s</td>
-  </tr>
-  <tr>
-    <td>@xmldom/xmldom</td>
-    <td align="right">92,091 op/s</td>
-    <td align="right">5,834 op/s</td>
-    <td align="right">4,770 op/s</td>
-    <td align="right">2,469 op/s</td>
-    <td align="right">861 op/s</td>
-    <td align="right">1,378 op/s</td>
-  </tr>
-</table>
+Run similar benchmarks in your browser: **[Interactive benchmark](https://evoactivity.github.io/eksml/benchmark)**
 
-Eksml is **1.2-1.5x faster than tXml**, **3-4x faster than htmlparser2**, **7-10x faster than fast-xml-parser**, and **8-15x faster than xmldom**.
+---
 
-> [!note]
-> tXml crashed on the RSS fixture
+## HTML Support
 
-### SAX Streaming (256 B chunks, with tree building)
+Eksml can parse and serialize HTML, but it is **not an HTML spec-compliant parser**. It does not implement the [WHATWG HTML parsing algorithm](https://html.spec.whatwg.org/multipage/parsing.html) — there is no tokenizer state machine, no tree construction stage, no implicit element insertion, and no error recovery for malformed markup.
 
-Chunked streaming parse where each parser tokenizes SAX events and builds a full DOM tree.
+What Eksml does provide is a set of **HTML-aware options** that cover the most common differences between XML and HTML:
 
-<table>
-  <tr>
-    <th>Library</th>
-    <th align="right">RSS (~3 KB)</th>
-    <th align="right">EPG (~9 KB)</th>
-    <th align="right">POM (~5 KB)</th>
-    <th align="right">EPG 64 B stress</th>
-  </tr>
-  <tr>
-    <td><strong>Eksml (SAX)</strong></td>
-    <td align="right"><strong>73,744 op/s</strong></td>
-    <td align="right"><strong>12,385 op/s</strong></td>
-    <td align="right"><strong>8,313 op/s</strong></td>
-    <td align="right"><strong>11,452 op/s</strong></td>
-  </tr>
-  <tr>
-    <td>Eksml (XmlParseStream)</td>
-    <td align="right">31,459 op/s</td>
-    <td align="right">7,764 op/s</td>
-    <td align="right">5,967 op/s</td>
-    <td align="right">4,559 op/s</td>
-  </tr>
-  <tr>
-    <td>saxes</td>
-    <td align="right">29,121 op/s</td>
-    <td align="right">6,628 op/s</td>
-    <td align="right">6,791 op/s</td>
-    <td align="right">6,284 op/s</td>
-  </tr>
-  <tr>
-    <td>htmlparser2</td>
-    <td align="right">27,279 op/s</td>
-    <td align="right">7,372 op/s</td>
-    <td align="right">5,919 op/s</td>
-    <td align="right">6,821 op/s</td>
-  </tr>
-  <tr>
-    <td>sax</td>
-    <td align="right">12,224 op/s</td>
-    <td align="right">3,720 op/s</td>
-    <td align="right">3,078 op/s</td>
-    <td align="right">4,013 op/s</td>
-  </tr>
-</table>
+- **Void elements** — `<br>`, `<img>`, `<input>`, etc. are recognized as self-closing when `html: true` is set (or when you provide a custom `selfClosingTags` list). The full list is exported as `HTML_VOID_ELEMENTS` from `eksml/utilities`.
+- **Raw content tags** — `<script>` and `<style>` content is treated as raw text (not parsed for child elements) when `html: true` is set. Customizable via `rawContentTags`. Exported as `HTML_RAW_CONTENT_TAGS`.
+- **Entity encoding** — The writer uses HTML named entities (e.g. `&nbsp;`, `&copy;`) instead of numeric references when `html: true` and `entities: true` are both set.
+- **Serialization style** — Void elements serialize as `<br>` instead of `<br/>` in HTML mode.
 
-Eksml's SAX engine is **1.6-2.5x faster than htmlparser2/saxes** and **3-6x faster than sax**.
+This is sufficient for well-formed HTML and most real-world documents. However, Eksml will not handle things like:
 
-### Raw Tokenization (no-op callbacks)
+- Optional closing tags (`<li>` without `</li>`, `<p>` auto-closed by a sibling `<p>`)
+- Implicit elements (`<html>`, `<head>`, `<body>` inserted by the spec when missing)
+- Misnested formatting tags (the adoption agency algorithm)
+- `<table>` foster parenting
 
-Pure scanner throughput with no downstream work -- isolates the tokenizer's raw speed.
-
-<table>
-  <tr>
-    <th>Library</th>
-    <th align="right">RSS (~3 KB)</th>
-    <th align="right">EPG (~9 KB)</th>
-    <th align="right">POM (~5 KB)</th>
-    <th align="right">EPG 64 B stress</th>
-  </tr>
-  <tr>
-    <td><strong>Eksml (SAX)</strong></td>
-    <td align="right"><strong>85,798 op/s</strong></td>
-    <td align="right"><strong>16,367 op/s</strong></td>
-    <td align="right"><strong>13,465 op/s</strong></td>
-    <td align="right"><strong>14,763 op/s</strong></td>
-  </tr>
-  <tr>
-    <td>saxes</td>
-    <td align="right">34,370 op/s</td>
-    <td align="right">8,990 op/s</td>
-    <td align="right">8,484 op/s</td>
-    <td align="right">8,965 op/s</td>
-  </tr>
-  <tr>
-    <td>htmlparser2</td>
-    <td align="right">28,558 op/s</td>
-    <td align="right">7,534 op/s</td>
-    <td align="right">6,126 op/s</td>
-    <td align="right">6,980 op/s</td>
-  </tr>
-  <tr>
-    <td>sax</td>
-    <td align="right">15,331 op/s</td>
-    <td align="right">4,193 op/s</td>
-    <td align="right">3,183 op/s</td>
-    <td align="right">3,950 op/s</td>
-  </tr>
-</table>
-
-Eksml's raw tokenizer is **2-2.5x faster than saxes**, **2-3x faster than htmlparser2**, and **4-6x faster than sax**.
-
-### XML Serialization (tree to string)
-
-Serialize a pre-parsed in-memory tree back to XML.
-
-<table>
-  <tr>
-    <th>Library</th>
-    <th align="right">small (~100 B)</th>
-    <th align="right">RSS (~3 KB)</th>
-    <th align="right">SOAP (~3 KB)</th>
-    <th align="right">Atom (~6 KB)</th>
-    <th align="right">POM (~8 KB)</th>
-    <th align="right">EPG (~30 KB)</th>
-  </tr>
-  <tr>
-    <td><strong>Eksml</strong></td>
-    <td align="right"><strong>1,885,288 op/s</strong></td>
-    <td align="right"><strong>308,059 op/s</strong></td>
-    <td align="right">195,102 op/s</td>
-    <td align="right">87,992 op/s</td>
-    <td align="right"><strong>52,345 op/s</strong></td>
-    <td align="right">34,001 op/s</td>
-  </tr>
-  <tr>
-    <td><strong>tXml</strong></td>
-    <td align="right"><strong>2,459,009 op/s</strong></td>
-    <td align="right">--</td>
-    <td align="right"><strong>226,242 op/s</strong></td>
-    <td align="right"><strong>95,098 op/s</strong></td>
-    <td align="right">48,697 op/s</td>
-    <td align="right"><strong>43,192 op/s</strong></td>
-  </tr>
-  <tr>
-    <td>htmlparser2</td>
-    <td align="right">1,996,848 op/s</td>
-    <td align="right">99,635 op/s</td>
-    <td align="right">72,448 op/s</td>
-    <td align="right">29,742 op/s</td>
-    <td align="right">14,393 op/s</td>
-    <td align="right">16,840 op/s</td>
-  </tr>
-  <tr>
-    <td>@xmldom/xmldom</td>
-    <td align="right">1,075,965 op/s</td>
-    <td align="right">44,446 op/s</td>
-    <td align="right">38,996 op/s</td>
-    <td align="right">14,354 op/s</td>
-    <td align="right">7,318 op/s</td>
-    <td align="right">10,038 op/s</td>
-  </tr>
-  <tr>
-    <td>fast-xml-parser</td>
-    <td align="right">356,881 op/s</td>
-    <td align="right">23,261 op/s</td>
-    <td align="right">27,979 op/s</td>
-    <td align="right">11,582 op/s</td>
-    <td align="right">4,622 op/s</td>
-    <td align="right">3,435 op/s</td>
-  </tr>
-  <tr>
-    <td>xml2js</td>
-    <td align="right">220,393 op/s</td>
-    <td align="right">16,480 op/s</td>
-    <td align="right">19,606 op/s</td>
-    <td align="right">8,577 op/s</td>
-    <td align="right">4,114 op/s</td>
-    <td align="right">4,174 op/s</td>
-  </tr>
-</table>
-
-Eksml and tXml trade top position depending on document size and shape. Both are **3-7x faster than @xmldom/xmldom** and **7-13x faster than fast-xml-parser/xml2js** at serialization.
-
-> [!note]
-> tXml crashed on the RSS fixture
+If you need full HTML spec compliance, use a dedicated HTML parser like [parse5](https://github.com/inikulin/parse5) or the browser's built-in `DOMParser`.
 
 ---
 
@@ -784,7 +572,6 @@ Eksml optimizes for speed and simplicity, which means it intentionally does not 
 - **No namespace support.** Namespace prefixes are preserved in tag and attribute names (e.g. `soap:Envelope`) but not resolved to URIs. There is no namespace-aware API.
 - **No XPath or CSS selectors.** Querying uses simple functions like `filter()`, `getElementById()`, and `getElementsByClassName()`. For complex queries, use the DOM output with a dedicated query library.
 - **Entity decoding is opt-in.** By default, entities like `&amp;` and `&#x20;` are left as-is in text and attribute values. Pass `entities: true` to decode them.
-- **Streaming emits DOM nodes by default.** `XmlParseStream` emits `TNode` subtrees unless you set `output: 'lossy'` or `output: 'lossless'`.
 - **Not a drop-in replacement for the W3C DOM.** `TNode` is a plain object with `tagName`, `attributes`, and `children` -- not a `Node`/`Element`/`Document` with methods like `querySelector`, `parentNode`, etc.
 - **Single-threaded.** Parsing runs synchronously on the calling thread. For CPU-bound workloads with very large documents, consider offloading to a Web Worker.
 
