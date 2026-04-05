@@ -118,6 +118,20 @@ img {
   }
 }
 
+.nav-github {
+  margin-left: auto;
+  color: #888;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+@media (hover: hover) {
+  .nav-github:hover {
+    color: #fff;
+  }
+}
+
 /* --- Landing page --- */
 
 .landing {
