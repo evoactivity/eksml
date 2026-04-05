@@ -10,7 +10,7 @@
  *
  * const parser = createSaxParser({ html: true });
  *
- * parser.on('opentag', (tagName, attrs) => console.log(tagName, attrs));
+ * parser.on('openTag', (tagName, attrs) => console.log(tagName, attrs));
  * parser.on('text', (text) => console.log(text));
  *
  * parser.write('<div><br><p>Hello</p></div>');
