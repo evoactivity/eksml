@@ -302,7 +302,6 @@ export function parse(
             S.charCodeAt(pos + 8) === LBRACKET &&
             S.substring(pos + 3, pos + 8).toLowerCase() === 'cdata'
           ) {
-            // cdata
             const cdataEndIndex = S.indexOf(']]>', pos);
             if (cdataEndIndex === -1) {
               if (strict) throw strictError('Unclosed CDATA section');
@@ -635,7 +634,6 @@ export function parse(
     if (strict && !S[pos]) {
       throw strictError(`Unclosed tag <${tagName}>`);
     }
-    // optional parsing of children
     // Self-closing: explicit />, processing instruction ?>, or declaration <!...>
     if (
       S.charCodeAt(pos - 1) !== SLASH &&

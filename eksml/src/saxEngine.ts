@@ -353,17 +353,14 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         // OPEN_TAG_NAME — batch scan for end of name
         // ==================================================================
         case State.OPEN_TAG_NAME: {
-          // Scan ahead for end of tag name
           let j = i;
           while (j < chunkLength) {
             const charCode = chunk.charCodeAt(j);
             if (isNameEnd(charCode)) break;
             j++;
           }
-          // Accumulate what we scanned
           if (j > i) tagName += chunk.substring(i, j);
           if (j >= chunkLength) {
-            // Tag name continues in next chunk
             i = chunkLength;
             continue;
           }
