@@ -20,22 +20,44 @@ export function filter(
   depth: number = 0,
   path: string = '',
 ): TNode[] {
-  const children = typeof input === 'string' ? parse(input) : input;
-  let out: TNode[] = [];
-
-  children.forEach(function (child, i) {
-    if (typeof child === 'object' && predicate(child, i, depth, path)) {
-      out.push(child);
-    }
-    if (typeof child === 'object' && child.children) {
-      const filteredChildren = filter(
-        child.children,
-        predicate,
-        depth + 1,
-        (path ? path + '.' : '') + i + '.' + child.tagName,
-      );
-      out = out.concat(filteredChildren);
-    }
-  });
+  const out: TNode[] = [];
+  filterInto(
+    out,
+    typeof input === 'string' ? parse(input) : input,
+    predicate,
+    depth,
+    path,
+  );
   return out;
+}
+
+function filterInto(
+  out: TNode[],
+  children: (TNode | string)[],
+  predicate: (
+    node: TNode,
+    index: number,
+    depth: number,
+    path: string,
+  ) => boolean,
+  depth: number,
+  path: string,
+): void {
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i]!;
+    if (typeof child === 'object') {
+      if (predicate(child, i, depth, path)) {
+        out.push(child);
+      }
+      if (child.children) {
+        filterInto(
+          out,
+          child.children,
+          predicate,
+          depth + 1,
+          (path ? path + '.' : '') + i + '.' + child.tagName,
+        );
+      }
+    }
+  }
 }
