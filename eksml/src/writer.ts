@@ -10,6 +10,13 @@ const BANG = 33; // !
 const QUESTION = 63; // ?
 // @generated:char-codes:end
 
+/**
+ * Recursion depth at which the circular-reference WeakSet guard kicks in.
+ * Below this depth, no WeakSet overhead is incurred — the natural call-stack
+ * limit provides a safety net. Typical XML documents have depth < 10.
+ */
+const CIRCULAR_CHECK_DEPTH = 16;
+
 /** Options for write. */
 export interface WriterOptions {
   /**
@@ -100,24 +107,27 @@ const SIMPLE_KEYWORD = /^[A-Za-z][A-Za-z0-9_-]*$/;
 
 function compactWrite(input: TNode | (TNode | string)[]): string {
   let out = '';
-  const seen = new WeakSet<TNode>();
+  let seen: WeakSet<TNode> | null = null;
 
-  function writeChildren(nodes: (TNode | string)[]): void {
+  function writeChildren(nodes: (TNode | string)[], depth: number): void {
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]!;
       if (typeof node === 'string') {
         out += node;
       } else {
-        writeNode(node);
+        writeNode(node, depth);
       }
     }
   }
 
-  function writeNode(node: TNode): void {
-    if (seen.has(node)) {
-      throw new Error('Circular reference detected in TNode tree');
+  function writeNode(node: TNode, depth: number): void {
+    if (depth >= CIRCULAR_CHECK_DEPTH) {
+      if (seen === null) seen = new WeakSet<TNode>();
+      if (seen.has(node)) {
+        throw new Error('Circular reference detected in TNode tree');
+      }
+      seen.add(node);
     }
-    seen.add(node);
     const tag = node.tagName;
     const attributes = node.attributes;
     const firstChar = tag.charCodeAt(0);
@@ -169,11 +179,11 @@ function compactWrite(input: TNode | (TNode | string)[]): string {
       }
       out += '>';
     }
-    writeChildren(node.children);
+    writeChildren(node.children, depth + 1);
     out += '</' + tag + '>';
   }
 
-  writeChildren(Array.isArray(input) ? input : [input]);
+  writeChildren(Array.isArray(input) ? input : [input], 0);
   return out;
 }
 
@@ -216,24 +226,27 @@ function fullWriter(
   // Compact path with entities/html support
   if (!indent) {
     let out = '';
-    const seen = new WeakSet<TNode>();
+    let seen: WeakSet<TNode> | null = null;
 
-    function writeChildren(nodes: (TNode | string)[]): void {
+    function writeChildren(nodes: (TNode | string)[], depth: number): void {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]!;
         if (typeof node === 'string') {
           out += encodeTextContent(node);
         } else {
-          writeNode(node);
+          writeNode(node, depth);
         }
       }
     }
 
-    function writeNode(node: TNode): void {
-      if (seen.has(node)) {
-        throw new Error('Circular reference detected in TNode tree');
+    function writeNode(node: TNode, depth: number): void {
+      if (depth >= CIRCULAR_CHECK_DEPTH) {
+        if (seen === null) seen = new WeakSet<TNode>();
+        if (seen.has(node)) {
+          throw new Error('Circular reference detected in TNode tree');
+        }
+        seen.add(node);
       }
-      seen.add(node);
       const tag = node.tagName;
       const attributes = node.attributes;
       const firstChar = tag.charCodeAt(0);
@@ -299,17 +312,17 @@ function fullWriter(
         }
         out += '>';
       }
-      writeChildren(node.children);
+      writeChildren(node.children, depth + 1);
       out += '</' + tag + '>';
     }
 
-    writeChildren(Array.isArray(input) ? input : [input]);
+    writeChildren(Array.isArray(input) ? input : [input], 0);
     return out;
   }
 
   // Pretty path
   let out = '';
-  const seen = new WeakSet<TNode>();
+  let seen: WeakSet<TNode> | null = null;
 
   function hasTextChildren(nodes: (TNode | string)[]): boolean {
     for (let i = 0; i < nodes.length; i++) {
@@ -348,10 +361,13 @@ function fullWriter(
 
   function prettyWriteNode(node: TNode, depth: number): void {
     if (!node) return;
-    if (seen.has(node)) {
-      throw new Error('Circular reference detected in TNode tree');
+    if (depth >= CIRCULAR_CHECK_DEPTH) {
+      if (seen === null) seen = new WeakSet<TNode>();
+      if (seen.has(node)) {
+        throw new Error('Circular reference detected in TNode tree');
+      }
+      seen.add(node);
     }
-    seen.add(node);
     const padding = indent.repeat(depth);
     const tag = node.tagName;
     const firstChar = tag.charCodeAt(0);
