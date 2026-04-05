@@ -103,6 +103,22 @@ describe('getElementById', () => {
       getElementById('<div><span>no id</span></div>', 'missing'),
     ).toBeUndefined();
   });
+
+  it('handles id with regex special characters', () => {
+    const result = getElementById(
+      '<div id="foo.bar[0]">found</div>',
+      'foo.bar[0]',
+    ) as TNode;
+    expect(result).toBeDefined();
+    expect(result.tagName).toBe('div');
+    expect(result.children).toEqual(['found']);
+  });
+
+  it('does not match unintended ids via regex injection', () => {
+    // Without escaping, id ".*" would match any id value
+    const result = getElementById('<div id="something">oops</div>', '.*');
+    expect(result).toBeUndefined();
+  });
 });
 
 // =================================================================
@@ -130,6 +146,29 @@ describe('getElementsByClassName', () => {
       '<div><span class="highlight active">1</span><span class="highlight">2</span><span class="active">3</span></div>';
     expect(getElementsByClassName(html, 'highlight').length).toBe(2);
     expect(getElementsByClassName(html, 'active').length).toBe(2);
+  });
+
+  it('handles class name with regex special characters (string input)', () => {
+    const html =
+      '<div class="foo.bar[0]">found</div><div class="fooXbar00]">nope</div>';
+    const result = getElementsByClassName(html, 'foo.bar[0]');
+    expect(result).toHaveLength(1);
+    expect(result[0]!.attributes?.class).toBe('foo.bar[0]');
+  });
+
+  it('handles class name with regex special characters (DOM input)', () => {
+    const dom = parse(
+      '<div class="foo.bar[0]">found</div><div class="fooXbar00]">nope</div>',
+    );
+    const result = getElementsByClassName(dom, 'foo.bar[0]');
+    expect(result).toHaveLength(1);
+    expect(result[0]!.attributes?.class).toBe('foo.bar[0]');
+  });
+
+  it('does not match unintended classes via regex injection', () => {
+    const html = '<div class="anything">oops</div>';
+    const result = getElementsByClassName(html, '.*');
+    expect(result).toHaveLength(0);
   });
 });
 

@@ -205,6 +205,24 @@ describe('parse', () => {
     }).toThrow();
   });
 
+  it('throws when close tag is a superstring of the open tag', () => {
+    expect(() => {
+      parse('<foo>text</foobar>');
+    }).toThrow();
+  });
+
+  it('throws when close tag is a superstring of the open tag (nested)', () => {
+    expect(() => {
+      parse('<root><foo>text</foobar></root>');
+    }).toThrow();
+  });
+
+  it('handles close tags with trailing whitespace', () => {
+    expect(parse('<foo>text</foo >')).toEqual([
+      { tagName: 'foo', attributes: null, children: ['text'] },
+    ]);
+  });
+
   it('SVG with comment', () => {
     expect(parse(commentedSvg, { trimWhitespace: true })).toEqual([
       {

@@ -1,5 +1,6 @@
 import type { TNode } from '#src/parser.ts';
 import { parse } from '#src/parser.ts';
+import { escapeRegExp } from '#src/utilities/escapeRegExp.ts';
 import { filter } from '#src/utilities/filter.ts';
 
 /**
@@ -12,14 +13,9 @@ export function getElementsByClassName(
   input: string | (TNode | string)[],
   className: string,
 ): TNode[] {
-  if (typeof input === 'string') {
-    return parse(input, {
-      attrName: 'class',
-      attrValue: '[a-zA-Z0-9- ]*' + className + '[a-zA-Z0-9- ]*',
-    }) as TNode[];
-  }
-  const re = new RegExp('(?:^|\\s)' + className + '(?:\\s|$)');
-  return filter(input, (node) => {
+  const dom = typeof input === 'string' ? parse(input) : input;
+  const re = new RegExp('(?:^|\\s)' + escapeRegExp(className) + '(?:\\s|$)');
+  return filter(dom, (node) => {
     const cls = node.attributes?.class;
     return cls != null && re.test(cls);
   });

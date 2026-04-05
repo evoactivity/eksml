@@ -1,4 +1,5 @@
 import { decodeXML, decodeHTML } from 'entities';
+import { escapeRegExp } from '#src/utilities/escapeRegExp.ts';
 import { filter } from '#src/utilities/filter.ts';
 import {
   HTML_VOID_ELEMENTS,
@@ -219,8 +220,8 @@ export function parse(
             return children;
           }
 
-          const closeTag = S.substring(closeStart, pos);
-          if (closeTag.indexOf(tagName) === -1) {
+          const closeTag = S.substring(closeStart, pos).trimEnd();
+          if (closeTag !== tagName) {
             const parsedText = S.substring(0, pos).split('\n');
             throw new Error(
               'Unexpected close tag\nLine: ' +
@@ -509,7 +510,7 @@ export function parse(
       '\\s' +
         resolvedOptions.attrName +
         '\\s*=[\'"]' +
-        resolvedOptions.attrValue +
+        escapeRegExp(resolvedOptions.attrValue) +
         '[\'"]',
     ).exec(S);
     if (matchResult) {
@@ -530,7 +531,7 @@ export function parse(
       if (pos !== -1) {
         results.push(parseNode());
       }
-      S = S.substr(pos);
+      S = S.slice(pos);
       pos = 0;
     }
     out = results;
