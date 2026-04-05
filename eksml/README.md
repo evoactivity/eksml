@@ -7,6 +7,7 @@
 # Eksml
 
 [![CI](https://github.com/evoactivity/eksml/actions/workflows/ci.yml/badge.svg)](https://github.com/evoactivity/eksml/actions/workflows/ci.yml)
+[![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/evoactivity/a81d2cb6fcee7165ffe898a8cfff9f4c/raw/eksml-coverage.json)](https://github.com/evoactivity/eksml/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@eksml/xml)](https://www.npmjs.com/package/@eksml/xml)
 [![license](https://img.shields.io/npm/l/@eksml/xml)](https://github.com/evoactivity/eksml/blob/main/LICENSE)
 

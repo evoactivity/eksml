@@ -38,7 +38,19 @@ jobs:
         run: pnpm --filter @eksml/xml typecheck
 
       - name: Test
+        if: matrix.node-version != '24'
         run: pnpm test
+
+      - name: Test with coverage
+        if: matrix.node-version == '24'
+        run: pnpm --filter @eksml/xml test:coverage
+
+      - name: Read coverage percentage
+        if: matrix.node-version == '24'
+        id: coverage
+        run: |
+          PCT=$(node -e "const s = JSON.parse(require('fs').readFileSync('eksml/coverage/coverage-summary.json','utf8')); console.log(s.total.lines.pct)")
+          echo "pct=$PCT" >> "$GITHUB_OUTPUT"
 
       - name: Prettier
         run: pnpm prettier --check .
@@ -49,6 +61,19 @@ jobs:
         with:
           name: dist
           path: eksml/dist
+
+      - name: Update coverage badge
+        if: matrix.node-version == '24' && github.ref == 'refs/heads/main'
+        uses: schneegans/dynamic-badges-action@0e50b8bad39e7e1afd3e4e9c2b7dd145fad07501 # v1.8.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: a81d2cb6fcee7165ffe898a8cfff9f4c
+          filename: eksml-coverage.json
+          label: coverage
+          message: ${{ steps.coverage.outputs.pct }}%
+          valColorRange: ${{ steps.coverage.outputs.pct }}
+          minColorRange: 50
+          maxColorRange: 100
 
   smoke:
     name: Smoke (Node 18)
