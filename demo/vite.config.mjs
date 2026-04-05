@@ -3,6 +3,15 @@ import { extensions, ember } from '@embroider/vite';
 import { babel } from '@rollup/plugin-babel';
 import { emberSsg } from 'vite-ember-ssr/vite-plugin';
 
+function removeCrossOrigin() {
+  return {
+    name: 'remove-crossorigin',
+    transformIndexHtml(html) {
+      return html.replace(/ crossorigin /g, ' ');
+    },
+  };
+}
+
 export default defineConfig({
   base: '/eksml/',
   plugins: [
@@ -15,6 +24,7 @@ export default defineConfig({
       routes: ['index', 'parse', 'write', 'sax', 'stream', 'benchmark'],
       rehydrate: true,
     }),
+    removeCrossOrigin(),
   ],
   resolve: {
     alias: {
