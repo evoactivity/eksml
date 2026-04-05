@@ -3,12 +3,13 @@ import { htmlSafe } from '@ember/template';
 import pageTitle from 'ember-page-title/helpers/page-title';
 
 import Card from '#components/card.gts';
+import logoDark from '/logo-dark.svg?url';
 
 <template>
   {{pageTitle 'Home'}}
   <div class='landing'>
     <div class='logo-container'>
-      <img class='logo' src='/logo-dark.svg' alt='eksml' height='56' />
+      <img class='logo' src={{logoDark}} alt='eksml' height='56' />
       <p class='subtitle'>Interactive examples for the eksml XML parser</p>
     </div>
 

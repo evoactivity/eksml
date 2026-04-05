@@ -4,6 +4,7 @@ import { babel } from '@rollup/plugin-babel';
 import { emberSsg } from 'vite-ember-ssr/vite-plugin';
 
 export default defineConfig({
+  base: '/eksml/',
   plugins: [
     ember(),
     babel({

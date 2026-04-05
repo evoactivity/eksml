@@ -2,12 +2,14 @@ import { LinkTo } from '@ember/routing';
 
 import pageTitle from 'ember-page-title/helpers/page-title';
 
+import logoDark from '/logo-dark.svg?url';
+
 <template>
   {{pageTitle 'Eksml Demo'}}
   <div class='page'>
     <nav class='nav'>
       <LinkTo @route='index'>
-        <img class='nav-logo' src='/logo-dark.svg' alt='eksml' height='28' />
+        <img class='nav-logo' src={{logoDark}} alt='eksml' height='28' />
       </LinkTo>
       <div class='nav-links'>
         <LinkTo @route='parse'>Parse</LinkTo>
