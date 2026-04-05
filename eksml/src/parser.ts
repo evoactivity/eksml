@@ -205,11 +205,23 @@ export function parse(
     }
   }
 
-  function parseChildren(tagName: string): (TNode | string)[] {
-    const children: (TNode | string)[] = [];
+  function parseChildren(rootTagName: string): (TNode | string)[] {
+    // Iterative tree-building using an explicit stack to avoid
+    // stack overflow on deeply nested XML (the old recursive
+    // parseNode → parseChildren → parseNode chain blew up at ~2000 levels).
+    interface Frame {
+      tagName: string;
+      attributes: Record<string, string | null> | null;
+      children: (TNode | string)[];
+    }
+    const stack: Frame[] = [];
+    let currentTagName = rootTagName;
+    let children: (TNode | string)[] = [];
+
     while (S[pos]) {
       if (S.charCodeAt(pos) === LT) {
         if (S.charCodeAt(pos + 1) === SLASH) {
+          // ---- Close tag ----
           const closeStart = pos + 2;
           pos = S.indexOf('>', pos);
 
@@ -217,11 +229,25 @@ export function parse(
             if (strict) throw strictError('Unclosed close tag');
             pos = S.length;
             stripIgnorableWhitespace(children);
+            // Unwind: if we are inside a stacked frame, pop back
+            while (stack.length > 0) {
+              const frame = stack.pop()!;
+              const node: TNode = {
+                tagName: currentTagName,
+                attributes: frame.attributes,
+                children,
+              };
+              // Restore from stack
+              currentTagName = frame.tagName;
+              children = frame.children;
+              children.push(node);
+              stripIgnorableWhitespace(children);
+            }
             return children;
           }
 
           const closeTag = S.substring(closeStart, pos).trimEnd();
-          if (closeTag !== tagName) {
+          if (closeTag !== currentTagName) {
             const parsedText = S.substring(0, pos).split('\n');
             throw new Error(
               'Unexpected close tag\nLine: ' +
@@ -236,7 +262,28 @@ export function parse(
           if (pos + 1) pos += 1;
 
           stripIgnorableWhitespace(children);
-          return children;
+
+          if (stack.length === 0) {
+            // We've closed the root tag — return
+            return children;
+          }
+
+          // Pop frame: finalize node and add to parent's children
+          const frame = stack.pop()!;
+          const node: TNode = {
+            tagName: currentTagName,
+            attributes: frame.attributes,
+            children,
+          };
+          currentTagName = frame.tagName;
+          children = frame.children;
+          children.push(node);
+          // Handle processing instruction children promotion
+          if (node.tagName.charCodeAt(0) === QUESTION) {
+            children.push(...node.children);
+            node.children = [];
+          }
+          continue;
         } else if (S.charCodeAt(pos + 1) === BANG) {
           if (S.charCodeAt(pos + 2) === DASH) {
             // comment: use indexOf("-->") for fast scanning
@@ -280,10 +327,10 @@ export function parse(
               if (cc <= 32 || cc === GT || cc === LBRACKET) break;
               pos++;
             }
-            const tagName = S.substring(keywordStart, pos);
+            const declTagName = S.substring(keywordStart, pos);
 
             // Parse space-separated tokens as null-valued attributes
-            let attributes: Record<string, string | null> | null = null;
+            let declAttributes: Record<string, string | null> | null = null;
             while (pos < S.length) {
               const cc = S.charCodeAt(pos);
               if (cc === GT || cc === LBRACKET) break;
@@ -301,8 +348,9 @@ export function parse(
                   break;
                 }
                 const token = S.substring(pos + 1, closePos);
-                if (attributes === null) attributes = Object.create(null);
-                attributes![token] = null;
+                if (declAttributes === null)
+                  declAttributes = Object.create(null);
+                declAttributes![token] = null;
                 pos = closePos + 1;
                 continue;
               }
@@ -314,8 +362,8 @@ export function parse(
                 pos++;
               }
               const token = S.substring(tokenStart, pos);
-              if (attributes === null) attributes = Object.create(null);
-              attributes![token] = null;
+              if (declAttributes === null) declAttributes = Object.create(null);
+              declAttributes![token] = null;
             }
 
             // Skip internal DTD subset ([...]) if present
@@ -349,19 +397,133 @@ export function parse(
               throw strictError('Unclosed declaration');
 
             children.push({
-              tagName,
-              attributes,
+              tagName: declTagName,
+              attributes: declAttributes,
               children: [],
             } as TNode);
           }
           pos++;
           continue;
         }
-        const node = parseNode();
-        children.push(node);
-        if (node.tagName.charCodeAt(0) === QUESTION) {
-          children.push(...node.children);
-          node.children = [];
+        // ---- Open tag (inline parseNode logic) ----
+        pos++;
+        const tagName = parseName();
+        let attributes: Record<string, string | null> | null = null;
+
+        // parsing attributes
+        while (S.charCodeAt(pos) !== GT && S[pos]) {
+          let charCode = S.charCodeAt(pos);
+          if (
+            (charCode > 64 && charCode < 91) ||
+            (charCode > 96 && charCode < 123) ||
+            charCode === UNDERSCORE ||
+            charCode === COLON ||
+            charCode > 127
+          ) {
+            const name = parseName();
+            let code = S.charCodeAt(pos);
+            while (
+              code &&
+              code !== SQUOTE &&
+              code !== DQUOTE &&
+              !(
+                (code > 64 && code < 91) ||
+                (code > 96 && code < 123) ||
+                code === UNDERSCORE ||
+                code === COLON ||
+                code > 127
+              ) &&
+              code !== GT
+            ) {
+              pos++;
+              code = S.charCodeAt(pos);
+            }
+            let value: string | null;
+            if (code === SQUOTE || code === DQUOTE) {
+              value = parseString();
+              if (pos === -1) {
+                // Unterminated attribute string — emit node with what we have
+                const node: TNode = { tagName, attributes, children: [] };
+                children.push(node);
+                // Unwind remaining stack frames
+                while (stack.length > 0) {
+                  const frame = stack.pop()!;
+                  const parent: TNode = {
+                    tagName: currentTagName,
+                    attributes: frame.attributes,
+                    children,
+                  };
+                  currentTagName = frame.tagName;
+                  children = frame.children;
+                  children.push(parent);
+                }
+                return children;
+              }
+              if (decode) value = decode(value);
+            } else {
+              value = null;
+              pos--;
+            }
+            if (attributes === null) attributes = Object.create(null);
+            attributes![name] = value;
+          }
+          pos++;
+        }
+        if (strict && !S[pos]) {
+          throw strictError(`Unclosed tag <${tagName}>`);
+        }
+
+        // Determine if this node has children or is self-closing
+        if (
+          S.charCodeAt(pos - 1) !== SLASH &&
+          S.charCodeAt(pos - 1) !== QUESTION &&
+          tagName.charCodeAt(0) !== BANG
+        ) {
+          if (rawContentSet !== null && rawContentSet.has(tagName)) {
+            // Raw content tag
+            const closeTagStr = '</' + tagName + '>';
+            const start = pos + 1;
+            pos = S.indexOf(closeTagStr, start);
+            let rawChildren: (TNode | string)[];
+            if (pos === -1) {
+              if (strict) throw strictError(`Unclosed tag <${tagName}>`);
+              rawChildren = [S.substring(start)];
+              pos = S.length;
+            } else {
+              rawChildren = [S.substring(start, pos)];
+              pos += closeTagStr.length;
+            }
+            const node: TNode = { tagName, attributes, children: rawChildren };
+            children.push(node);
+            if (tagName.charCodeAt(0) === QUESTION) {
+              children.push(...node.children);
+              node.children = [];
+            }
+          } else if (selfClosingSet === null || !selfClosingSet.has(tagName)) {
+            // Node has children — push frame and descend
+            pos++;
+            stack.push({ tagName: currentTagName, attributes, children });
+            currentTagName = tagName;
+            children = [];
+          } else {
+            // Self-closing tag (from selfClosingTags list)
+            pos++;
+            const node: TNode = { tagName, attributes, children: [] };
+            children.push(node);
+            if (tagName.charCodeAt(0) === QUESTION) {
+              children.push(...node.children);
+              node.children = [];
+            }
+          }
+        } else {
+          // Explicit self-closing (/>) or processing instruction (?>) or declaration
+          pos++;
+          const node: TNode = { tagName, attributes, children: [] };
+          children.push(node);
+          if (tagName.charCodeAt(0) === QUESTION) {
+            children.push(...node.children);
+            node.children = [];
+          }
         }
       } else {
         let text = parseText();
@@ -380,10 +542,23 @@ export function parse(
       }
     }
     // If we exit the loop for a named tag, input ended without a close tag
-    if (strict && tagName !== '') {
-      throw strictError(`Unclosed tag <${tagName}>`);
+    if (strict && currentTagName !== '') {
+      throw strictError(`Unclosed tag <${currentTagName}>`);
     }
     stripIgnorableWhitespace(children);
+    // Unwind any remaining stack frames (unclosed tags in non-strict mode)
+    while (stack.length > 0) {
+      const frame = stack.pop()!;
+      const node: TNode = {
+        tagName: currentTagName,
+        attributes: frame.attributes,
+        children,
+      };
+      currentTagName = frame.tagName;
+      children = frame.children;
+      children.push(node);
+      stripIgnorableWhitespace(children);
+    }
     return children;
   }
 

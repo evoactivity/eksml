@@ -399,4 +399,20 @@ describe('parse', () => {
     expect(el.attributes!.required).toBe('');
     expect(el.attributes!.value).toBe('test');
   });
+
+  it('handles deeply nested XML (5000 levels) without stack overflow', () => {
+    const depth = 5000;
+    const open = '<a>'.repeat(depth);
+    const close = '</a>'.repeat(depth);
+    const xml = open + 'leaf' + close;
+    const result = parse(xml);
+    // Walk to the innermost node and verify structure
+    let node = result[0] as TNode;
+    for (let i = 1; i < depth; i++) {
+      expect(node.tagName).toBe('a');
+      node = node.children[0] as TNode;
+    }
+    expect(node.tagName).toBe('a');
+    expect(node.children[0]).toBe('leaf');
+  });
 });
