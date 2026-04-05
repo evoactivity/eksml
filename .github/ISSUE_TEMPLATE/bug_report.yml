@@ -1,7 +1,7 @@
 ---
 name: Bug Report
 description: Report a bug in Eksml
-labels: ["bug"]
+labels: ['bug']
 body:
   - type: textarea
     id: description
@@ -36,7 +36,7 @@ body:
     id: version
     attributes:
       label: Eksml Version
-      placeholder: "0.1.0"
+      placeholder: '0.1.0'
     validations:
       required: true
   - type: input
@@ -44,4 +44,4 @@ body:
     attributes:
       label: Environment
       description: Node version, runtime, OS, etc.
-      placeholder: "Node 22.0.0, macOS 15"
+      placeholder: 'Node 22.0.0, macOS 15'
