@@ -556,7 +556,7 @@ If you need full HTML spec compliance, use a dedicated HTML parser like [parse5]
 
 ## Acknowledgments
 
-Eksml's DOM parser is built on the work of **[Tobias Nickel](https://github.com/nickel-org)** and his [tXml](https://github.com/tobiasNickel/tXml) library. The core parsing architecture, a single-pass, position-tracking string scanner that builds the tree as it goes, is what makes both libraries so fast. tXml demonstrated that you don't need a separate tokenizer-then-tree-builder pipeline to parse XML at high speed, and Eksml carries that insight forward.
+Eksml's DOM parser is built on the work of **[Tobias Nickel](https://github.com/tobiasNickel)** and his [tXml](https://github.com/tobiasNickel/tXml) library. The core parsing architecture, a single-pass, position-tracking string scanner that builds the tree as it goes, is what makes both libraries so fast. tXml demonstrated that you don't need a separate tokenizer-then-tree-builder pipeline to parse XML at high speed, and Eksml carries that insight forward.
 
 Eksml extends tXml's foundation with:
 
