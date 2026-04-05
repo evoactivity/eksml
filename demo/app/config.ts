@@ -8,7 +8,7 @@ interface Config {
 
 const ENV: Config = {
   environment: import.meta.env.DEV ? 'development' : 'production',
-  rootURL: '/eksml/',
+  rootURL: '/',
   locationType: 'history',
   EmberENV: {},
   APP: {},
