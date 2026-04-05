@@ -83,7 +83,6 @@
     "@types/sax": "^1.2.7",
     "@types/xml2js": "^0.4.14",
     "@xmldom/xmldom": "^0.9.9",
-    "combinations": "^1.0.0",
     "fast-xml-parser": "^5.5.9",
     "htmlparser2": "^12.0.0",
     "modern-monaco": "^0.4.0",

@@ -135,4 +135,77 @@ describe('createSaxParser()', () => {
 
     expect(tags).toEqual(['root', 'item']);
   });
+
+  it('multiple instances do not share state', () => {
+    const tags1: string[] = [];
+    const tags2: string[] = [];
+
+    const sax1 = createSaxParser();
+    const sax2 = createSaxParser();
+
+    sax1.on('openTag', (name) => tags1.push(name));
+    sax2.on('openTag', (name) => tags2.push(name));
+
+    // Interleave writes to both parsers
+    sax1.write('<root>');
+    sax2.write('<doc>');
+    sax1.write('<a/>');
+    sax2.write('<b/>');
+    sax1.write('</root>');
+    sax2.write('<c/>');
+    sax2.write('</doc>');
+
+    sax1.close();
+    sax2.close();
+
+    expect(tags1).toEqual(['root', 'a']);
+    expect(tags2).toEqual(['doc', 'b', 'c']);
+  });
+
+  it('multiple instances have independent event listeners', () => {
+    const sax1 = createSaxParser();
+    const sax2 = createSaxParser();
+    const texts1: string[] = [];
+    const texts2: string[] = [];
+
+    sax1.on('text', (t) => texts1.push(t));
+    sax2.on('text', (t) => texts2.push(t));
+
+    sax1.write('<a>one</a>');
+    sax2.write('<b>two</b>');
+    sax1.close();
+    sax2.close();
+
+    expect(texts1).toEqual(['one']);
+    expect(texts2).toEqual(['two']);
+  });
+
+  it('multiple instances with different options', () => {
+    const tags1: string[] = [];
+    const texts1: string[] = [];
+    const tags2: string[] = [];
+    const texts2: string[] = [];
+
+    const sax1 = createSaxParser({ rawContentTags: ['script'] });
+    const sax2 = createSaxParser();
+
+    sax1.on('openTag', (n) => tags1.push(n));
+    sax1.on('text', (t) => texts1.push(t));
+    sax2.on('openTag', (n) => tags2.push(n));
+    sax2.on('text', (t) => texts2.push(t));
+
+    // sax1 treats <script> as raw — inner <b> is text, not a tag
+    sax1.write('<script><b>code</b></script>');
+    // sax2 parses <script> normally — inner <b> is a tag
+    sax2.write('<script><b>code</b></script>');
+
+    sax1.close();
+    sax2.close();
+
+    expect(tags1).toEqual(['script']);
+    expect(texts1).toEqual(['<b>code</b>']);
+
+    expect(tags2).toEqual(['script', 'b']);
+    expect(texts2).toEqual(['code']);
+  });
 });

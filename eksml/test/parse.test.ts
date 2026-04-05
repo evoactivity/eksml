@@ -481,4 +481,61 @@ describe('parse', () => {
       expect((result[2] as TNode).children[0]).toBe('3');
     });
   });
+
+  // =========================================================================
+  // Strict mode — error message content and line/column accuracy
+  // =========================================================================
+  describe('strict mode error messages', () => {
+    it('unclosed tag includes tag name and line/column', () => {
+      const xml = '<root><open>text';
+      expect(() => parse(xml, { strict: true })).toThrow(
+        /Unclosed tag <open>.*line 1.*column 17/,
+      );
+    });
+
+    it('unclosed comment includes line/column', () => {
+      const xml = '<root><!-- oops';
+      expect(() => parse(xml, { strict: true })).toThrow(
+        /Unclosed comment.*line 1.*column 7/,
+      );
+    });
+
+    it('unclosed CDATA includes line/column', () => {
+      const xml = '<root><![CDATA[oops';
+      expect(() => parse(xml, { strict: true })).toThrow(
+        /Unclosed CDATA.*line 1.*column 7/,
+      );
+    });
+
+    it('unclosed close tag includes line/column', () => {
+      const xml = '<root></root';
+      expect(() => parse(xml, { strict: true })).toThrow(
+        /Unclosed close tag.*line 1.*column 7/,
+      );
+    });
+
+    it('mismatched close tag includes both tag names', () => {
+      const xml = '<root><a>text</b></root>';
+      expect(() => parse(xml, { strict: true })).toThrow(
+        /Unexpected close tag <\/b>.*expected <\/a>/,
+      );
+    });
+
+    it('reports correct line for multiline input', () => {
+      const xml = '<root>\n  <child>\n    <!-- unclosed';
+      expect(() => parse(xml, { strict: true })).toThrow(/line 3/);
+    });
+
+    it('reports correct column for multiline input', () => {
+      const xml = '<root>\n  <child>\n    <open>text';
+      expect(() => parse(xml, { strict: true })).toThrow(/line 3.*column 15/);
+    });
+
+    it('unclosed declaration includes line/column', () => {
+      const xml = '<!DOCTYPE html';
+      expect(() => parse(xml, { strict: true })).toThrow(
+        /Unclosed declaration.*line 1/,
+      );
+    });
+  });
 });

@@ -902,10 +902,17 @@ describe('saxEngine', () => {
     });
 
     it('does not throw when buffers stay within maxBufferSize', () => {
-      const e = parseEvents('<root><child attr="value">text</child></root>');
-      // Default (no maxBufferSize) should work fine
-      expect(e.opens.map((o) => o.name)).toEqual(['root', 'child']);
-      expect(e.texts).toEqual(['text']);
+      const parser = saxEngine({
+        maxBufferSize: 1000,
+        onOpenTag() {},
+        onCloseTag() {},
+        onText() {},
+      });
+      // All buffers remain well under the 1000-char limit
+      expect(() => {
+        parser.write('<root><child attr="value">text</child></root>');
+        parser.close();
+      }).not.toThrow();
     });
 
     it('does not throw when maxBufferSize is undefined (backward compat)', () => {
@@ -938,6 +945,116 @@ describe('saxEngine', () => {
       const e = collectEvents(chunks, { rawContentTags: ['script'] });
       expect(e.texts).toEqual(['content</script nope>more']);
       expect(e.closes).toEqual(['script']);
+    });
+  });
+
+  // =========================================================================
+  // close() in non-raw-text states — partial constructs are discarded
+  // =========================================================================
+  describe('close() in non-raw-text states', () => {
+    it('close() mid-attribute discards partial tag, emits nothing', () => {
+      const opens: string[] = [];
+      const texts: string[] = [];
+      const parser = saxEngine({
+        onOpenTag(name) {
+          opens.push(name);
+        },
+        onText(t) {
+          texts.push(t);
+        },
+      });
+      parser.write('some text<div id="val');
+      parser.close();
+      // The text before the tag should be emitted, but the partial tag is discarded
+      expect(texts).toEqual(['some text']);
+      expect(opens).toEqual([]);
+    });
+
+    it('close() mid-processing-instruction discards partial PI', () => {
+      const pis: string[] = [];
+      const opens: string[] = [];
+      const parser = saxEngine({
+        onProcessingInstruction(name) {
+          pis.push(name);
+        },
+        onOpenTag(name) {
+          opens.push(name);
+        },
+      });
+      parser.write('<root/><?xml version="1.0');
+      parser.close();
+      expect(opens).toEqual(['root']);
+      expect(pis).toEqual([]);
+    });
+
+    it('close() mid-comment discards partial comment', () => {
+      const comments: string[] = [];
+      const texts: string[] = [];
+      const parser = saxEngine({
+        onComment(c) {
+          comments.push(c);
+        },
+        onText(t) {
+          texts.push(t);
+        },
+      });
+      parser.write('hello<!-- incomplete');
+      parser.close();
+      expect(texts).toEqual(['hello']);
+      expect(comments).toEqual([]);
+    });
+
+    it('close() mid-CDATA discards partial CDATA', () => {
+      const cdatas: string[] = [];
+      const parser = saxEngine({
+        onCdata(d) {
+          cdatas.push(d);
+        },
+      });
+      parser.write('<root><![CDATA[some data');
+      parser.close();
+      expect(cdatas).toEqual([]);
+    });
+
+    it('close() mid-tag-name discards partial open tag', () => {
+      const opens: string[] = [];
+      const parser = saxEngine({
+        onOpenTag(name) {
+          opens.push(name);
+        },
+      });
+      parser.write('<root><longtagnam');
+      parser.close();
+      expect(opens).toEqual(['root']);
+    });
+
+    it('close() mid-close-tag discards partial close tag', () => {
+      const closes: string[] = [];
+      const parser = saxEngine({
+        onOpenTag() {},
+        onCloseTag(name) {
+          closes.push(name);
+        },
+      });
+      parser.write('<root></roo');
+      parser.close();
+      expect(closes).toEqual([]);
+    });
+
+    it('close() resets state so parser can be reused', () => {
+      const texts: string[] = [];
+      const parser = saxEngine({
+        onText(t) {
+          texts.push(t);
+        },
+      });
+      // Leave parser in a mid-attribute state
+      parser.write('<div id="val');
+      parser.close();
+      // Write fresh content — should parse cleanly
+      parser.write('hello');
+      parser.close();
+      expect(texts).toEqual(['hello']);
     });
   });
 

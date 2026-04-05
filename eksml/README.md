@@ -30,6 +30,8 @@ npm install eksml
 yarn add eksml
 ```
 
+Eksml is **ESM-only**. It requires Node.js 18+ and a runtime that supports ES modules. There are no CommonJS exports.
+
 ## Quick Start
 
 ```ts
@@ -523,7 +525,7 @@ Eksml is consistently the fastest across parsing, streaming, and serialization. 
 - **Raw tokenization**: 2-2.5x faster than saxes, 2-3x faster than htmlparser2, 4-6x faster than sax
 - **Serialization**: Trades top position with tXml; both are 3-7x faster than xmldom and 7-13x faster than fast-xml-parser/xml2js
 
-Full results with per-fixture op/s tables: **[BENCHMARKS.md](./BENCHMARKS.md)**
+Full results with per-fixture op/s tables: **[BENCHMARKS.md](https://github.com/evoactivity/eksml/blob/main/eksml/BENCHMARKS.md)**
 
 Run similar benchmarks in your browser: **[Interactive benchmark](https://evoactivity.github.io/eksml/benchmark)**
 

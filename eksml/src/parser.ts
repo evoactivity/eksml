@@ -161,8 +161,9 @@ export function parse(
     rawContentTagList.length > 0 ? new Set(rawContentTagList) : null;
 
   /** Build an error with line/column info for strict mode. */
-  function strictError(message: string): Error {
-    const before = S.substring(0, pos);
+  function strictError(message: string, atPos?: number): Error {
+    const p = atPos !== undefined ? atPos : pos;
+    const before = S.substring(0, p);
     const lines = before.split('\n');
     const line = lines.length;
     const column = lines[lines.length - 1]!.length + 1;
@@ -226,7 +227,7 @@ export function parse(
           pos = S.indexOf('>', pos);
 
           if (pos === -1) {
-            if (strict) throw strictError('Unclosed close tag');
+            if (strict) throw strictError('Unclosed close tag', closeStart - 2);
             pos = S.length;
             stripIgnorableWhitespace(children);
             // Unwind: if we are inside a stacked frame, pop back
@@ -284,7 +285,8 @@ export function parse(
             const startCommentPos = pos;
             pos = S.indexOf('-->', pos + 3);
             if (pos === -1) {
-              if (strict) throw strictError('Unclosed comment');
+              if (strict)
+                throw strictError('Unclosed comment', startCommentPos);
               pos = S.length;
               if (keepComments) {
                 children.push(S.substring(startCommentPos));

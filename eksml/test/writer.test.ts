@@ -753,9 +753,18 @@ describe('write', () => {
   // --- tag/attribute name validation (issue 4) ---
 
   describe('tag/attribute name validation (issue 4)', () => {
-    it('throws for tag name containing >', () => {
+    it('throws for tag name injection in compact mode', () => {
       const node: TNode = {
         tagName: '"><script>alert(1)</script><x',
+        attributes: null,
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('throws for tag name containing >', () => {
+      const node: TNode = {
+        tagName: 'foo>bar',
         attributes: null,
         children: [],
       };
@@ -774,6 +783,24 @@ describe('write', () => {
     it('throws for tag name containing space', () => {
       const node: TNode = {
         tagName: 'foo bar',
+        attributes: null,
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('throws for tag name containing double quote', () => {
+      const node: TNode = {
+        tagName: 'foo"bar',
+        attributes: null,
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('throws for tag name containing single quote', () => {
+      const node: TNode = {
+        tagName: "foo'bar",
         attributes: null,
         children: [],
       };
