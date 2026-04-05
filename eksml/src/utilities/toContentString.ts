@@ -11,11 +11,10 @@ export function toContentString(
 ): string {
   if (Array.isArray(domContent)) {
     let out = '';
-    domContent.forEach(function (child) {
-      out += ' ' + toContentString(child);
-      out = out.trim();
-    });
-    return out;
+    for (let i = 0; i < domContent.length; i++) {
+      out += ' ' + toContentString(domContent[i]!);
+    }
+    return out.trim();
   } else if (typeof domContent === 'object' && domContent !== null) {
     return toContentString(domContent.children);
   } else {
