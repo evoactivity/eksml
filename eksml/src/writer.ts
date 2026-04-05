@@ -142,8 +142,16 @@ function compactWrite(input: TNode | (TNode | string)[]): string {
           }
         } else if (attributeValue.indexOf('"') === -1) {
           out += ' ' + attributeName + '="' + attributeValue + '"';
-        } else {
+        } else if (attributeValue.indexOf("'") === -1) {
           out += ' ' + attributeName + "='" + attributeValue + "'";
+        } else {
+          // Value contains both quote types — escape single quotes
+          out +=
+            ' ' +
+            attributeName +
+            "='" +
+            attributeValue.replace(/'/g, '&apos;') +
+            "'";
         }
       }
       if (firstChar === QUESTION) {
@@ -252,8 +260,16 @@ function fullWriter(
             const encoded = encodeAttributeValue(attributeValue);
             if (encoded.indexOf('"') === -1) {
               out += ' ' + attributeName + '="' + encoded + '"';
-            } else {
+            } else if (encoded.indexOf("'") === -1) {
               out += ' ' + attributeName + "='" + encoded + "'";
+            } else {
+              // Value contains both quote types — escape single quotes
+              out +=
+                ' ' +
+                attributeName +
+                "='" +
+                encoded.replace(/'/g, '&apos;') +
+                "'";
             }
           }
         }
@@ -309,8 +325,11 @@ function fullWriter(
         const encoded = encodeAttributeValue(attributeValue);
         if (encoded.indexOf('"') === -1) {
           out += ' ' + key + '="' + encoded + '"';
-        } else {
+        } else if (encoded.indexOf("'") === -1) {
           out += ' ' + key + "='" + encoded + "'";
+        } else {
+          // Value contains both quote types — escape single quotes
+          out += ' ' + key + "='" + encoded.replace(/'/g, '&apos;') + "'";
         }
       }
     }

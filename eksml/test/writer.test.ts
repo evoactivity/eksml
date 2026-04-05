@@ -125,6 +125,50 @@ describe('write', () => {
     ).toBe('<div data=\'he said "hi"\'></div>');
   });
 
+  it('escapes attribute values containing both double and single quotes (compact)', () => {
+    const node: TNode = {
+      tagName: 'div',
+      attributes: { data: `he said "it's"` },
+      children: [],
+    };
+    const xml = write(node);
+    // Must produce valid XML that roundtrips correctly
+    const reparsed = parse(xml, { entities: true });
+    const child = reparsed[0] as TNode;
+    expect(child.attributes?.data).toBe(`he said "it's"`);
+  });
+
+  it('escapes attribute values containing both quotes (entities mode, compact)', () => {
+    const node: TNode = {
+      tagName: 'div',
+      attributes: { data: `he said "it's"` },
+      children: [],
+    };
+    const xml = write(node, { entities: true });
+    const reparsed = parse(xml, { entities: true });
+    const child = reparsed[0] as TNode;
+    expect(child.attributes?.data).toBe(`he said "it's"`);
+  });
+
+  it('escapes attribute values containing both quotes (pretty mode)', () => {
+    const node: TNode = {
+      tagName: 'root',
+      attributes: {},
+      children: [
+        {
+          tagName: 'div',
+          attributes: { data: `he said "it's"` },
+          children: [],
+        },
+      ],
+    };
+    const xml = write(node, { pretty: true });
+    const reparsed = parse(xml, { entities: true });
+    const root = reparsed[0] as TNode;
+    const child = root.children[0] as TNode;
+    expect(child.attributes?.data).toBe(`he said "it's"`);
+  });
+
   // --- pretty option ---
 
   it('pretty: true uses 2-space indent', () => {
