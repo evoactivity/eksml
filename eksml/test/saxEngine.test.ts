@@ -731,6 +731,217 @@ describe('saxEngine', () => {
   });
 
   // =========================================================================
+  // Issue 1 — Prototype pollution via plain {} for attributes
+  // =========================================================================
+  describe('prototype pollution (issue 1)', () => {
+    it('attributes objects have null prototype (no Object.prototype properties)', () => {
+      const e = parseEvents('<foo bar="baz">x</foo>');
+      const attrs = e.opens[0]!.attrs;
+      // Object.create(null) produces an object with no prototype
+      expect(Object.getPrototypeOf(attrs)).toBeNull();
+    });
+
+    it('attribute named "constructor" does not shadow Object.prototype.constructor', () => {
+      const e = parseEvents('<foo constructor="bad">x</foo>');
+      const attrs = e.opens[0]!.attrs;
+      // With Object.create(null), there is no inherited constructor
+      expect(attrs.constructor).toBe('bad');
+      expect(Object.getPrototypeOf(attrs)).toBeNull();
+    });
+
+    it('attribute named "__proto__" is stored as a plain key', () => {
+      const e = parseEvents('<foo __proto__="polluted">x</foo>');
+      const attrs = e.opens[0]!.attrs;
+      expect(attrs['__proto__']).toBe('polluted');
+      // Should not actually pollute the prototype chain
+      expect(Object.getPrototypeOf(attrs)).toBeNull();
+    });
+
+    it('DOCTYPE attributes have null prototype', () => {
+      const e = parseEvents('<!DOCTYPE html><root/>');
+      const attrs = e.doctypes[0]!.attrs;
+      expect(Object.getPrototypeOf(attrs)).toBeNull();
+    });
+
+    it('element with no explicit attributes still has null-prototype attributes', () => {
+      // When a tag opens, attributes = {} is created (line 339 in TAG_OPEN)
+      // Even if no attributes are parsed, the object should have null prototype
+      const e = parseEvents('<foo>x</foo>');
+      const attrs = e.opens[0]!.attrs;
+      expect(Object.getPrototypeOf(attrs)).toBeNull();
+    });
+  });
+
+  // =========================================================================
+  // Issue 2 — Raw text loses < on partial close-tag mismatch
+  // =========================================================================
+  describe('raw text close-tag mismatch (issue 2)', () => {
+    it('preserves raw text when close tag name does not match', () => {
+      // <script> contains "</scr" which starts matching but then fails
+      const e = parseEvents('<script></scr not a close>real content</script>', {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['</scr not a close>real content']);
+      expect(e.closes).toEqual(['script']);
+    });
+
+    it('preserves raw text with < followed by non-slash', () => {
+      const e = parseEvents('<script>a < b && c > d</script>', {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['a < b && c > d']);
+    });
+
+    it('preserves raw text when partial close tag is followed by < (RAW_END_2 mismatch with <)', () => {
+      // After "</scx" mismatch, the next char could be "<" which starts a new potential close
+      const e = parseEvents('<script></scx</ still raw</script>', {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['</scx</ still raw']);
+      expect(e.closes).toEqual(['script']);
+    });
+
+    it('preserves whitespace between close tag name and mismatch char in RAW_END_3', () => {
+      // After matching full tag name "script" + whitespace, a non-">" char causes mismatch
+      // The whitespace between the tag name and the mismatch char should be preserved
+      const e = parseEvents('<script></script x>real</script>', {
+        rawContentTags: ['script'],
+      });
+      // The "</script x>" is not a valid close tag — the full text should be preserved
+      expect(e.texts).toEqual(['</script x>real']);
+      expect(e.closes).toEqual(['script']);
+    });
+
+    it('handles multiple false close-tag starts in raw content', () => {
+      const e = parseEvents('<script></scr></scrip></scriptx>done</script>', {
+        rawContentTags: ['script'],
+      });
+      expect(e.texts).toEqual(['</scr></scrip></scriptx>done']);
+      expect(e.closes).toEqual(['script']);
+    });
+
+    it('close() flushes raw text in RAW_END_3 state', () => {
+      // When close() is called while in RAW_END_3 (after matching tag name + whitespace)
+      const texts: string[] = [];
+      const closes: string[] = [];
+      const parser = saxEngine({
+        rawContentTags: ['script'],
+        onOpenTag() {},
+        onText(t) {
+          texts.push(t);
+        },
+        onCloseTag(n) {
+          closes.push(n);
+        },
+      });
+      parser.write('<script>content</script ');
+      // Input ends while in RAW_END_3 (after matching "script" + space, waiting for >)
+      parser.close();
+      // The raw text should be flushed even though the close tag wasn't completed
+      expect(texts).toEqual(['content']);
+      expect(closes).toEqual(['script']);
+    });
+  });
+
+  // =========================================================================
+  // Issue 3 — Unbounded memory accumulation
+  // =========================================================================
+  describe('maxBufferSize (issue 3)', () => {
+    it('throws when text buffer exceeds maxBufferSize', () => {
+      const parser = saxEngine({
+        maxBufferSize: 100,
+        onText() {},
+      });
+      // Write a huge text chunk without any tags to trigger buffer overflow
+      expect(() => {
+        parser.write('x'.repeat(200));
+      }).toThrow(/buffer/i);
+    });
+
+    it('throws when attribute value buffer exceeds maxBufferSize', () => {
+      const parser = saxEngine({
+        maxBufferSize: 100,
+        onOpenTag() {},
+      });
+      // Start a tag with a very long attribute value that never closes
+      expect(() => {
+        parser.write('<foo bar="' + 'x'.repeat(200));
+      }).toThrow(/buffer/i);
+    });
+
+    it('throws when comment buffer exceeds maxBufferSize', () => {
+      const parser = saxEngine({
+        maxBufferSize: 100,
+        onComment() {},
+      });
+      // Start a comment that never closes
+      expect(() => {
+        parser.write('<!--' + 'x'.repeat(200));
+      }).toThrow(/buffer/i);
+    });
+
+    it('throws when CDATA buffer exceeds maxBufferSize', () => {
+      const parser = saxEngine({
+        maxBufferSize: 100,
+        onCdata() {},
+      });
+      expect(() => {
+        parser.write('<![CDATA[' + 'x'.repeat(200));
+      }).toThrow(/buffer/i);
+    });
+
+    it('throws when raw text buffer exceeds maxBufferSize', () => {
+      const parser = saxEngine({
+        maxBufferSize: 100,
+        rawContentTags: ['script'],
+        onText() {},
+      });
+      expect(() => {
+        parser.write('<script>' + 'x'.repeat(200));
+      }).toThrow(/buffer/i);
+    });
+
+    it('does not throw when buffers stay within maxBufferSize', () => {
+      const e = parseEvents('<root><child attr="value">text</child></root>');
+      // Default (no maxBufferSize) should work fine
+      expect(e.opens.map((o) => o.name)).toEqual(['root', 'child']);
+      expect(e.texts).toEqual(['text']);
+    });
+
+    it('does not throw when maxBufferSize is undefined (backward compat)', () => {
+      const parser = saxEngine({
+        onText() {},
+      });
+      // No maxBufferSize = no limit
+      expect(() => {
+        parser.write('x'.repeat(10000));
+        parser.close();
+      }).not.toThrow();
+    });
+  });
+
+  // =========================================================================
+  // Issue 5 — Raw close-tag matching correctness (O(n×m) optimization)
+  // =========================================================================
+  describe('raw close-tag matching correctness (issue 5)', () => {
+    it('correctly handles long raw content with many false close-tag starts', () => {
+      // Generate content with many "</scrip" false starts that almost match "</script>"
+      const falseStarts = '</scrip '.repeat(100);
+      const xml = `<script>${falseStarts}real</script>`;
+      const e = parseEvents(xml, { rawContentTags: ['script'] });
+      expect(e.texts).toEqual([`${falseStarts}real`]);
+      expect(e.closes).toEqual(['script']);
+    });
+
+    it('handles raw content split across chunks with false close-tag starts', () => {
+      const chunks = ['<script>content</scr', 'ipt nope>more</scri', 'pt>'];
+      const e = collectEvents(chunks, { rawContentTags: ['script'] });
+      expect(e.texts).toEqual(['content</script nope>more']);
+      expect(e.closes).toEqual(['script']);
+    });
+  });
+
+  // =========================================================================
   // Selective callbacks — only register what you need
   // =========================================================================
   describe('selective callbacks', () => {

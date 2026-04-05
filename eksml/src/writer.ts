@@ -11,6 +11,40 @@ const QUESTION = 63; // ?
 // @generated:char-codes:end
 
 /**
+ * Characters forbidden in XML tag names and attribute names.
+ * Covers structural delimiters (`<`, `>`, `=`), quote characters, and
+ * whitespace that would break well-formedness if interpolated unchecked.
+ */
+const INVALID_NAME_CHARS = /[<>=\s"']/;
+
+function validateTagName(tag: string): void {
+  if (tag.length === 0) {
+    throw new Error('Invalid tag name: tag name must not be empty');
+  }
+  // Allow leading `?` (PI) or `!` (DOCTYPE), validate the rest
+  const name =
+    tag.charCodeAt(0) === QUESTION || tag.charCodeAt(0) === BANG
+      ? tag.substring(1)
+      : tag;
+  if (name.length === 0) return; // bare `?` or `!` is degenerate but harmless
+  if (INVALID_NAME_CHARS.test(name)) {
+    throw new Error(`Invalid tag name: "${tag}" contains forbidden characters`);
+  }
+}
+
+function validateAttributeNames(attributes: Record<string, unknown>): void {
+  const keys = Object.keys(attributes);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i]!;
+    if (key.length === 0 || INVALID_NAME_CHARS.test(key)) {
+      throw new Error(
+        `Invalid attribute name: "${key}" contains forbidden characters`,
+      );
+    }
+  }
+}
+
+/**
  * Recursion depth at which the circular-reference WeakSet guard kicks in.
  * Below this depth, no WeakSet overhead is incurred — the natural call-stack
  * limit provides a safety net. Typical XML documents have depth < 10.
@@ -129,8 +163,14 @@ function compactWrite(input: TNode | (TNode | string)[]): string {
       seen.add(node);
     }
     const tag = node.tagName;
+    validateTagName(tag);
     const attributes = node.attributes;
     const firstChar = tag.charCodeAt(0);
+    // Skip attribute name validation for declarations (!DOCTYPE etc.)
+    // where keys are quoted identifiers, not XML attribute names
+    if (attributes !== null && firstChar !== BANG) {
+      validateAttributeNames(attributes);
+    }
     if (attributes === null) {
       // No attributes — combine open tag into one concat
       if (firstChar === QUESTION) {
@@ -248,8 +288,14 @@ function fullWriter(
         seen.add(node);
       }
       const tag = node.tagName;
+      validateTagName(tag);
       const attributes = node.attributes;
       const firstChar = tag.charCodeAt(0);
+      // Skip attribute name validation for declarations (!DOCTYPE etc.)
+      // where keys are quoted identifiers, not XML attribute names
+      if (attributes !== null && firstChar !== BANG) {
+        validateAttributeNames(attributes);
+      }
       if (attributes === null) {
         if (firstChar === QUESTION) {
           out += '<' + tag + '?>';
@@ -368,9 +414,15 @@ function fullWriter(
       }
       seen.add(node);
     }
-    const padding = indent.repeat(depth);
     const tag = node.tagName;
+    validateTagName(tag);
+    const padding = indent.repeat(depth);
     const firstChar = tag.charCodeAt(0);
+    // Skip attribute name validation for declarations (!DOCTYPE etc.)
+    // where keys are quoted identifiers, not XML attribute names
+    if (node.attributes !== null && firstChar !== BANG) {
+      validateAttributeNames(node.attributes);
+    }
 
     // Processing instruction
     if (firstChar === QUESTION) {

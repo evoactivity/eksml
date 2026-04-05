@@ -750,6 +750,136 @@ describe('write', () => {
     });
   });
 
+  // --- tag/attribute name validation (issue 4) ---
+
+  describe('tag/attribute name validation (issue 4)', () => {
+    it('throws for tag name containing >', () => {
+      const node: TNode = {
+        tagName: '"><script>alert(1)</script><x',
+        attributes: null,
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('throws for tag name containing <', () => {
+      const node: TNode = {
+        tagName: 'foo<bar',
+        attributes: null,
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('throws for tag name containing space', () => {
+      const node: TNode = {
+        tagName: 'foo bar',
+        attributes: null,
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('throws for attribute name containing =', () => {
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { 'foo=bar': 'value' },
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('throws for attribute name containing >', () => {
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { 'foo>': 'value' },
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('throws for attribute name containing <', () => {
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { '<script': 'value' },
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('throws for attribute name containing space', () => {
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { 'foo bar': 'value' },
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('throws for empty tag name', () => {
+      const node: TNode = {
+        tagName: '',
+        attributes: null,
+        children: [],
+      };
+      expect(() => write(node)).toThrow();
+    });
+
+    it('allows valid XML tag names (including namespaced)', () => {
+      expect(() =>
+        write({
+          tagName: 'soap:Envelope',
+          attributes: { 'xmlns:soap': 'http://example.com' },
+          children: [],
+        }),
+      ).not.toThrow();
+    });
+
+    it('allows valid processing instruction and DOCTYPE names', () => {
+      expect(() =>
+        write({
+          tagName: '?xml',
+          attributes: { version: '1.0' },
+          children: [],
+        }),
+      ).not.toThrow();
+      expect(() =>
+        write({
+          tagName: '!DOCTYPE',
+          attributes: { html: null },
+          children: [],
+        }),
+      ).not.toThrow();
+    });
+
+    it('throws for tag name injection in pretty mode', () => {
+      const node: TNode = {
+        tagName: '"><script>alert(1)</script><x',
+        attributes: null,
+        children: [],
+      };
+      expect(() => write(node, { pretty: true })).toThrow();
+    });
+
+    it('throws for tag name injection in entities mode', () => {
+      const node: TNode = {
+        tagName: '"><script>alert(1)</script><x',
+        attributes: null,
+        children: [],
+      };
+      expect(() => write(node, { entities: true })).toThrow();
+    });
+
+    it('throws for attribute name injection in entities mode', () => {
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { 'x"><script>alert(1)</script><x y': 'value' },
+        children: [],
+      };
+      expect(() => write(node, { entities: true })).toThrow();
+    });
+  });
+
   // --- edge cases for input auto-detection ---
 
   describe('input auto-detection edge cases', () => {

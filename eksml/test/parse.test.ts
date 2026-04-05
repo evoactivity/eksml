@@ -415,4 +415,70 @@ describe('parse', () => {
     expect(node.tagName).toBe('a');
     expect(node.children[0]).toBe('leaf');
   });
+
+  // =========================================================================
+  // Issue 6 — findElements regex matches attribute name suffixes
+  // =========================================================================
+  describe('findElements attribute matching (issue 6)', () => {
+    it('does not match suffix of attribute name (id vs data-id)', () => {
+      // Searching for attrName="id" attrValue="123" should NOT match data-id="123"
+      const xml =
+        '<root><item data-id="123">wrong</item><item id="123">right</item></root>';
+      const result = parse(xml, { attrName: 'id', attrValue: '123' });
+      expect(result).toHaveLength(1);
+      expect((result[0] as TNode).tagName).toBe('item');
+      expect((result[0] as TNode).children[0]).toBe('right');
+    });
+
+    it('does not match prefix of attribute name', () => {
+      // Searching for attrName="class" should NOT match className="foo"
+      const xml =
+        '<root><item className="foo">wrong</item><item class="foo">right</item></root>';
+      const result = parse(xml, { attrName: 'class', attrValue: 'foo' });
+      expect(result).toHaveLength(1);
+      expect((result[0] as TNode).tagName).toBe('item');
+      expect((result[0] as TNode).children[0]).toBe('right');
+    });
+
+    it('matches exact attribute name correctly', () => {
+      const xml = '<div id="test">found</div>';
+      const result = parse(xml, { attrName: 'id', attrValue: 'test' });
+      expect(result).toHaveLength(1);
+      expect((result[0] as TNode).tagName).toBe('div');
+    });
+
+    it('matches attribute on the first attribute position', () => {
+      // The regex uses \s before the attribute name, so the first attribute
+      // (right after the tag name with just a space) should still match
+      const xml = '<div id="x">found</div>';
+      const result = parse(xml, { attrName: 'id', attrValue: 'x' });
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  // =========================================================================
+  // Issue 7 — findElements loop fragile with pos reuse
+  // =========================================================================
+  describe('findElements multiple matches (issue 7)', () => {
+    it('finds multiple elements matching the same attribute', () => {
+      const xml =
+        '<root><a class="x">1</a><b>skip</b><c class="x">2</c></root>';
+      const result = parse(xml, { attrName: 'class', attrValue: 'x' });
+      expect(result).toHaveLength(2);
+      expect((result[0] as TNode).tagName).toBe('a');
+      expect((result[0] as TNode).children[0]).toBe('1');
+      expect((result[1] as TNode).tagName).toBe('c');
+      expect((result[1] as TNode).children[0]).toBe('2');
+    });
+
+    it('finds elements when matches are far apart in the document', () => {
+      const filler = '<filler>' + 'x'.repeat(100) + '</filler>';
+      const xml = `<root><a id="target">1</a>${filler}<b id="target">2</b>${filler}<c id="target">3</c></root>`;
+      const result = parse(xml, { attrName: 'id', attrValue: 'target' });
+      expect(result).toHaveLength(3);
+      expect((result[0] as TNode).children[0]).toBe('1');
+      expect((result[1] as TNode).children[0]).toBe('2');
+      expect((result[2] as TNode).children[0]).toBe('3');
+    });
+  });
 });

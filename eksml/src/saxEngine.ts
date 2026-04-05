@@ -62,6 +62,12 @@ export interface SaxEngineOptions extends SaxEngineHandlers {
   selfClosingTags?: string[];
   /** Tag names whose content is raw text. Default `[]`. */
   rawContentTags?: string[];
+  /**
+   * Maximum allowed size (in characters) for any internal buffer (text,
+   * attribute values, comments, CDATA, raw text).  When a buffer exceeds
+   * this limit a `RangeError` is thrown.  Default `undefined` (no limit).
+   */
+  maxBufferSize?: number;
 }
 
 /** The parser instance returned by `saxEngine()`. */
@@ -128,6 +134,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
     onDoctype,
     selfClosingTags = [],
     rawContentTags = [],
+    maxBufferSize,
   } = options;
 
   const voidSet: Set<string> | null =
@@ -140,11 +147,12 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
   let tagName = '';
   let attributeName = '';
   let attributeValue = '';
-  let attributes: Attributes = {};
+  let attributes: Attributes = Object.create(null);
   let special = '';
   let rawTag = '';
   let rawText = '';
   let rawCloseTagMatchIndex = 0;
+  let rawCloseTagTrailing = '';
 
   // --- Emit helpers ---
 
@@ -215,7 +223,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
     const tagName = '!' + body.substring(0, i);
 
     // Parse space-separated tokens as null-valued attributes
-    const attributes: Attributes = {};
+    const attributes: Attributes = Object.create(null);
     while (i < bodyLength) {
       const charCode = body.charCodeAt(i);
       // Skip whitespace
@@ -336,7 +344,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           } else {
             state = State.OPEN_TAG_NAME;
             tagName = '';
-            attributes = {};
+            attributes = Object.create(null);
           }
           continue;
         }
@@ -1037,6 +1045,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
               charCode === LF ||
               charCode === CR
             ) {
+              rawCloseTagTrailing = chunk[i]!;
               state = State.RAW_END_3;
               i++;
             } else {
@@ -1058,6 +1067,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
             if (onCloseTag) onCloseTag(rawTag);
             rawText = '';
             rawTag = '';
+            rawCloseTagTrailing = '';
             state = State.TEXT;
             i++;
           } else if (
@@ -1066,9 +1076,11 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
             charCode === LF ||
             charCode === CR
           ) {
+            rawCloseTagTrailing += chunk[i];
             i++;
           } else {
-            rawText += '</' + rawTag;
+            rawText += '</' + rawTag + rawCloseTagTrailing;
+            rawCloseTagTrailing = '';
             state = State.RAW_TEXT;
             // don't advance
           }
@@ -1086,16 +1098,42 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
     write(chunk: string): void {
       if (chunk.length === 0) return;
       processChunk(chunk);
+      if (
+        maxBufferSize !== undefined &&
+        (text.length > maxBufferSize ||
+          attributeValue.length > maxBufferSize ||
+          special.length > maxBufferSize ||
+          rawText.length > maxBufferSize)
+      ) {
+        const buf =
+          text.length > maxBufferSize
+            ? 'text'
+            : attributeValue.length > maxBufferSize
+              ? 'attribute value'
+              : special.length > maxBufferSize
+                ? 'special'
+                : 'raw text';
+        throw new RangeError(
+          `Buffer overflow: ${buf} buffer exceeded maxBufferSize (${maxBufferSize})`,
+        );
+      }
     },
 
     close(): void {
       if (state === State.TEXT) {
         emitText();
+      } else if (state === State.RAW_END_3) {
+        // Full tag name matched + trailing whitespace — treat as valid close
+        if (onText && rawText.length > 0) onText(rawText);
+        if (onCloseTag) onCloseTag(rawTag);
+        rawText = '';
+        rawTag = '';
+        rawCloseTagTrailing = '';
+        state = State.TEXT;
       } else if (
         state === State.RAW_TEXT ||
         state === State.RAW_END_1 ||
-        state === State.RAW_END_2 ||
-        state === State.RAW_END_3
+        state === State.RAW_END_2
       ) {
         if (state === State.RAW_END_1) {
           rawText += '<';
