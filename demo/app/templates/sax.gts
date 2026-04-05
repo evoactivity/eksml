@@ -15,10 +15,6 @@ import type { SaxModel } from '../routes/sax';
 import type { LogEntry } from '#components/log-area.gts';
 import type * as ModernMonaco from 'modern-monaco';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function escapeHtml(str: string | undefined): string {
   if (!str) return '';
 
@@ -51,10 +47,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ---------------------------------------------------------------------------
-// Route template component
-// ---------------------------------------------------------------------------
-
 interface SaxTemplateSignature {
   Args: {
     model: SaxModel;
@@ -80,8 +72,6 @@ class SaxTemplate extends Component<SaxTemplateSignature> {
     return this.args.model.defaultXml;
   }
 
-  // ------- Helpers -------
-
   private appendLog(className: string, tag: string, detail: string): void {
     this.eventCount++;
     this.entries = [...this.entries, { type: 'event', className, tag, detail }];
@@ -96,8 +86,6 @@ class SaxTemplate extends Component<SaxTemplateSignature> {
       },
     ];
   }
-
-  // ------- Actions -------
 
   onInputReady = (
     editor: SaxTemplate['inputEditorInstance'],

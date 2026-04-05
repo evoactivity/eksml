@@ -11,9 +11,9 @@
  * pipeline, so TypeScript syntax causes parse errors at build time.
  */
 
-import { parseXml } from '@rgrove/parse-xml';
 import { parse } from '@eksml/xml/parser';
 import { createSaxParser } from '@eksml/xml/sax';
+import { parseXml } from '@rgrove/parse-xml';
 import { XMLParser } from 'fast-xml-parser';
 import { parseDocument, Parser as HtmlParser } from 'htmlparser2';
 import sax from 'sax';

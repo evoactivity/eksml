@@ -2,10 +2,6 @@ import Component from '@glimmer/component';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 
-// ---------------------------------------------------------------------------
-// Signature
-// ---------------------------------------------------------------------------
-
 interface DurationOption {
   value: string;
   label: string;
@@ -25,11 +21,6 @@ interface DurationSelectSignature {
     onChange: (value: string) => void;
   };
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export default class DurationSelect extends Component<DurationSelectSignature> {
   isSelected = (optionValue: string): boolean => {
     return this.args.value === optionValue;

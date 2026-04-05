@@ -5,21 +5,12 @@ import autoAnimate from '#modifiers/auto-animate.ts';
 
 import type { BenchResult } from '#utils/bench-result.ts';
 
-// ---------------------------------------------------------------------------
-// Signature
-// ---------------------------------------------------------------------------
-
 interface BenchResultListSignature {
   Args: {
     results: BenchResult[];
     running: boolean;
   };
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export default class BenchResultList extends Component<BenchResultListSignature> {
   get sortedResults(): BenchResult[] {
     return [...this.args.results].sort((a, b) => b.iterations - a.iterations);
@@ -48,8 +39,6 @@ export default class BenchResultList extends Component<BenchResultListSignature>
   get hasResults(): boolean {
     return this.args.results.length > 0;
   }
-
-  // ------- Template -------
 
   <template>
     <div class='pane-header'>

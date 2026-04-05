@@ -14,10 +14,6 @@ import { BenchResult, formatSize } from '#utils/bench-result.ts';
 import type { BenchmarkModel, SuiteDef } from '../routes/benchmark';
 import type Owner from '@ember/owner';
 
-// ---------------------------------------------------------------------------
-// Signature
-// ---------------------------------------------------------------------------
-
 interface BenchmarkTemplateSignature {
   Args: {
     model: BenchmarkModel;
@@ -26,10 +22,6 @@ interface BenchmarkTemplateSignature {
 
 /** Duration each parser gets to run, in ms */
 const DEFAULT_DURATION_MS = 2000;
-
-// ---------------------------------------------------------------------------
-// Route template component — orchestration only
-// ---------------------------------------------------------------------------
 
 class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
   @tracked activeTab = 0;
@@ -55,8 +47,6 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
     this.worker = null;
   }
 
-  // ------- Computed -------
-
   get tabs(): { label: string; size: string }[] {
     return this.args.model.samples.map((s) => ({
       label: s.label,
@@ -75,8 +65,6 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
   get isSuite1(): boolean {
     return this.suiteIndex === 1;
   }
-
-  // ------- Worker management -------
 
   private ensureWorker(): Worker {
     if (!this.worker) {
@@ -126,8 +114,6 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
       w.postMessage({ type: 'run', xml, parserId, durationMs });
     });
   }
-
-  // ------- Actions -------
 
   selectTab = (index: number): void => {
     this.activeTab = index;
@@ -185,8 +171,6 @@ class BenchmarkTemplate extends Component<BenchmarkTemplateSignature> {
 
     this.running = false;
   };
-
-  // ------- Template -------
 
   <template>
     {{pageTitle 'Benchmark'}}

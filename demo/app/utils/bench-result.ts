@@ -2,10 +2,6 @@ import { tracked } from '@glimmer/tracking';
 
 import type { ParserDef } from '../routes/benchmark';
 
-// ---------------------------------------------------------------------------
-// Formatting helpers
-// ---------------------------------------------------------------------------
-
 export function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -16,10 +12,6 @@ export function formatSize(bytes: number): string {
 export function formatNumber(n: number): string {
   return n.toLocaleString();
 }
-
-// ---------------------------------------------------------------------------
-// Tracked result entry — one per parser per benchmark run
-// ---------------------------------------------------------------------------
 
 export type BenchStatus = 'pending' | 'running' | 'done' | 'error';
 

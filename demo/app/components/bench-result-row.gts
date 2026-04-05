@@ -5,24 +5,13 @@ import { formatNumber } from '#utils/bench-result.ts';
 
 import type { BenchResult } from '#utils/bench-result.ts';
 
-// ---------------------------------------------------------------------------
-// Signature
-// ---------------------------------------------------------------------------
-
 interface BenchResultRowSignature {
   Args: {
     result: BenchResult;
     maxIterations: number;
   };
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export default class BenchResultRow extends Component<BenchResultRowSignature> {
-  // ------- Status predicates -------
-
   get isRunning(): boolean {
     return this.args.result.status === 'running';
   }
@@ -38,8 +27,6 @@ export default class BenchResultRow extends Component<BenchResultRowSignature> {
   get isError(): boolean {
     return this.args.result.status === 'error';
   }
-
-  // ------- Display values -------
 
   get barWidth(): ReturnType<typeof htmlSafe> {
     const max = this.args.maxIterations;
@@ -73,8 +60,6 @@ export default class BenchResultRow extends Component<BenchResultRowSignature> {
 
     return `${formatNumber(Math.round(r.opsPerSec))} ops/s`;
   }
-
-  // ------- Template -------
 
   <template>
     <div

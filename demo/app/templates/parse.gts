@@ -19,10 +19,6 @@ import type { init as monacoInit } from 'modern-monaco';
 type MonacoApi = Awaited<ReturnType<typeof monacoInit>>;
 type InputEditorInstance = ReturnType<MonacoApi['editor']['create']> | null;
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -38,10 +34,6 @@ function selectParser(mode: string): ParseFn {
 
   return lossless as ParseFn;
 }
-
-// ---------------------------------------------------------------------------
-// Route template component
-// ---------------------------------------------------------------------------
 
 interface ParseTemplateSignature {
   Args: {
@@ -66,8 +58,6 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
     super(owner, args);
     this.inputContent = this.sampleContent(0);
   }
-
-  // ------- Computed: tabs -------
 
   get tabs(): { label: string; size: string }[] {
     const { samples, getLargeCatalog } = this.args.model;
@@ -96,8 +86,6 @@ class ParseTemplate extends Component<ParseTemplateSignature> {
 
     return getLargeCatalog();
   }
-
-  // ------- Actions -------
 
   onInputReady = (
     editor: ParseTemplate['inputEditorInstance'],

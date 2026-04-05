@@ -1,9 +1,5 @@
 import Component from '@glimmer/component';
 
-// ---------------------------------------------------------------------------
-// Helpers (exported for reuse in log entries, etc.)
-// ---------------------------------------------------------------------------
-
 function formatMicroseconds(us: number): string {
   if (us < 1000) return `${us.toFixed(1)} µs`;
   if (us < 1_000_000) return `${Math.round(us / 1000)} ms`;
@@ -18,21 +14,12 @@ export function formatMs(ms: number): string {
   return us < 1000 ? '< 1 ms' : formatMicroseconds(us);
 }
 
-// ---------------------------------------------------------------------------
-// Signature
-// ---------------------------------------------------------------------------
-
 interface RunDurationSignature {
   Args: {
     /** Elapsed time in milliseconds (from performance.now delta) */
     ms: number | null;
   };
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export default class RunDuration extends Component<RunDurationSignature> {
   get display(): string {
     const ms = this.args.ms;

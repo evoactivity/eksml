@@ -18,11 +18,6 @@ import type { init as monacoInit } from 'modern-monaco';
 
 type MonacoApi = Awaited<ReturnType<typeof monacoInit>>;
 type EditorInstance = ReturnType<MonacoApi['editor']['create']> | null;
-
-// ---------------------------------------------------------------------------
-// Route template component
-// ---------------------------------------------------------------------------
-
 interface WriterTemplateSignature {
   Args: {
     model: WriterModel;
@@ -48,8 +43,6 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
     this.inputContent = this.sampleContent(0);
   }
 
-  // ------- Computed -------
-
   get tabs(): { label: string }[] {
     return this.args.model.samples.map((s) => ({ label: s.label }));
   }
@@ -61,8 +54,6 @@ class WriterTemplate extends Component<WriterTemplateSignature> {
 
     return sample[this.format];
   }
-
-  // ------- Actions -------
 
   onInputReady = (
     editor: WriterTemplate['inputEditorInstance'],

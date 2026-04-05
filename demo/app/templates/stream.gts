@@ -15,22 +15,14 @@ import TwoPaneLayout from '#components/two-pane-layout.gts';
 import { NodeEntry } from '#utils/node-log.ts';
 
 import type { StreamModel } from '../routes/stream';
-import type { LogItem } from '#utils/node-log.ts';
 import type { XmlParseStreamOptions } from '@eksml/xml/stream';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+import type { LogItem } from '#utils/node-log.ts';
 
 interface TNode {
   tagName: string;
   attributes: Record<string, string | null> | null;
   children: (TNode | string)[];
 }
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -101,10 +93,6 @@ async function getMonaco(): Promise<Awaited<ReturnType<typeof init>>> {
   return monacoInstance;
 }
 
-// ---------------------------------------------------------------------------
-// Route template component
-// ---------------------------------------------------------------------------
-
 interface StreamTemplateSignature {
   Args: {
     model: StreamModel;
@@ -133,8 +121,6 @@ class StreamTemplate extends Component<StreamTemplateSignature> {
   get xmlContent(): string {
     return this.args.model.defaultXml;
   }
-
-  // ------- Helpers -------
 
   private appendNode(node: unknown): void {
     const isDom = this.outputMode === 'dom';
@@ -180,8 +166,6 @@ class StreamTemplate extends Component<StreamTemplateSignature> {
       text: `${nodeCount} nodes in ${formatMs(elapsed)}`,
     });
   }
-
-  // ------- Actions -------
 
   onInputReady = (
     editor: StreamTemplate['inputEditorInstance'],
