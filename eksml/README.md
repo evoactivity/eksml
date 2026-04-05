@@ -6,6 +6,10 @@
 
 # Eksml
 
+[![CI](https://github.com/evoactivity/eksml/actions/workflows/ci.yml/badge.svg)](https://github.com/evoactivity/eksml/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/eksml)](https://www.npmjs.com/package/eksml)
+[![license](https://img.shields.io/npm/l/eksml)](https://github.com/evoactivity/eksml/blob/main/LICENSE)
+
 A fast, lightweight XML/HTML parser, serializer, and streaming toolkit for JavaScript and TypeScript. Import only what you need — tree parsing, SAX streaming, object conversion, or serialization — each as a standalone export.
 
 Built on the same core parsing architecture as [tXml](https://github.com/tobiasNickel/tXml) by Tobias Nickel, Eksml improves the performance and extends it with additional features.
