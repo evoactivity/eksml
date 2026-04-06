@@ -57,6 +57,7 @@
     "test:smoke": "node scripts/smoke-test.mjs",
     "bench": "vitest bench",
     "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm run build",
     "examples": "vite",
     "examples:build": "vite build"
   },
