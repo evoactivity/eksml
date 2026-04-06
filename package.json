@@ -1,24 +1,29 @@
 {
   "name": "eksml-monorepo",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "type": "module",
   "private": true,
+  "description": "",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:evoactivity/eksml.git"
+  },
+  "license": "MIT",
+  "author": "Liam Potter",
+  "type": "module",
+  "main": "index.js",
   "scripts": {
-    "test": "pnpm --filter @eksml/xml test",
     "build": "pnpm --filter @eksml/xml build",
     "build:demo": "pnpm --filter demo build",
+    "demo": "pnpm --filter demo dev",
     "dev:demo": "pnpm --filter demo dev",
     "format": "prettier --write .",
-    "demo": "pnpm --filter demo dev"
+    "test": "pnpm --filter @eksml/xml test"
   },
-  "keywords": [],
-  "author": "Liam Potter",
-  "license": "MIT",
-  "packageManager": "pnpm@10.33.0",
   "devDependencies": {
     "prettier": "3.8.1",
-    "prettier-plugin-ember-template-tag": "2.1.3"
-  }
+    "prettier-plugin-ember-template-tag": "2.1.3",
+    "release-plan": "^0.17.4"
+  },
+  "packageManager": "pnpm@10.33.0"
 }
