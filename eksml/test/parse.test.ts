@@ -560,8 +560,7 @@ describe('parse', () => {
     });
 
     it('rejects broken XML PI (missing delimiters)', () => {
-      const xml =
-        'xml version="1.0" encoding="UTF-8"\n<root>child</root>';
+      const xml = 'xml version="1.0" encoding="UTF-8"\n<root>child</root>';
       expect(() => parse(xml, { strict: true })).toThrow(
         /Text content outside of a tag/,
       );

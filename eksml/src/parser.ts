@@ -79,11 +79,11 @@ export interface ParseOptions {
   /** Trim whitespace from text nodes and discard whitespace-only text nodes */
   trimWhitespace?: boolean;
   /**
-    * Strict mode: throw on malformed XML instead of recovering silently.
-    * Catches unclosed comments, CDATA sections, processing instructions,
-    * close tags, open tags that reach end-of-input without closing, and
-    * text content outside of any tag (e.g. before or after the root element).
-    */
+   * Strict mode: throw on malformed XML instead of recovering silently.
+   * Catches unclosed comments, CDATA sections, processing instructions,
+   * close tags, open tags that reach end-of-input without closing, and
+   * text content outside of any tag (e.g. before or after the root element).
+   */
   strict?: boolean;
   /**
    * Decode XML/HTML entities in text content and attribute values.
