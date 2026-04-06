@@ -681,8 +681,8 @@ export function generateSteps(S: string): Step[] {
           textParent.textCount++;
         }
 
-        // Top-level text counts toward output too
-        if (stack.length === 0 && text.length > 0) {
+        // Top-level non-whitespace text counts toward output
+        if (stack.length === 0 && trimmed.length > 0) {
           nodesEmitted++;
         }
       }
