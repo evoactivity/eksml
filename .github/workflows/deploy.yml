@@ -3,6 +3,9 @@ name: Deploy Demo
 on:
   push:
     branches: [main]
+    paths:
+      - 'demo/**'
+      - 'eksml/src/**'
   workflow_dispatch:
 
 concurrency:
