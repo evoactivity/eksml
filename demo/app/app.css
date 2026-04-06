@@ -777,3 +777,10 @@ button:disabled {
     max-height: none;
   }
 }
+
+/* --- Visualise: landing tag --- */
+
+.tag-vis {
+  background: #1a2a3a;
+  color: #60a5fa;
+}

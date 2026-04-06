@@ -1,5 +1,3 @@
-import { htmlSafe } from '@ember/template';
-
 import pageTitle from 'ember-page-title/helpers/page-title';
 
 import logoDark from '/logo-dark.svg?url';
@@ -52,7 +50,16 @@ import Card from '#components/card.gts';
         <:tag><span class='tag tag-stream'>XmlParseStream</span></:tag>
       </Card>
 
-      <Card @route='benchmark' style='{{htmlSafe "grid-column: 1 / span 2;"}}'>
+      <Card @route='visualise'>
+        <:title>Visualise</:title>
+        <:content>
+          Step through the XML parser algorithm character by character. Watch
+          the element stack grow and shrink as tags open and close.
+        </:content>
+        <:tag><span class='tag tag-vis'>parser-stepper</span></:tag>
+      </Card>
+
+      <Card @route='benchmark'>
         <:title>Benchmark</:title>
         <:content>
           Compare synchronous XML parsing performance across multiple libraries.

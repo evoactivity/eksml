@@ -21,7 +21,15 @@ export default defineConfig({
       extensions,
     }),
     emberSsg({
-      routes: ['index', 'parse', 'write', 'sax', 'stream', 'benchmark'],
+      routes: [
+        'index',
+        'parse',
+        'write',
+        'sax',
+        'stream',
+        'visualise',
+        'benchmark',
+      ],
       rehydrate: true,
     }),
     removeCrossOrigin(),

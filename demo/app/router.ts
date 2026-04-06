@@ -12,5 +12,6 @@ Router.map(function () {
   this.route('write');
   this.route('sax');
   this.route('stream');
+  this.route('visualise');
   this.route('benchmark');
 });

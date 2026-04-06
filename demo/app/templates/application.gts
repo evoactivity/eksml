@@ -27,6 +27,7 @@ export default class ApplicationTemplate extends Component {
             <LinkTo @route='write'>Write</LinkTo>
             <LinkTo @route='sax'>SAX Parser</LinkTo>
             <LinkTo @route='stream'>Stream</LinkTo>
+            <LinkTo @route='visualise'>Visualise</LinkTo>
             <LinkTo @route='benchmark'>Benchmark</LinkTo>
           </div>
           <a

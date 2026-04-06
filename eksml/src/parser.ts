@@ -79,10 +79,11 @@ export interface ParseOptions {
   /** Trim whitespace from text nodes and discard whitespace-only text nodes */
   trimWhitespace?: boolean;
   /**
-   * Strict mode: throw on malformed XML instead of recovering silently.
-   * Catches unclosed comments, CDATA sections, processing instructions,
-   * close tags, and open tags that reach end-of-input without closing.
-   */
+    * Strict mode: throw on malformed XML instead of recovering silently.
+    * Catches unclosed comments, CDATA sections, processing instructions,
+    * close tags, open tags that reach end-of-input without closing, and
+    * text content outside of any tag (e.g. before or after the root element).
+    */
   strict?: boolean;
   /**
    * Decode XML/HTML entities in text content and attribute values.
@@ -521,8 +522,17 @@ export function parse(
           }
         }
       } else {
+        const textStart = pos;
         let text = parseText();
         if (decode) text = decode(text);
+        if (
+          strict &&
+          stack.length === 0 &&
+          currentTagName === '' &&
+          text.trim().length > 0
+        ) {
+          throw strictError('Text content outside of a tag', textStart);
+        }
         if (trimWhitespace) {
           const trimmed = text.trim();
           if (trimmed.length > 0) {
@@ -709,6 +719,13 @@ export function parse(
     out = parseNode();
   } else {
     out = parseChildren('');
+    // In strict mode, reject non-whitespace text after the root element
+    if (strict && pos < S.length) {
+      const trailing = S.substring(pos);
+      if (trailing.trim().length > 0) {
+        throw strictError('Text content outside of a tag');
+      }
+    }
   }
 
   if (resolvedOptions.filter && Array.isArray(out)) {

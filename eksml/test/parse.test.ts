@@ -537,6 +537,45 @@ describe('parse', () => {
         /Unclosed declaration.*line 1/,
       );
     });
+
+    it('rejects text content outside of any tag', () => {
+      const xml = 'hello world';
+      expect(() => parse(xml, { strict: true })).toThrow(
+        /Text content outside of a tag/,
+      );
+    });
+
+    it('rejects text content before root element', () => {
+      const xml = 'some text <root>child</root>';
+      expect(() => parse(xml, { strict: true })).toThrow(
+        /Text content outside of a tag/,
+      );
+    });
+
+    it('rejects text content after root element', () => {
+      const xml = '<root>child</root> trailing text';
+      expect(() => parse(xml, { strict: true })).toThrow(
+        /Text content outside of a tag/,
+      );
+    });
+
+    it('rejects broken XML PI (missing delimiters)', () => {
+      const xml =
+        'xml version="1.0" encoding="UTF-8"\n<root>child</root>';
+      expect(() => parse(xml, { strict: true })).toThrow(
+        /Text content outside of a tag/,
+      );
+    });
+
+    it('allows whitespace-only text outside tags (ignorable whitespace)', () => {
+      const xml = '  \n  <root>child</root>  \n  ';
+      expect(() => parse(xml, { strict: true })).not.toThrow();
+    });
+
+    it('allows text inside tags in strict mode', () => {
+      const xml = '<root>hello world</root>';
+      expect(() => parse(xml, { strict: true })).not.toThrow();
+    });
   });
 
   // =========================================================================
