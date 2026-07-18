@@ -147,7 +147,11 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
   let tagName = '';
   let attributeName = '';
   let attributeValue = '';
-  let attributes: Attributes = Object.create(null);
+  // Null-prototype object to prevent prototype pollution via attribute names
+  // (e.g. `__proto__`, `constructor`). The `{ __proto__: null }` literal keeps
+  // the null prototype while letting V8 use fast in-object properties, which
+  // `Object.create(null)` does not (it forces slow dictionary mode).
+  let attributes: Attributes = { __proto__: null } as Attributes;
   let special = '';
   let rawTag = '';
   let rawText = '';
@@ -344,7 +348,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           } else {
             state = State.OPEN_TAG_NAME;
             tagName = '';
-            attributes = Object.create(null);
+            attributes = { __proto__: null } as Attributes;
           }
           continue;
         }
