@@ -4,6 +4,14 @@
  * Measures pure tokenization throughput by registering no-op callbacks.
  * This isolates the parser's scanning and event-dispatch cost from any
  * downstream work (tree construction, string copying, etc.).
+ *
+ * Parser reuse policy: every parser here supports being reused across
+ * documents (verified by parsing the same document twice and comparing event
+ * streams), so each is constructed once at module scope and reused every
+ * iteration. This measures steady-state parse throughput rather than
+ * constructor cost, and gives the JIT stable callback targets. Chunk arrays
+ * are precomputed for the same reason: the benchmark should time parsing,
+ * not string slicing.
  */
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -42,151 +50,150 @@ function chunkString(str: string, size: number): string[] {
   return chunks;
 }
 
+// Precomputed chunk arrays for every (document, size) pair used below.
+const rssChunks256 = chunkString(rssFeed, 256);
+const xmltvChunks256 = chunkString(xmltvEpg, 256);
+const pomChunks256 = chunkString(pomXml, 256);
+const xmltvChunks64 = chunkString(xmltvEpg, 64);
+
 // No-op function used as callback
 const noop = () => {};
 
 // ---------------------------------------------------------------------------
-// eksml saxEngine — no-op callbacks
+// eksml saxEngine — persistent parser, no-op callbacks (close() resets)
 // ---------------------------------------------------------------------------
-function eksmlSaxEngine(xml: string, chunkSize: number): void {
-  const chunks = chunkString(xml, chunkSize);
-  const parser = saxEngine({
-    onOpenTag: noop,
-    onCloseTag: noop,
-    onText: noop,
-    onCdata: noop,
-    onComment: noop,
-    onProcessingInstruction: noop,
-  });
+const eksmlParser = saxEngine({
+  onOpenTag: noop,
+  onCloseTag: noop,
+  onText: noop,
+  onCdata: noop,
+  onComment: noop,
+  onProcessingInstruction: noop,
+});
+function eksmlSaxEngine(chunks: string[]): void {
   for (const chunk of chunks) {
-    parser.write(chunk);
+    eksmlParser.write(chunk);
   }
-  parser.close();
+  eksmlParser.close();
 }
 
 // ---------------------------------------------------------------------------
-// sax — no-op callbacks
+// sax — persistent parser, no-op callbacks (close() re-initializes in place)
 // ---------------------------------------------------------------------------
-function saxStream(xml: string, chunkSize: number): void {
-  const chunks = chunkString(xml, chunkSize);
-  const parser = sax.parser(true);
-  parser.onopentag = noop;
-  parser.onclosetag = noop;
-  parser.ontext = noop;
-  parser.oncdata = noop;
-  parser.oncomment = noop;
-  parser.onprocessinginstruction = noop;
+const saxParser = sax.parser(true);
+saxParser.onopentag = noop;
+saxParser.onclosetag = noop;
+saxParser.ontext = noop;
+saxParser.oncdata = noop;
+saxParser.oncomment = noop;
+saxParser.onprocessinginstruction = noop;
+function saxStream(chunks: string[]): void {
   for (const chunk of chunks) {
-    parser.write(chunk);
+    saxParser.write(chunk);
   }
-  parser.close();
+  saxParser.close();
 }
 
 // ---------------------------------------------------------------------------
-// saxes — no-op callbacks
+// saxes — persistent parser, no-op callbacks (close() resets)
 // ---------------------------------------------------------------------------
-function saxesStream(xml: string, chunkSize: number): void {
-  const chunks = chunkString(xml, chunkSize);
-  const parser = new SaxesParser();
-  parser.on('opentag', noop);
-  parser.on('closetag', noop);
-  parser.on('text', noop);
-  parser.on('cdata', noop);
-  parser.on('comment', noop);
-  parser.on('processinginstruction', noop);
+const saxesParser = new SaxesParser();
+saxesParser.on('opentag', noop);
+saxesParser.on('closetag', noop);
+saxesParser.on('text', noop);
+saxesParser.on('cdata', noop);
+saxesParser.on('comment', noop);
+saxesParser.on('processinginstruction', noop);
+function saxesStream(chunks: string[]): void {
   for (const chunk of chunks) {
-    parser.write(chunk);
+    saxesParser.write(chunk);
   }
-  parser.close();
+  saxesParser.close();
 }
 
 // ---------------------------------------------------------------------------
-// htmlparser2 — no-op callbacks
+// htmlparser2 — persistent parser, no-op callbacks (reset() after end())
 // ---------------------------------------------------------------------------
-function htmlparser2Stream(xml: string, chunkSize: number): void {
-  const chunks = chunkString(xml, chunkSize);
-  const parser = new Htmlparser2(
-    {
-      onopentag: noop,
-      onclosetag: noop,
-      ontext: noop,
-      oncdatastart: noop,
-      oncdataend: noop,
-      oncomment: noop,
-      onprocessinginstruction: noop,
-    },
-    { xmlMode: true },
-  );
+const htmlparser2Parser = new Htmlparser2(
+  {
+    onopentag: noop,
+    onclosetag: noop,
+    ontext: noop,
+    oncdatastart: noop,
+    oncdataend: noop,
+    oncomment: noop,
+    onprocessinginstruction: noop,
+  },
+  { xmlMode: true },
+);
+function htmlparser2Stream(chunks: string[]): void {
   for (const chunk of chunks) {
-    parser.write(chunk);
+    htmlparser2Parser.write(chunk);
   }
-  parser.end();
+  htmlparser2Parser.end();
+  htmlparser2Parser.reset();
 }
 
 // ---------------------------------------------------------------------------
-// @tuananh/sax-parser — no-op callbacks
+// @tuananh/sax-parser — persistent parser, no-op callbacks (end() resets)
 // ---------------------------------------------------------------------------
-function tuananhStream(xml: string, chunkSize: number): void {
-  const chunks = chunkString(xml, chunkSize);
-  const parser = new SaxParser();
-  parser.on('startElement', noop);
-  parser.on('endElement', noop);
-  parser.on('text', noop);
-  parser.on('cdata', noop);
-  parser.on('comment', noop);
-  parser.on('processingInstruction', noop);
+const tuananhParser = new SaxParser();
+tuananhParser.on('startElement', noop);
+tuananhParser.on('endElement', noop);
+tuananhParser.on('text', noop);
+tuananhParser.on('cdata', noop);
+tuananhParser.on('comment', noop);
+tuananhParser.on('processingInstruction', noop);
+function tuananhStream(chunks: string[]): void {
   for (const chunk of chunks) {
-    parser.write(chunk);
+    tuananhParser.write(chunk);
   }
-  parser.end();
+  tuananhParser.end();
 }
 
 // ---------------------------------------------------------------------------
-// easysax — no-op callbacks
+// easysax — persistent parser, no-op callbacks (end() resets)
 // ---------------------------------------------------------------------------
-function easysaxStream(xml: string, chunkSize: number): void {
-  const chunks = chunkString(xml, chunkSize);
-  const parser = new EasySax();
-  parser.on('startNode', noop);
-  parser.on('endNode', noop);
-  parser.on('textNode', noop);
-  parser.on('cdata', noop);
-  parser.on('comment', noop);
-  parser.on('question', noop);
+const easysaxParser = new EasySax();
+easysaxParser.on('startNode', noop);
+easysaxParser.on('endNode', noop);
+easysaxParser.on('textNode', noop);
+easysaxParser.on('cdata', noop);
+easysaxParser.on('comment', noop);
+easysaxParser.on('question', noop);
+function easysaxStream(chunks: string[]): void {
   for (const chunk of chunks) {
-    parser.write(chunk);
+    easysaxParser.write(chunk);
   }
-  parser.end();
+  easysaxParser.end();
 }
 
 // ---------------------------------------------------------------------------
 // RSS feed — 256 B chunks
 // ---------------------------------------------------------------------------
 describe('tokenize: RSS feed (256 B chunks)', () => {
-  const size = 256;
-
   bench('eksml', () => {
-    eksmlSaxEngine(rssFeed, size);
+    eksmlSaxEngine(rssChunks256);
   });
 
   bench('sax', () => {
-    saxStream(rssFeed, size);
+    saxStream(rssChunks256);
   });
 
   bench('saxes', () => {
-    saxesStream(rssFeed, size);
+    saxesStream(rssChunks256);
   });
 
   bench('htmlparser2', () => {
-    htmlparser2Stream(rssFeed, size);
+    htmlparser2Stream(rssChunks256);
   });
 
   bench('@tuananh/sax-parser', () => {
-    tuananhStream(rssFeed, size);
+    tuananhStream(rssChunks256);
   });
 
   bench('easysax', () => {
-    easysaxStream(rssFeed, size);
+    easysaxStream(rssChunks256);
   });
 });
 
@@ -194,30 +201,28 @@ describe('tokenize: RSS feed (256 B chunks)', () => {
 // XMLTV EPG — 256 B chunks
 // ---------------------------------------------------------------------------
 describe('tokenize: XMLTV EPG (256 B chunks)', () => {
-  const size = 256;
-
   bench('eksml', () => {
-    eksmlSaxEngine(xmltvEpg, size);
+    eksmlSaxEngine(xmltvChunks256);
   });
 
   bench('sax', () => {
-    saxStream(xmltvEpg, size);
+    saxStream(xmltvChunks256);
   });
 
   bench('saxes', () => {
-    saxesStream(xmltvEpg, size);
+    saxesStream(xmltvChunks256);
   });
 
   bench('htmlparser2', () => {
-    htmlparser2Stream(xmltvEpg, size);
+    htmlparser2Stream(xmltvChunks256);
   });
 
   bench('@tuananh/sax-parser', () => {
-    tuananhStream(xmltvEpg, size);
+    tuananhStream(xmltvChunks256);
   });
 
   bench('easysax', () => {
-    easysaxStream(xmltvEpg, size);
+    easysaxStream(xmltvChunks256);
   });
 });
 
@@ -225,30 +230,28 @@ describe('tokenize: XMLTV EPG (256 B chunks)', () => {
 // Maven POM — 256 B chunks
 // ---------------------------------------------------------------------------
 describe('tokenize: Maven POM (256 B chunks)', () => {
-  const size = 256;
-
   bench('eksml', () => {
-    eksmlSaxEngine(pomXml, size);
+    eksmlSaxEngine(pomChunks256);
   });
 
   bench('sax', () => {
-    saxStream(pomXml, size);
+    saxStream(pomChunks256);
   });
 
   bench('saxes', () => {
-    saxesStream(pomXml, size);
+    saxesStream(pomChunks256);
   });
 
   bench('htmlparser2', () => {
-    htmlparser2Stream(pomXml, size);
+    htmlparser2Stream(pomChunks256);
   });
 
   bench('@tuananh/sax-parser', () => {
-    tuananhStream(pomXml, size);
+    tuananhStream(pomChunks256);
   });
 
   bench('easysax', () => {
-    easysaxStream(pomXml, size);
+    easysaxStream(pomChunks256);
   });
 });
 
@@ -256,29 +259,27 @@ describe('tokenize: Maven POM (256 B chunks)', () => {
 // XMLTV EPG — 64 B chunks (stress test)
 // ---------------------------------------------------------------------------
 describe('tokenize: XMLTV EPG (64 B chunks — stress)', () => {
-  const size = 64;
-
   bench('eksml', () => {
-    eksmlSaxEngine(xmltvEpg, size);
+    eksmlSaxEngine(xmltvChunks64);
   });
 
   bench('sax', () => {
-    saxStream(xmltvEpg, size);
+    saxStream(xmltvChunks64);
   });
 
   bench('saxes', () => {
-    saxesStream(xmltvEpg, size);
+    saxesStream(xmltvChunks64);
   });
 
   bench('htmlparser2', () => {
-    htmlparser2Stream(xmltvEpg, size);
+    htmlparser2Stream(xmltvChunks64);
   });
 
   bench('@tuananh/sax-parser', () => {
-    tuananhStream(xmltvEpg, size);
+    tuananhStream(xmltvChunks64);
   });
 
   bench('easysax', () => {
-    easysaxStream(xmltvEpg, size);
+    easysaxStream(xmltvChunks64);
   });
 });
