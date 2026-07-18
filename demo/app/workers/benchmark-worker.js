@@ -14,6 +14,7 @@
 import { parse } from '@eksml/xml/parser';
 import { createSaxParser } from '@eksml/xml/sax';
 import { parseXml } from '@rgrove/parse-xml';
+import EasySax from 'easysax';
 import { XMLParser } from 'fast-xml-parser';
 import { parseDocument, Parser as HtmlParser } from 'htmlparser2';
 import sax from 'sax';
@@ -122,6 +123,20 @@ const PARSERS = {
     p.on('comment', noop);
     p.on('pi', noop);
     p.write(xml).close();
+  },
+
+  easysax: (xml) => {
+    const p = new EasySax();
+
+    p.on('startNode', noop);
+    p.on('endNode', noop);
+    p.on('textNode', noop);
+    p.on('cdata', noop);
+    p.on('comment', noop);
+    p.on('question', noop);
+
+    p.write(xml);
+    p.end();
   },
 };
 
