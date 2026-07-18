@@ -142,6 +142,9 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
     devDependencies:
+      '@tuananh/sax-parser':
+        specifier: ^1.2.0
+        version: 1.2.0
       '@types/node':
         specifier: ^25.5.0
         version: 25.5.0
@@ -157,6 +160,9 @@ importers:
       '@xmldom/xmldom':
         specifier: ^0.9.9
         version: 0.9.9
+      easysax:
+        specifier: ^0.4.2
+        version: 0.4.2
       fast-xml-parser:
         specifier: ^5.5.9
         version: 5.5.9
@@ -1565,6 +1571,62 @@ packages:
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
     engines: {node: '>= 6'}
 
+  '@tuananh/sax-parser-darwin-arm64@1.2.0':
+    resolution: {integrity: sha512-epRwVplpKMLYtIaTpOkuIXXeI+aM6N0W7m7MPDIJcwbAXu2m9qmGCl84senxr8gc1YnjvNN5drxoHQBwgQOtMQ==}
+    engines: {node: '>= 18'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@tuananh/sax-parser-darwin-x64@1.2.0':
+    resolution: {integrity: sha512-Q1QT7oebbnn2yz1/NthQm4svyZCbKyKI2OgqA/iQVUx08dj3v+yCiNHkWqgTPNkpZQdpLeOlCLQdmX1RiFd4Xg==}
+    engines: {node: '>= 18'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@tuananh/sax-parser-linux-arm64-gnu@1.2.0':
+    resolution: {integrity: sha512-Prodgbi4GV9+r+dWfvX2Hka24lJgjWTFTm5rSGc4VCjQ+72FGtHbt5+0RksqNYamlwl+xVHNTcjli0bK4wxjrQ==}
+    engines: {node: '>= 18'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@tuananh/sax-parser-linux-arm64-musl@1.2.0':
+    resolution: {integrity: sha512-1HAUzy6yMr38+3PEOv0s1k0LC5cnXAXXoL6RMTc2P/T71zVlN4y4ReUw6Eewvk8a8ePkV1DwN5QLiavVPtvniQ==}
+    engines: {node: '>= 18'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@tuananh/sax-parser-linux-x64-gnu@1.2.0':
+    resolution: {integrity: sha512-qbOL6zfS5VVmK/IeTMiJDe7gqUjrVMCCBr+0LryKAzW424SPDsH8zmkvJrKwHEu+NIAJu5WyTbuzSebKUFANFA==}
+    engines: {node: '>= 18'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@tuananh/sax-parser-linux-x64-musl@1.2.0':
+    resolution: {integrity: sha512-iO00t6nSgDe4Kk63lUNq8nV6v+aO0L7e6fojMLRwbrO22k5V98IQDYpOn6LHiePf1zFeeRUJ662Q1qp5dbB8Mw==}
+    engines: {node: '>= 18'}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@tuananh/sax-parser-win32-arm64-msvc@1.2.0':
+    resolution: {integrity: sha512-p28xhPsfBMMoUo2h0PkHXjxN1G2pMCe0ACfNB1nsySgr0N9G/edKE+dBsNBnulwVJpWcHwq0GzSDpCw1bIXVtQ==}
+    engines: {node: '>= 18'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@tuananh/sax-parser-win32-x64-msvc@1.2.0':
+    resolution: {integrity: sha512-LKxGbvDhwQJHZZXYqAxEP/MnRmGsMQVggg1L/y+O4GdCJ7akucwRiTEuk8ol/GKimuUWzPFSXhNIm4m+RNDU3Q==}
+    engines: {node: '>= 18'}
+    cpu: [x64]
+    os: [win32]
+
+  '@tuananh/sax-parser@1.2.0':
+    resolution: {integrity: sha512-YmcxRNApC5M9g+OeounLl/8M6prrKH/hI4HALRTdS2heO718r431g0FuNiw3Fe4EQllwtE27LLJHptLXUA3+kw==}
+    engines: {node: '>= 18'}
+
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
 
@@ -2049,6 +2111,9 @@ packages:
     resolution: {integrity: sha512-nAihlQsYGyc5Bwq6+EsubvANYGExeJKHDO3RjnvwU042fawQTQfM3Kxn7IHUXQOz4bzfwsGYYHGSvXyW4zOGLg==}
     engines: {node: '>=0.8'}
 
+  bindings@1.5.0:
+    resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
+
   birpc@4.0.0:
     resolution: {integrity: sha512-LShSxJP0KTmd101b6DRyGBj57LZxSDYWKitQNW/mi8GRMvZb078Uf9+pveax1DrVL89vm7mWe+TovdI/UDOuPw==}
 
@@ -2395,6 +2460,9 @@ packages:
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
+
+  easysax@0.4.2:
+    resolution: {integrity: sha512-gh0lVWdWNTu28bRzYw3NDWm9UUs8gFh0LvWjOpA2QrBW+sOBNKRIYEiV0k5U/oCT8S+wQ7++1NwDQF0Nq3KrIw==}
 
   editions@2.3.1:
     resolution: {integrity: sha512-ptGvkwTvGdGfC0hfhKg0MT+TRLRKGtUiWGBInxOm5pz7ssADezahjCUaYuZ8Dr+C05FW0AECIIPt4WBxVINEhA==}
@@ -2835,6 +2903,9 @@ packages:
   file-entry-cache@8.0.0:
     resolution: {integrity: sha512-XXTUwCvisa5oacNGRP9SfNtYBNAMi+RPwBFmblZEF7N7swHYQS6/Zfk7SRwx4D5j3CH211YNRco1DEMNVfZCnQ==}
     engines: {node: '>=16.0.0'}
+
+  file-uri-to-path@1.0.0:
+    resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
 
   fill-range@7.1.1:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
@@ -3756,6 +3827,10 @@ packages:
 
   no-case@3.0.4:
     resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
+
+  node-addon-api@8.9.0:
+    resolution: {integrity: sha512-ekZMeaaIzSQTSpr7X2X3iJM7lTzgnx8ahAG9pJfT/7+14mlEM8ZYQ9cgCDvSSRbReFK0oHli3WrZdCiRsgAT9Q==}
+    engines: {node: ^18 || ^20 || >= 21}
 
   node-exports-info@1.6.0:
     resolution: {integrity: sha512-pyFS63ptit/P5WqUkt+UUfe+4oevH+bFeIiPPdfb0pFeYEu/1ELnJu5l+5EcTKYL5M7zaAa7S8ddywgXypqKCw==}
@@ -6376,9 +6451,9 @@ snapshots:
       cosmiconfig: 9.0.1(typescript@6.0.2)
       ember-eslint: 0.6.1(@babel/core@7.29.0)(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2)
       eslint: 9.39.4(jiti@2.6.1)
-      eslint-import-resolver-typescript: 4.4.4(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1))
+      eslint-import-resolver-typescript: 4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
       eslint-plugin-decorator-position: 6.0.0(@babel/eslint-parser@7.28.6(@babel/core@7.29.0)(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
       eslint-plugin-json: 4.0.1
       eslint-plugin-n: 17.24.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2)
       eslint-plugin-simple-import-sort: 12.1.1(eslint@9.39.4(jiti@2.6.1))
@@ -6644,6 +6719,45 @@ snapshots:
   '@standard-schema/spec@1.1.0': {}
 
   '@tootallnate/once@1.1.2': {}
+
+  '@tuananh/sax-parser-darwin-arm64@1.2.0':
+    optional: true
+
+  '@tuananh/sax-parser-darwin-x64@1.2.0':
+    optional: true
+
+  '@tuananh/sax-parser-linux-arm64-gnu@1.2.0':
+    optional: true
+
+  '@tuananh/sax-parser-linux-arm64-musl@1.2.0':
+    optional: true
+
+  '@tuananh/sax-parser-linux-x64-gnu@1.2.0':
+    optional: true
+
+  '@tuananh/sax-parser-linux-x64-musl@1.2.0':
+    optional: true
+
+  '@tuananh/sax-parser-win32-arm64-msvc@1.2.0':
+    optional: true
+
+  '@tuananh/sax-parser-win32-x64-msvc@1.2.0':
+    optional: true
+
+  '@tuananh/sax-parser@1.2.0':
+    dependencies:
+      bindings: 1.5.0
+      detect-libc: 2.1.2
+      node-addon-api: 8.9.0
+    optionalDependencies:
+      '@tuananh/sax-parser-darwin-arm64': 1.2.0
+      '@tuananh/sax-parser-darwin-x64': 1.2.0
+      '@tuananh/sax-parser-linux-arm64-gnu': 1.2.0
+      '@tuananh/sax-parser-linux-arm64-musl': 1.2.0
+      '@tuananh/sax-parser-linux-x64-gnu': 1.2.0
+      '@tuananh/sax-parser-linux-x64-musl': 1.2.0
+      '@tuananh/sax-parser-win32-arm64-msvc': 1.2.0
+      '@tuananh/sax-parser-win32-x64-msvc': 1.2.0
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
@@ -7195,6 +7309,10 @@ snapshots:
 
   binaryextensions@2.3.0: {}
 
+  bindings@1.5.0:
+    dependencies:
+      file-uri-to-path: 1.0.0
+
   birpc@4.0.0: {}
 
   brace-expansion@1.1.13:
@@ -7607,6 +7725,8 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
+  easysax@0.4.2: {}
+
   editions@2.3.1:
     dependencies:
       errlop: 2.2.0
@@ -7959,7 +8079,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1)):
+  eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       debug: 4.4.3
       eslint: 9.39.4(jiti@2.6.1)
@@ -7970,18 +8090,18 @@ snapshots:
       tinyglobby: 0.2.15
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2)
       eslint: 9.39.4(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 4.4.4(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1))
+      eslint-import-resolver-typescript: 4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -8024,7 +8144,7 @@ snapshots:
       eslint: 9.39.4(jiti@2.6.1)
       eslint-compat-utils: 0.5.1(eslint@9.39.4(jiti@2.6.1))
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.6.1)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -8035,7 +8155,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.4(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -8266,6 +8386,8 @@ snapshots:
   file-entry-cache@8.0.0:
     dependencies:
       flat-cache: 4.0.1
+
+  file-uri-to-path@1.0.0: {}
 
   fill-range@7.1.1:
     dependencies:
@@ -9228,6 +9350,8 @@ snapshots:
     dependencies:
       lower-case: 2.0.2
       tslib: 2.8.1
+
+  node-addon-api@8.9.0: {}
 
   node-exports-info@1.6.0:
     dependencies:
