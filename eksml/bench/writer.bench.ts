@@ -41,6 +41,9 @@ const pomXml = fixture('pom.xml');
 const xmltvEpg = fixture('xmltv-epg.xml');
 
 // ---------------------------------------------------------------------------
+// Shared options object for the no-validation benchmark rows
+const NO_VALIDATE = { validate: false } as const;
+
 // Pre-parse all fixtures into each library's native format
 // (so benchmarks measure only serialization)
 // ---------------------------------------------------------------------------
@@ -120,6 +123,10 @@ describe('write: small XML (~100 B)', () => {
     write(eksmlSmall);
   });
 
+  bench('eksml (validate: false)', () => {
+    write(eksmlSmall, NO_VALIDATE);
+  });
+
   bench('fast-xml-parser', () => {
     fxpBuilder.build(fxpSmall);
   });
@@ -149,6 +156,10 @@ describe('write: RSS feed (~3 KB)', () => {
     write(eksmlRss);
   });
 
+  bench('eksml (validate: false)', () => {
+    write(eksmlRss, NO_VALIDATE);
+  });
+
   bench('fast-xml-parser', () => {
     fxpBuilder.build(fxpRss);
   });
@@ -174,6 +185,10 @@ describe('write: RSS feed (~3 KB)', () => {
 describe('write: SOAP envelope (~3 KB)', () => {
   bench('eksml', () => {
     write(eksmlSoap);
+  });
+
+  bench('eksml (validate: false)', () => {
+    write(eksmlSoap, NO_VALIDATE);
   });
 
   bench('fast-xml-parser', () => {
@@ -205,6 +220,10 @@ describe('write: Atom feed (~6 KB)', () => {
     write(eksmlAtom);
   });
 
+  bench('eksml (validate: false)', () => {
+    write(eksmlAtom, NO_VALIDATE);
+  });
+
   bench('fast-xml-parser', () => {
     fxpBuilder.build(fxpAtom);
   });
@@ -234,6 +253,10 @@ describe('write: Maven POM (~8 KB)', () => {
     write(eksmlPom);
   });
 
+  bench('eksml (validate: false)', () => {
+    write(eksmlPom, NO_VALIDATE);
+  });
+
   bench('fast-xml-parser', () => {
     fxpBuilder.build(fxpPom);
   });
@@ -261,6 +284,10 @@ describe('write: Maven POM (~8 KB)', () => {
 describe('write: XMLTV EPG (~30 KB)', () => {
   bench('eksml', () => {
     write(eksmlEpg);
+  });
+
+  bench('eksml (validate: false)', () => {
+    write(eksmlEpg, NO_VALIDATE);
   });
 
   bench('fast-xml-parser', () => {

@@ -17,30 +17,52 @@ const QUESTION = 63; // ?
  */
 const INVALID_NAME_CHARS = /[<>=\s"']/;
 
+/**
+ * Bounded value-keyed cache of names already validated against
+ * INVALID_NAME_CHARS. Set.has on an interned short string is roughly 2x
+ * faster than re-running the regex. Only valid names are ever added, so a
+ * cache hit is always safe; the size cap bounds memory for adversarial
+ * inputs with unbounded distinct names.
+ */
+const VALID_NAMES = new Set<string>();
+const VALID_NAMES_LIMIT = 8192;
+
+/**
+ * Bounded cache of tag names known to be BOTH valid and regular elements
+ * (not starting with `?` or `!`). One Set.has on this cache replaces the
+ * validation lookup plus the per-node charCodeAt classification branches
+ * in the hot element path.
+ */
+const ELEMENT_TAGS = new Set<string>();
+
 function validateTagName(tag: string): void {
+  if (!VALID_NAMES.has(tag)) validateTagNameSlow(tag);
+}
+
+function validateTagNameSlow(tag: string): void {
   if (tag.length === 0) {
     throw new Error('Invalid tag name: tag name must not be empty');
   }
-  // Allow leading `?` (PI) or `!` (DOCTYPE), validate the rest
-  const name =
-    tag.charCodeAt(0) === QUESTION || tag.charCodeAt(0) === BANG
-      ? tag.substring(1)
-      : tag;
-  if (name.length === 0) return; // bare `?` or `!` is degenerate but harmless
-  if (INVALID_NAME_CHARS.test(name)) {
+  // A leading `?` (PI) or `!` (DOCTYPE) is allowed; since `?` and `!` are
+  // not in INVALID_NAME_CHARS, testing the full tag is equivalent to
+  // testing the name with the marker stripped — no substring needed.
+  if (INVALID_NAME_CHARS.test(tag)) {
     throw new Error(`Invalid tag name: "${tag}" contains forbidden characters`);
   }
+  if (VALID_NAMES.size < VALID_NAMES_LIMIT) VALID_NAMES.add(tag);
 }
 
 function validateAttributeNames(attributes: Record<string, unknown>): void {
   const keys = Object.keys(attributes);
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i]!;
+    if (VALID_NAMES.has(key)) continue;
     if (key.length === 0 || INVALID_NAME_CHARS.test(key)) {
       throw new Error(
         `Invalid attribute name: "${key}" contains forbidden characters`,
       );
     }
+    if (VALID_NAMES.size < VALID_NAMES_LIMIT) VALID_NAMES.add(key);
   }
 }
 
@@ -82,6 +104,17 @@ export interface WriterOptions {
    *   (e.g. `&copy;` instead of `&#xa9;`) for encoding.
    */
   html?: boolean;
+  /**
+   * Validate tag and attribute names against forbidden characters
+   * (`<`, `>`, `=`, quotes, whitespace). Defaults to `true`.
+   *
+   * Set to `false` to skip name validation for maximum throughput when the
+   * tree is trusted (e.g. serializing unmodified parser output). With
+   * validation disabled, forbidden characters in names are written verbatim
+   * and can produce malformed XML. Circular-reference protection remains
+   * active regardless of this setting.
+   */
+  validate?: boolean;
 }
 
 /** Input types accepted by `write()`. */
@@ -121,8 +154,11 @@ export function write(input: WriterInput, options?: WriterOptions): string {
 
   // Fast path: no options — skip all option parsing, closure creation,
   // identity function allocation, and voidSet construction.
-  if (!options || (!options.pretty && !options.entities && !options.html)) {
-    return compactWrite(dom);
+  if (!options) return compactWrite(dom);
+  if (!options.pretty && !options.entities && !options.html) {
+    return options.validate === false
+      ? compactWriteUnvalidated(dom)
+      : compactWrite(dom);
   }
 
   return fullWriter(dom, options);
@@ -139,92 +175,267 @@ export function write(input: WriterInput, options?: WriterOptions): string {
  */
 const SIMPLE_KEYWORD = /^[A-Za-z][A-Za-z0-9_-]*$/;
 
-function compactWrite(input: TNode | (TNode | string)[]): string {
-  let out = '';
-  let seen: WeakSet<TNode> | null = null;
+/**
+ * Circular-reference guard shared by the module-level compact writer.
+ * Only touched at depth >= CIRCULAR_CHECK_DEPTH. Saved and restored in
+ * compactWrite so re-entrant calls (e.g. write() called from an attributes
+ * getter) can't corrupt an in-progress traversal.
+ */
+let compactSeen: WeakSet<TNode> | null = null;
 
-  function writeChildren(nodes: (TNode | string)[], depth: number): void {
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i]!;
+function compactWrite(input: TNode | (TNode | string)[]): string {
+  const previousSeen = compactSeen;
+  compactSeen = null;
+  try {
+    // Avoid allocating a wrapper array for the single-TNode case
+    if (!Array.isArray(input)) {
+      return compactWriteNode(input, 0);
+    }
+    let out = '';
+    for (let i = 0; i < input.length; i++) {
+      const node = input[i]!;
       if (typeof node === 'string') {
         out += node;
       } else {
-        writeNode(node, depth);
+        out += compactWriteNode(node, 0);
       }
     }
+    return out;
+  } finally {
+    compactSeen = previousSeen;
   }
+}
 
-  function writeNode(node: TNode, depth: number): void {
-    if (depth >= CIRCULAR_CHECK_DEPTH) {
-      if (seen === null) seen = new WeakSet<TNode>();
-      if (seen.has(node)) {
-        throw new Error('Circular reference detected in TNode tree');
-      }
-      seen.add(node);
+/**
+ * Serialize one node and return its XML string. Module-level (no closure
+ * allocation per write() call); accumulates into a local and returns it,
+ * so parent frames concatenate child results.
+ */
+function compactWriteNode(node: TNode, depth: number): string {
+  if (depth >= CIRCULAR_CHECK_DEPTH) {
+    if (compactSeen === null) compactSeen = new WeakSet<TNode>();
+    if (compactSeen.has(node)) {
+      throw new Error('Circular reference detected in TNode tree');
     }
-    const tag = node.tagName;
+    compactSeen.add(node);
+  }
+  const tag = node.tagName;
+  // One Set.has covers validation AND classification for the hot path.
+  // Misses validate, then either take the special PI/declaration route or
+  // join the cache as a known regular element.
+  if (!ELEMENT_TAGS.has(tag)) {
     validateTagName(tag);
-    const attributes = node.attributes;
     const firstChar = tag.charCodeAt(0);
-    // Skip attribute name validation for declarations (!DOCTYPE etc.)
-    // where keys are quoted identifiers, not XML attribute names
-    if (attributes !== null && firstChar !== BANG) {
-      validateAttributeNames(attributes);
+    if (firstChar === QUESTION || firstChar === BANG) {
+      return compactWriteSpecial(node, firstChar);
     }
-    if (attributes === null) {
-      // No attributes — combine open tag into one concat
-      if (firstChar === QUESTION) {
-        out += '<' + tag + '?>';
-        return;
-      }
-      if (firstChar === BANG) {
-        out += '<' + tag + '>';
-        return;
-      }
-      out += '<' + tag + '>';
-    } else {
-      out += '<' + tag;
-      const isDeclaration = firstChar === BANG;
-      const keys = Object.keys(attributes);
-      for (let j = 0; j < keys.length; j++) {
-        const attributeName = keys[j]!;
-        const attributeValue = attributes[attributeName];
-        if (attributeValue === null) {
-          if (isDeclaration && !SIMPLE_KEYWORD.test(attributeName)) {
-            out += ' "' + attributeName + '"';
-          } else {
-            out += ' ' + attributeName;
-          }
-        } else if (attributeValue.indexOf('"') === -1) {
-          out += ' ' + attributeName + '="' + attributeValue + '"';
-        } else if (attributeValue.indexOf("'") === -1) {
-          out += ' ' + attributeName + "='" + attributeValue + "'";
-        } else {
-          // Value contains both quote types — escape single quotes
-          out +=
-            ' ' +
-            attributeName +
-            "='" +
-            attributeValue.replace(/'/g, '&apos;') +
-            "'";
+    if (ELEMENT_TAGS.size < VALID_NAMES_LIMIT) ELEMENT_TAGS.add(tag);
+  }
+  const attributes = node.attributes;
+  let out: string;
+  if (attributes === null) {
+    const children = node.children;
+    // Text-only leaf — emit the whole element in one concatenation
+    if (children.length === 1 && typeof children[0] === 'string') {
+      return '<' + tag + '>' + children[0] + '</' + tag + '>';
+    }
+    out = '<' + tag + '>';
+  } else {
+    out = '<' + tag;
+    const keys = Object.keys(attributes);
+    for (let j = 0; j < keys.length; j++) {
+      const attributeName = keys[j]!;
+      // Validate inline (single Object.keys pass). `out` is discarded on
+      // throw — externally identical error behavior.
+      if (!VALID_NAMES.has(attributeName)) {
+        if (
+          attributeName.length === 0 ||
+          INVALID_NAME_CHARS.test(attributeName)
+        ) {
+          throw new Error(
+            `Invalid attribute name: "${attributeName}" contains forbidden characters`,
+          );
+        }
+        if (VALID_NAMES.size < VALID_NAMES_LIMIT) {
+          VALID_NAMES.add(attributeName);
         }
       }
-      if (firstChar === QUESTION) {
-        out += '?>';
-        return;
+      const attributeValue = attributes[attributeName];
+      if (attributeValue === null) {
+        out += ' ' + attributeName;
+      } else if (attributeValue.indexOf('"') === -1) {
+        out += ' ' + attributeName + '="' + attributeValue + '"';
+      } else if (attributeValue.indexOf("'") === -1) {
+        out += ' ' + attributeName + "='" + attributeValue + "'";
+      } else {
+        // Value contains both quote types — escape single quotes
+        out +=
+          ' ' +
+          attributeName +
+          "='" +
+          attributeValue.replace(/'/g, '&apos;') +
+          "'";
       }
-      if (firstChar === BANG) {
-        out += '>';
-        return;
-      }
-      out += '>';
     }
-    writeChildren(node.children, depth + 1);
-    out += '</' + tag + '>';
+    out += '>';
   }
+  const children = node.children;
+  // Single text child — most common leaf shape; skip the children loop
+  if (children.length === 1 && typeof children[0] === 'string') {
+    return out + children[0] + '</' + tag + '>';
+  }
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i]!;
+    if (typeof child === 'string') {
+      out += child;
+    } else {
+      out += compactWriteNode(child, depth + 1);
+    }
+  }
+  return out + '</' + tag + '>';
+}
 
-  writeChildren(Array.isArray(input) ? input : [input], 0);
-  return out;
+/**
+ * Unvalidated variant of compactWrite — no name validation Set lookups at
+ * all. Selected via `{ validate: false }`. Circular protection unchanged.
+ */
+function compactWriteUnvalidated(input: TNode | (TNode | string)[]): string {
+  const previousSeen = compactSeen;
+  compactSeen = null;
+  try {
+    if (!Array.isArray(input)) {
+      return compactWriteNodeUnvalidated(input, 0);
+    }
+    let out = '';
+    for (let i = 0; i < input.length; i++) {
+      const node = input[i]!;
+      if (typeof node === 'string') {
+        out += node;
+      } else {
+        out += compactWriteNodeUnvalidated(node, 0);
+      }
+    }
+    return out;
+  } finally {
+    compactSeen = previousSeen;
+  }
+}
+
+function compactWriteNodeUnvalidated(node: TNode, depth: number): string {
+  if (depth >= CIRCULAR_CHECK_DEPTH) {
+    if (compactSeen === null) compactSeen = new WeakSet<TNode>();
+    if (compactSeen.has(node)) {
+      throw new Error('Circular reference detected in TNode tree');
+    }
+    compactSeen.add(node);
+  }
+  const tag = node.tagName;
+  const firstChar = tag.charCodeAt(0);
+  if (firstChar === QUESTION || firstChar === BANG) {
+    return compactWriteSpecial(node, firstChar, false);
+  }
+  const attributes = node.attributes;
+  let out: string;
+  if (attributes === null) {
+    const children = node.children;
+    if (children.length === 1 && typeof children[0] === 'string') {
+      return '<' + tag + '>' + children[0] + '</' + tag + '>';
+    }
+    out = '<' + tag + '>';
+  } else {
+    out = '<' + tag;
+    const keys = Object.keys(attributes);
+    for (let j = 0; j < keys.length; j++) {
+      const attributeName = keys[j]!;
+      const attributeValue = attributes[attributeName];
+      if (attributeValue === null) {
+        out += ' ' + attributeName;
+      } else if (attributeValue.indexOf('"') === -1) {
+        out += ' ' + attributeName + '="' + attributeValue + '"';
+      } else if (attributeValue.indexOf("'") === -1) {
+        out += ' ' + attributeName + "='" + attributeValue + "'";
+      } else {
+        out +=
+          ' ' +
+          attributeName +
+          "='" +
+          attributeValue.replace(/'/g, '&apos;') +
+          "'";
+      }
+    }
+    out += '>';
+  }
+  const children = node.children;
+  if (children.length === 1 && typeof children[0] === 'string') {
+    return out + children[0] + '</' + tag + '>';
+  }
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i]!;
+    if (typeof child === 'string') {
+      out += child;
+    } else {
+      out += compactWriteNodeUnvalidated(child, depth + 1);
+    }
+  }
+  return out + '</' + tag + '>';
+}
+
+/**
+ * Cold path: processing instructions (`?...`) and declarations (`!...`).
+ * Both emit attributes and return without children.
+ */
+function compactWriteSpecial(
+  node: TNode,
+  firstChar: number,
+  validate = true,
+): string {
+  const tag = node.tagName;
+  const attributes = node.attributes;
+  const isDeclaration = firstChar === BANG;
+  if (attributes === null) {
+    return firstChar === QUESTION ? '<' + tag + '?>' : '<' + tag + '>';
+  }
+  let out = '<' + tag;
+  const keys = Object.keys(attributes);
+  for (let j = 0; j < keys.length; j++) {
+    const attributeName = keys[j]!;
+    // Declarations (!DOCTYPE etc.) use quoted identifiers, not XML
+    // attribute names — skip name validation for them (matches baseline).
+    if (validate && !isDeclaration && !VALID_NAMES.has(attributeName)) {
+      if (
+        attributeName.length === 0 ||
+        INVALID_NAME_CHARS.test(attributeName)
+      ) {
+        throw new Error(
+          `Invalid attribute name: "${attributeName}" contains forbidden characters`,
+        );
+      }
+      if (VALID_NAMES.size < VALID_NAMES_LIMIT) {
+        VALID_NAMES.add(attributeName);
+      }
+    }
+    const attributeValue = attributes[attributeName];
+    if (attributeValue === null) {
+      if (isDeclaration && !SIMPLE_KEYWORD.test(attributeName)) {
+        out += ' "' + attributeName + '"';
+      } else {
+        out += ' ' + attributeName;
+      }
+    } else if (attributeValue.indexOf('"') === -1) {
+      out += ' ' + attributeName + '="' + attributeValue + '"';
+    } else if (attributeValue.indexOf("'") === -1) {
+      out += ' ' + attributeName + "='" + attributeValue + "'";
+    } else {
+      // Value contains both quote types — escape single quotes
+      out +=
+        ' ' +
+        attributeName +
+        "='" +
+        attributeValue.replace(/'/g, '&apos;') +
+        "'";
+    }
+  }
+  return firstChar === QUESTION ? out + '?>' : out + '>';
 }
 
 // ---------------------------------------------------------------------------
@@ -244,6 +455,7 @@ function fullWriter(
   // Entity encoding functions — identity when disabled
   const encodeEntities = !!options.entities;
   const htmlMode = !!options.html;
+  const doValidate = options.validate !== false;
   const encodeRawText: (input: string) => string = encodeEntities
     ? htmlMode
       ? escapeUTF8
@@ -288,12 +500,12 @@ function fullWriter(
         seen.add(node);
       }
       const tag = node.tagName;
-      validateTagName(tag);
+      if (doValidate) validateTagName(tag);
       const attributes = node.attributes;
       const firstChar = tag.charCodeAt(0);
       // Skip attribute name validation for declarations (!DOCTYPE etc.)
       // where keys are quoted identifiers, not XML attribute names
-      if (attributes !== null && firstChar !== BANG) {
+      if (doValidate && attributes !== null && firstChar !== BANG) {
         validateAttributeNames(attributes);
       }
       if (attributes === null) {
@@ -417,12 +629,12 @@ function fullWriter(
       seen.add(node);
     }
     const tag = node.tagName;
-    validateTagName(tag);
+    if (doValidate) validateTagName(tag);
     const padding = indent.repeat(depth);
     const firstChar = tag.charCodeAt(0);
     // Skip attribute name validation for declarations (!DOCTYPE etc.)
     // where keys are quoted identifiers, not XML attribute names
-    if (node.attributes !== null && firstChar !== BANG) {
+    if (doValidate && node.attributes !== null && firstChar !== BANG) {
       validateAttributeNames(node.attributes);
     }
 
@@ -576,18 +788,19 @@ function toDom(
   /* v8 ignore next — unreachable: write() checks !input before calling toDom() */
   if (input === null || input === undefined) return [];
 
-  // Single TNode — pass through
-  if (!Array.isArray(input) && typeof input === 'object' && isTNode(input)) {
-    return input as TNode;
-  }
-
-  // Non-object, non-array: bare string (lossy top-level string)
-  if (!Array.isArray(input) && typeof input !== 'object') {
-    return fromLossy(input as LossyValue);
-  }
-
-  // Non-array object without tagName → lossy object
   if (!Array.isArray(input)) {
+    // Non-object, non-array: bare string (lossy top-level string)
+    if (typeof input !== 'object') {
+      return fromLossy(input as LossyValue);
+    }
+    // Single TNode — pass through (most common case)
+    if (
+      typeof (input as TNode).tagName === 'string' &&
+      Array.isArray((input as TNode).children)
+    ) {
+      return input as TNode;
+    }
+    // Non-array object without tagName → lossy object
     return fromLossy(input as LossyValue);
   }
 
@@ -608,7 +821,12 @@ function toDom(
   if (sample === undefined) return array as string[];
 
   // TNode in the array → DOM format
-  if (typeof sample === 'object' && sample !== null && isTNode(sample)) {
+  if (
+    typeof sample === 'object' &&
+    sample !== null &&
+    typeof (sample as TNode).tagName === 'string' &&
+    Array.isArray((sample as TNode).children)
+  ) {
     return array as (TNode | string)[];
   }
 
@@ -623,16 +841,6 @@ function toDom(
 
   // Everything else → lossy
   return fromLossy(array as LossyValue[]);
-}
-
-/** Check if a value looks like a TNode (has tagName string + children array). */
-function isTNode(value: unknown): value is TNode {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof (value as TNode).tagName === 'string' &&
-    Array.isArray((value as TNode).children)
-  );
 }
 
 /** Check if a value looks like a LosslessEntry. */
