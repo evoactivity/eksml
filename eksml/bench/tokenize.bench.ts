@@ -19,7 +19,10 @@ import { fileURLToPath } from 'node:url';
 import { bench, describe } from 'vitest';
 
 // --- eksml ---
-import { saxEngine } from '#src/saxEngine.ts';
+// Measured through the public createSaxParser API (the same surface users
+// get from '@eksml/xml/sax'), not the internal engine — competitors are
+// benchmarked through their public APIs too.
+import { createSaxParser } from '#src/sax.ts';
 
 // --- competitors ---
 import SaxParser from '@tuananh/sax-parser';
@@ -60,16 +63,15 @@ const xmltvChunks64 = chunkString(xmltvEpg, 64);
 const noop = () => {};
 
 // ---------------------------------------------------------------------------
-// eksml saxEngine — persistent parser, no-op callbacks (close() resets)
+// eksml createSaxParser — persistent parser, no-op callbacks (close() resets)
 // ---------------------------------------------------------------------------
-const eksmlParser = saxEngine({
-  onOpenTag: noop,
-  onCloseTag: noop,
-  onText: noop,
-  onCdata: noop,
-  onComment: noop,
-  onProcessingInstruction: noop,
-});
+const eksmlParser = createSaxParser();
+eksmlParser.on('openTag', noop);
+eksmlParser.on('closeTag', noop);
+eksmlParser.on('text', noop);
+eksmlParser.on('cdata', noop);
+eksmlParser.on('comment', noop);
+eksmlParser.on('processingInstruction', noop);
 function eksmlSaxEngine(chunks: string[]): void {
   for (const chunk of chunks) {
     eksmlParser.write(chunk);
@@ -153,9 +155,16 @@ function tuananhStream(chunks: string[]): void {
 
 // ---------------------------------------------------------------------------
 // easysax — persistent parser, no-op callbacks (end() resets)
+//
+// easysax parses attributes lazily: startNode receives a getAttr() thunk and
+// no attribute work happens unless it is called. Every other parser in this
+// suite materializes attributes for the open-tag event unconditionally, so
+// getAttr() is invoked to make easysax do the same work.
 // ---------------------------------------------------------------------------
 const easysaxParser = new EasySax();
-easysaxParser.on('startNode', noop);
+easysaxParser.on('startNode', (_name: string, getAttr: () => unknown) => {
+  getAttr();
+});
 easysaxParser.on('endNode', noop);
 easysaxParser.on('textNode', noop);
 easysaxParser.on('cdata', noop);
