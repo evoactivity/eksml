@@ -26,8 +26,11 @@ import { fileURLToPath } from 'node:url';
 import { bench, describe } from 'vitest';
 
 // --- eksml ---
+// SAX is measured through the public createSaxParser API (the same surface
+// users get from '@eksml/xml/sax'), not the internal engine — competitors
+// are benchmarked through their public APIs too.
 import { XmlParseStream } from '#src/xmlParseStream.ts';
-import { saxEngine } from '#src/saxEngine.ts';
+import { createSaxParser } from '#src/sax.ts';
 
 // --- competitors ---
 import SaxParser from '@tuananh/sax-parser';
@@ -279,25 +282,24 @@ function easysaxStream(chunks: string[]): void {
 }
 
 // ---------------------------------------------------------------------------
-// eksml saxEngine — persistent parser (close() resets)
+// eksml createSaxParser — persistent parser (close() resets)
 // ---------------------------------------------------------------------------
-const eksmlSaxParser = saxEngine({
-  onOpenTag(tagName, attributes) {
-    pushElement({
-      tagName,
-      attributes: attributes as Record<string, string>,
-      children: [],
-    });
-  },
-  onText(text) {
-    pushChild(text);
-  },
-  onCdata(cdata) {
-    pushChild(cdata);
-  },
-  onCloseTag() {
-    stack.pop();
-  },
+const eksmlSaxParser = createSaxParser();
+eksmlSaxParser.on('openTag', (tagName, attributes) => {
+  pushElement({
+    tagName,
+    attributes: attributes as Record<string, string>,
+    children: [],
+  });
+});
+eksmlSaxParser.on('text', (text) => {
+  pushChild(text);
+});
+eksmlSaxParser.on('cdata', (cdata) => {
+  pushChild(cdata);
+});
+eksmlSaxParser.on('closeTag', () => {
+  stack.pop();
 });
 
 function eksmlSaxEngine(chunks: string[]): void {
