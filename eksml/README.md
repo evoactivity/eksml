@@ -535,7 +535,7 @@ Eksml is consistently the fastest at parsing, streaming, and tokenization, and t
 
 - **DOM parsing**: 1.3-1.5x faster than tXml, 2.7-4x faster than htmlparser2, 7-16x faster than fast-xml-parser/xml2js/xmldom
 - **SAX streaming**: 1.2-1.3x faster than easysax, 2-3x faster than htmlparser2/saxes, 3.5-6x faster than sax
-- **Raw tokenization**: 1.3-1.4x faster than easysax (even on attribute-heavy XMLTV), 1.9-3.6x faster than saxes/htmlparser2, 4-7x faster than sax
+- **Raw tokenization**: 1.3-1.6x faster than easysax, 1.9-3.4x faster than saxes/htmlparser2, 4.5-7x faster than sax
 - **Serialization**: Beats tXml on POM/RSS and ties it on Atom with `validate: false`; 2-6x faster than xmldom and 4-13x faster than fast-xml-parser/xml2js
 
 Full results with per-fixture op/s tables: **[BENCHMARKS.md](https://github.com/evoactivity/eksml/blob/main/eksml/BENCHMARKS.md)**

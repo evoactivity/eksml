@@ -155,9 +155,16 @@ function tuananhStream(chunks: string[]): void {
 
 // ---------------------------------------------------------------------------
 // easysax — persistent parser, no-op callbacks (end() resets)
+//
+// easysax parses attributes lazily: startNode receives a getAttr() thunk and
+// no attribute work happens unless it is called. Every other parser in this
+// suite materializes attributes for the open-tag event unconditionally, so
+// getAttr() is invoked to make easysax do the same work.
 // ---------------------------------------------------------------------------
 const easysaxParser = new EasySax();
-easysaxParser.on('startNode', noop);
+easysaxParser.on('startNode', (_name: string, getAttr: () => unknown) => {
+  getAttr();
+});
 easysaxParser.on('endNode', noop);
 easysaxParser.on('textNode', noop);
 easysaxParser.on('cdata', noop);
