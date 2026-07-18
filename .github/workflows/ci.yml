@@ -3,8 +3,9 @@ name: CI
 on:
   push:
     branches: [main]
+  # No base-branch filter: stacked PRs (base = another PR's branch) should
+  # run CI too, not just PRs targeting main.
   pull_request:
-    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
