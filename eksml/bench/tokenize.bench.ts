@@ -14,6 +14,8 @@ import { bench, describe } from 'vitest';
 import { saxEngine } from '#src/saxEngine.ts';
 
 // --- competitors ---
+import SaxParser from '@tuananh/sax-parser';
+import EasySax from 'easysax';
 import { Parser as Htmlparser2 } from 'htmlparser2';
 import sax from 'sax';
 import { SaxesParser } from 'saxes';
@@ -122,6 +124,42 @@ function htmlparser2Stream(xml: string, chunkSize: number): void {
 }
 
 // ---------------------------------------------------------------------------
+// @tuananh/sax-parser — no-op callbacks
+// ---------------------------------------------------------------------------
+function tuananhStream(xml: string, chunkSize: number): void {
+  const chunks = chunkString(xml, chunkSize);
+  const parser = new SaxParser();
+  parser.on('startElement', noop);
+  parser.on('endElement', noop);
+  parser.on('text', noop);
+  parser.on('cdata', noop);
+  parser.on('comment', noop);
+  parser.on('processingInstruction', noop);
+  for (const chunk of chunks) {
+    parser.write(chunk);
+  }
+  parser.end();
+}
+
+// ---------------------------------------------------------------------------
+// easysax — no-op callbacks
+// ---------------------------------------------------------------------------
+function easysaxStream(xml: string, chunkSize: number): void {
+  const chunks = chunkString(xml, chunkSize);
+  const parser = new EasySax();
+  parser.on('startNode', noop);
+  parser.on('endNode', noop);
+  parser.on('textNode', noop);
+  parser.on('cdata', noop);
+  parser.on('comment', noop);
+  parser.on('question', noop);
+  for (const chunk of chunks) {
+    parser.write(chunk);
+  }
+  parser.end();
+}
+
+// ---------------------------------------------------------------------------
 // RSS feed — 256 B chunks
 // ---------------------------------------------------------------------------
 describe('tokenize: RSS feed (256 B chunks)', () => {
@@ -141,6 +179,14 @@ describe('tokenize: RSS feed (256 B chunks)', () => {
 
   bench('htmlparser2', () => {
     htmlparser2Stream(rssFeed, size);
+  });
+
+  bench('@tuananh/sax-parser', () => {
+    tuananhStream(rssFeed, size);
+  });
+
+  bench('easysax', () => {
+    easysaxStream(rssFeed, size);
   });
 });
 
@@ -165,6 +211,14 @@ describe('tokenize: XMLTV EPG (256 B chunks)', () => {
   bench('htmlparser2', () => {
     htmlparser2Stream(xmltvEpg, size);
   });
+
+  bench('@tuananh/sax-parser', () => {
+    tuananhStream(xmltvEpg, size);
+  });
+
+  bench('easysax', () => {
+    easysaxStream(xmltvEpg, size);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -188,6 +242,14 @@ describe('tokenize: Maven POM (256 B chunks)', () => {
   bench('htmlparser2', () => {
     htmlparser2Stream(pomXml, size);
   });
+
+  bench('@tuananh/sax-parser', () => {
+    tuananhStream(pomXml, size);
+  });
+
+  bench('easysax', () => {
+    easysaxStream(pomXml, size);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -210,5 +272,13 @@ describe('tokenize: XMLTV EPG (64 B chunks — stress)', () => {
 
   bench('htmlparser2', () => {
     htmlparser2Stream(xmltvEpg, size);
+  });
+
+  bench('@tuananh/sax-parser', () => {
+    tuananhStream(xmltvEpg, size);
+  });
+
+  bench('easysax', () => {
+    easysaxStream(xmltvEpg, size);
   });
 });

@@ -18,6 +18,8 @@ import { XmlParseStream } from '#src/xmlParseStream.ts';
 import { saxEngine } from '#src/saxEngine.ts';
 
 // --- competitors ---
+import SaxParser from '@tuananh/sax-parser';
+import EasySax from 'easysax';
 import { XMLParser } from 'fast-xml-parser';
 import { Parser as Htmlparser2 } from 'htmlparser2';
 import sax from 'sax';
@@ -236,6 +238,116 @@ function htmlparser2Stream(xml: string, chunkSize: number): Node[] {
 }
 
 // ---------------------------------------------------------------------------
+// @tuananh/sax-parser — build DOM tree from SAX events
+// ---------------------------------------------------------------------------
+function tuananhStream(xml: string, chunkSize: number): Node[] {
+  const chunks = chunkString(xml, chunkSize);
+  const parser = new SaxParser();
+
+  const roots: (Node | string)[] = [];
+  const stack: Node[] = [];
+
+  parser.on('startElement', (name: string, attrs: Record<string, string>) => {
+    const el: Node = {
+      tagName: name,
+      attributes: attrs,
+      children: [],
+    };
+    if (stack.length > 0) {
+      stack[stack.length - 1]!.children.push(el);
+    } else {
+      roots.push(el);
+    }
+    stack.push(el);
+  });
+
+  parser.on('text', (text: string) => {
+    if (stack.length > 0) {
+      stack[stack.length - 1]!.children.push(text);
+    } else {
+      roots.push(text);
+    }
+  });
+
+  parser.on('cdata', (cdata: string) => {
+    if (stack.length > 0) {
+      stack[stack.length - 1]!.children.push(cdata);
+    } else {
+      roots.push(cdata);
+    }
+  });
+
+  parser.on('endElement', () => {
+    stack.pop();
+  });
+
+  for (const chunk of chunks) {
+    parser.write(chunk);
+  }
+  parser.end();
+
+  return roots.filter((r): r is Node => typeof r !== 'string');
+}
+
+// ---------------------------------------------------------------------------
+// easysax — build DOM tree from SAX events
+// ---------------------------------------------------------------------------
+function easysaxStream(xml: string, chunkSize: number): Node[] {
+  const chunks = chunkString(xml, chunkSize);
+  const parser = new EasySax();
+
+  const roots: (Node | string)[] = [];
+  const stack: Node[] = [];
+
+  // getAttr() returns an attributes object, or `true` when the element has
+  // none; normalize to an empty object so every node has a consistent shape.
+  parser.on('startNode', (name: string, getAttr: () => unknown) => {
+    const attrs = getAttr();
+    const el: Node = {
+      tagName: name,
+      attributes:
+        attrs && typeof attrs === 'object'
+          ? (attrs as Record<string, string>)
+          : {},
+      children: [],
+    };
+    if (stack.length > 0) {
+      stack[stack.length - 1]!.children.push(el);
+    } else {
+      roots.push(el);
+    }
+    stack.push(el);
+  });
+
+  parser.on('textNode', (text: string) => {
+    if (stack.length > 0) {
+      stack[stack.length - 1]!.children.push(text);
+    } else {
+      roots.push(text);
+    }
+  });
+
+  parser.on('cdata', (cdata: string) => {
+    if (stack.length > 0) {
+      stack[stack.length - 1]!.children.push(cdata);
+    } else {
+      roots.push(cdata);
+    }
+  });
+
+  parser.on('endNode', () => {
+    stack.pop();
+  });
+
+  for (const chunk of chunks) {
+    parser.write(chunk);
+  }
+  parser.end();
+
+  return roots.filter((r): r is Node => typeof r !== 'string');
+}
+
+// ---------------------------------------------------------------------------
 // eksml saxEngine — synchronous SAX, build DOM tree from events
 // ---------------------------------------------------------------------------
 function eksmlSaxEngine(xml: string, chunkSize: number): Node[] {
@@ -322,6 +434,14 @@ describe('stream: RSS feed (256 B chunks)', () => {
     htmlparser2Stream(rssFeed, size);
   });
 
+  bench('@tuananh/sax-parser', () => {
+    tuananhStream(rssFeed, size);
+  });
+
+  bench('easysax', () => {
+    easysaxStream(rssFeed, size);
+  });
+
   bench('fast-xml-parser (sync, no streaming)', () => {
     fxpSync(rssFeed);
   });
@@ -351,6 +471,14 @@ describe('stream: XMLTV EPG (256 B chunks)', () => {
 
   bench('htmlparser2', () => {
     htmlparser2Stream(xmltvEpg, size);
+  });
+
+  bench('@tuananh/sax-parser', () => {
+    tuananhStream(xmltvEpg, size);
+  });
+
+  bench('easysax', () => {
+    easysaxStream(xmltvEpg, size);
   });
 
   bench('fast-xml-parser (sync, no streaming)', () => {
@@ -384,6 +512,14 @@ describe('stream: Maven POM (256 B chunks)', () => {
     htmlparser2Stream(pomXml, size);
   });
 
+  bench('@tuananh/sax-parser', () => {
+    tuananhStream(pomXml, size);
+  });
+
+  bench('easysax', () => {
+    easysaxStream(pomXml, size);
+  });
+
   bench('fast-xml-parser (sync, no streaming)', () => {
     fxpSync(pomXml);
   });
@@ -413,6 +549,14 @@ describe('stream: XMLTV EPG (64 B chunks — stress)', () => {
 
   bench('htmlparser2', () => {
     htmlparser2Stream(xmltvEpg, size);
+  });
+
+  bench('@tuananh/sax-parser', () => {
+    tuananhStream(xmltvEpg, size);
+  });
+
+  bench('easysax', () => {
+    easysaxStream(xmltvEpg, size);
   });
 
   bench('fast-xml-parser (sync, no streaming)', () => {
