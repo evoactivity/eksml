@@ -307,23 +307,365 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
 
   function processChunk(chunk: string): void {
     const chunkLength = chunk.length;
+    // Local aliases: register reads in the hot loop instead of context-slot
+    // loads (processChunk is a fresh closure per parser, so V8 does not
+    // specialize the shared optimized code to this context).
+    const handleText = onText;
+    const handleOpenTag = onOpenTag;
+    const handleCloseTag = onCloseTag;
     let i = 0;
 
     while (i < chunkLength) {
       switch (state) {
         // ==================================================================
-        // TEXT
+        // TEXT — straight-line fast path for the hot flow:
+        // text -> '<' -> close tag | open tag (name, attrs) -> text ...
+        // Falls back to the switch states only at chunk boundaries and for
+        // rare constructs (comments, CDATA, PI, doctype, raw text).
+        // Trimming is fused into the boundary scan so complete-in-chunk
+        // tokens need exactly one substring and zero accumulator writes.
         // ==================================================================
         case State.TEXT: {
-          const lessThanIndex = chunk.indexOf('<', i);
-          if (lessThanIndex === -1) {
-            text += i === 0 ? chunk : chunk.substring(i);
-            i = chunkLength;
-          } else {
-            if (lessThanIndex > i) text += chunk.substring(i, lessThanIndex);
-            emitText();
-            state = State.TAG_OPEN;
+          fastPath: while (true) {
+            // --- text run ---
+            const lessThanIndex = chunk.indexOf('<', i);
+            if (lessThanIndex === -1) {
+              if (i < chunkLength) {
+                text += i === 0 ? chunk : chunk.substring(i);
+              }
+              i = chunkLength;
+              break fastPath;
+            }
+            if (text.length === 0) {
+              if (handleText !== undefined && lessThanIndex > i) {
+                // Fused trim: compute trim bounds on the chunk itself, then
+                // substring once. Whitespace-only runs allocate nothing.
+                let s = i;
+                const last = lessThanIndex - 1;
+                let e = last;
+                while (s <= e) {
+                  const c = chunk.charCodeAt(s);
+                  if (c !== SPACE && c !== TAB && c !== LF && c !== CR) break;
+                  s++;
+                }
+                if (s <= e) {
+                  while (e > s) {
+                    const c = chunk.charCodeAt(e);
+                    if (c !== SPACE && c !== TAB && c !== LF && c !== CR) break;
+                    e--;
+                  }
+                  handleText(chunk.substring(s, e + 1));
+                }
+              }
+            } else {
+              text += chunk.substring(i, lessThanIndex);
+              emitText();
+            }
             i = lessThanIndex + 1;
+            if (i >= chunkLength) {
+              state = State.TAG_OPEN;
+              break fastPath;
+            }
+
+            const firstCharCode = chunk.charCodeAt(i);
+            if (firstCharCode === SLASH) {
+              // --- close tag, complete-in-chunk (trim fused) ---
+              i++;
+              const gtIndex = chunk.indexOf('>', i);
+              if (gtIndex === -1) {
+                tagName = chunk.substring(i);
+                state = State.CLOSE_TAG;
+                i = chunkLength;
+                break fastPath;
+              }
+              if (handleCloseTag !== undefined) {
+                let s = i;
+                let e = gtIndex - 1;
+                while (s <= e) {
+                  const c = chunk.charCodeAt(s);
+                  if (c !== SPACE && c !== TAB && c !== LF && c !== CR) break;
+                  s++;
+                }
+                while (e >= s) {
+                  const c = chunk.charCodeAt(e);
+                  if (c !== SPACE && c !== TAB && c !== LF && c !== CR) break;
+                  e--;
+                }
+                handleCloseTag(s <= e ? chunk.substring(s, e + 1) : '');
+              }
+              i = gtIndex + 1;
+              continue fastPath;
+            }
+            if (firstCharCode === BANG) {
+              special = '';
+              state = State.BANG_START;
+              i++;
+              break fastPath;
+            }
+            if (firstCharCode === QUESTION) {
+              special = '';
+              state = State.PI;
+              i++;
+              break fastPath;
+            }
+
+            // --- open tag: name scan ---
+            let j = i;
+            while (j < chunkLength) {
+              const c = chunk.charCodeAt(j);
+              if (
+                c === GT ||
+                c === SLASH ||
+                c === EQ ||
+                c === SPACE ||
+                c === TAB ||
+                c === LF ||
+                c === CR
+              )
+                break;
+              j++;
+            }
+            if (j >= chunkLength) {
+              tagName = chunk.substring(i);
+              attributes = { __proto__: null } as Attributes;
+              state = State.OPEN_TAG_NAME;
+              i = chunkLength;
+              break fastPath;
+            }
+            const name = chunk.substring(i, j);
+            const attrs: Attributes | null =
+              handleOpenTag !== undefined
+                ? ({ __proto__: null } as Attributes)
+                : null;
+            let selfClosed = false;
+            let c = chunk.charCodeAt(j);
+
+            emitTag: {
+              if (c === GT) {
+                i = j + 1;
+                break emitTag;
+              }
+              // '/' is left unconsumed so the body loop's slash branch
+              // handles the self-closing check; other terminators (ws, '=')
+              // are consumed, matching OPEN_TAG_NAME -> OPEN_TAG_BODY.
+              i = c === SLASH ? j : j + 1;
+
+              body: while (true) {
+                if (i >= chunkLength) {
+                  tagName = name;
+                  attributes =
+                    attrs !== null
+                      ? attrs
+                      : ({ __proto__: null } as Attributes);
+                  state = State.OPEN_TAG_BODY;
+                  break fastPath;
+                }
+                c = chunk.charCodeAt(i);
+                if (c === SPACE || c === TAB || c === LF || c === CR) {
+                  i++;
+                  continue body;
+                }
+                if (c === GT) {
+                  i++;
+                  break emitTag;
+                }
+                if (c === SLASH) {
+                  i++;
+                  if (i >= chunkLength) {
+                    tagName = name;
+                    attributes =
+                      attrs !== null
+                        ? attrs
+                        : ({ __proto__: null } as Attributes);
+                    state = State.SELF_CLOSING;
+                    break fastPath;
+                  }
+                  if (chunk.charCodeAt(i) === GT) {
+                    i++;
+                    selfClosed = true;
+                    break emitTag;
+                  }
+                  // not '>': re-process this char as tag body
+                  continue body;
+                }
+
+                // --- attribute name ---
+                let k = i;
+                while (k < chunkLength) {
+                  const cc = chunk.charCodeAt(k);
+                  if (
+                    cc === EQ ||
+                    cc === GT ||
+                    cc === SLASH ||
+                    cc === SPACE ||
+                    cc === TAB ||
+                    cc === LF ||
+                    cc === CR
+                  )
+                    break;
+                  k++;
+                }
+                if (k >= chunkLength) {
+                  tagName = name;
+                  attributes =
+                    attrs !== null
+                      ? attrs
+                      : ({ __proto__: null } as Attributes);
+                  attributeName = chunk.substring(i);
+                  state = State.ATTR_NAME;
+                  i = chunkLength;
+                  break fastPath;
+                }
+                const attrName = chunk.substring(i, k);
+                c = chunk.charCodeAt(k);
+                i = k + 1;
+                if (c !== EQ) {
+                  if (c === GT) {
+                    if (attrs !== null) attrs[attrName] = null;
+                    break emitTag;
+                  }
+                  if (c === SLASH) {
+                    if (attrs !== null) attrs[attrName] = null;
+                    i = k; // body's slash branch re-handles it
+                    continue body;
+                  }
+                  // whitespace after name — skip, then check for '='
+                  while (i < chunkLength) {
+                    const cc = chunk.charCodeAt(i);
+                    if (cc !== SPACE && cc !== TAB && cc !== LF && cc !== CR)
+                      break;
+                    i++;
+                  }
+                  if (i >= chunkLength) {
+                    tagName = name;
+                    attributes =
+                      attrs !== null
+                        ? attrs
+                        : ({ __proto__: null } as Attributes);
+                    attributeName = attrName;
+                    state = State.ATTR_AFTER_NAME;
+                    break fastPath;
+                  }
+                  const cc = chunk.charCodeAt(i);
+                  if (cc !== EQ) {
+                    // boolean attribute; '>' ends tag, '/' or a new attr
+                    // name is re-processed by the body loop
+                    if (attrs !== null) attrs[attrName] = null;
+                    if (cc === GT) {
+                      i++;
+                      break emitTag;
+                    }
+                    continue body;
+                  }
+                  i++;
+                }
+
+                // --- after '=': skip whitespace, then the value ---
+                while (i < chunkLength) {
+                  const cc = chunk.charCodeAt(i);
+                  if (cc !== SPACE && cc !== TAB && cc !== LF && cc !== CR)
+                    break;
+                  i++;
+                }
+                if (i >= chunkLength) {
+                  tagName = name;
+                  attributes =
+                    attrs !== null
+                      ? attrs
+                      : ({ __proto__: null } as Attributes);
+                  attributeName = attrName;
+                  state = State.ATTR_AFTER_EQ;
+                  break fastPath;
+                }
+                c = chunk.charCodeAt(i);
+                if (c === DQUOTE || c === SQUOTE) {
+                  const quoteIndex = chunk.indexOf(
+                    c === DQUOTE ? '"' : "'",
+                    i + 1,
+                  );
+                  if (quoteIndex === -1) {
+                    tagName = name;
+                    attributes =
+                      attrs !== null
+                        ? attrs
+                        : ({ __proto__: null } as Attributes);
+                    attributeName = attrName;
+                    attributeValue = chunk.substring(i + 1);
+                    state =
+                      c === DQUOTE ? State.ATTR_VALUE_DQ : State.ATTR_VALUE_SQ;
+                    i = chunkLength;
+                    break fastPath;
+                  }
+                  const value = chunk.substring(i + 1, quoteIndex);
+                  // Mirror the baseline's stale attributeValue so the
+                  // maxBufferSize check in write() behaves identically.
+                  if (maxBufferSize !== undefined) attributeValue = value;
+                  if (attrs !== null) attrs[attrName] = value;
+                  i = quoteIndex + 1;
+                  continue body;
+                }
+                if (c === GT) {
+                  if (attrs !== null) attrs[attrName] = '';
+                  i++;
+                  break emitTag;
+                }
+                // unquoted value
+                let m = i;
+                while (m < chunkLength) {
+                  const cc = chunk.charCodeAt(m);
+                  if (
+                    cc === SPACE ||
+                    cc === TAB ||
+                    cc === LF ||
+                    cc === CR ||
+                    cc === GT ||
+                    cc === SLASH
+                  )
+                    break;
+                  m++;
+                }
+                if (m >= chunkLength) {
+                  tagName = name;
+                  attributes =
+                    attrs !== null
+                      ? attrs
+                      : ({ __proto__: null } as Attributes);
+                  attributeName = attrName;
+                  attributeValue = chunk.substring(i);
+                  state = State.ATTR_VALUE_UQ;
+                  i = chunkLength;
+                  break fastPath;
+                }
+                const value = chunk.substring(i, m);
+                if (maxBufferSize !== undefined) attributeValue = value;
+                if (attrs !== null) attrs[attrName] = value;
+                c = chunk.charCodeAt(m);
+                if (c === GT) {
+                  i = m + 1;
+                  break emitTag;
+                }
+                // '/' left unconsumed for the body loop's slash branch
+                i = c === SLASH ? m : m + 1;
+                continue body;
+              }
+            }
+
+            // --- emit open tag ---
+            if (handleOpenTag !== undefined) handleOpenTag(name, attrs!);
+            if (selfClosed) {
+              if (handleCloseTag !== undefined) handleCloseTag(name);
+              continue fastPath;
+            }
+            if (voidSet !== null && voidSet.has(name)) {
+              if (handleCloseTag !== undefined) handleCloseTag(name);
+            } else if (rawSet !== null && rawSet.has(name)) {
+              rawTag = name;
+              rawText = '';
+              rawCloseTagMatchIndex = 0;
+              state = State.RAW_TEXT;
+              break fastPath;
+            }
+            continue fastPath;
           }
           continue;
         }
