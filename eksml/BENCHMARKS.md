@@ -97,42 +97,59 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
   </tr>
   <tr>
     <td><strong>Eksml (SAX)</strong></td>
-    <td align="right"><strong>73,744 op/s</strong></td>
-    <td align="right"><strong>12,385 op/s</strong></td>
-    <td align="right"><strong>8,313 op/s</strong></td>
-    <td align="right"><strong>11,452 op/s</strong></td>
+    <td align="right"><strong>88,615 op/s</strong></td>
+    <td align="right"><strong>18,707 op/s</strong></td>
+    <td align="right"><strong>12,675 op/s</strong></td>
+    <td align="right"><strong>14,920 op/s</strong></td>
   </tr>
   <tr>
-    <td>Eksml (XmlParseStream)</td>
-    <td align="right">31,459 op/s</td>
-    <td align="right">7,764 op/s</td>
-    <td align="right">5,967 op/s</td>
-    <td align="right">4,559 op/s</td>
-  </tr>
-  <tr>
-    <td>saxes</td>
-    <td align="right">29,121 op/s</td>
-    <td align="right">6,628 op/s</td>
-    <td align="right">6,791 op/s</td>
-    <td align="right">6,284 op/s</td>
+    <td>easysax</td>
+    <td align="right">69,398 op/s</td>
+    <td align="right">11,749 op/s</td>
+    <td align="right">9,358 op/s</td>
+    <td align="right">9,673 op/s</td>
   </tr>
   <tr>
     <td>htmlparser2</td>
-    <td align="right">27,279 op/s</td>
-    <td align="right">7,372 op/s</td>
-    <td align="right">5,919 op/s</td>
-    <td align="right">6,821 op/s</td>
+    <td align="right">30,021 op/s</td>
+    <td align="right">7,303 op/s</td>
+    <td align="right">5,963 op/s</td>
+    <td align="right">6,942 op/s</td>
+  </tr>
+  <tr>
+    <td>saxes</td>
+    <td align="right">26,111 op/s</td>
+    <td align="right">6,590 op/s</td>
+    <td align="right">6,875 op/s</td>
+    <td align="right">6,048 op/s</td>
+  </tr>
+  <tr>
+    <td>Eksml (XmlParseStream)</td>
+    <td align="right">23,786 op/s</td>
+    <td align="right">9,082 op/s</td>
+    <td align="right">8,039 op/s</td>
+    <td align="right">4,461 op/s</td>
   </tr>
   <tr>
     <td>sax</td>
-    <td align="right">12,224 op/s</td>
-    <td align="right">3,720 op/s</td>
-    <td align="right">3,078 op/s</td>
-    <td align="right">4,013 op/s</td>
+    <td align="right">14,041 op/s</td>
+    <td align="right">3,029 op/s</td>
+    <td align="right">3,054 op/s</td>
+    <td align="right">3,819 op/s</td>
+  </tr>
+  <tr>
+    <td>@tuananh/sax-parser</td>
+    <td align="right">13,966 op/s</td>
+    <td align="right">4,176 op/s</td>
+    <td align="right">3,299 op/s</td>
+    <td align="right">2,432 op/s</td>
   </tr>
 </table>
 
-Eksml's SAX engine is **1.6-2.5x faster than htmlparser2/saxes** and **3-6x faster than sax**.
+Eksml's SAX engine is **1.3-1.6x faster than easysax**, **1.8-3.4x faster than htmlparser2/saxes**, and **4-6x faster than sax**.
+
+> [!note]
+> @tuananh/sax-parser is a native C++ addon; every `write()` crosses the JS↔C++ boundary, which dominates in chunked streaming.
 
 ## Raw Tokenization (no-op callbacks)
 
@@ -148,35 +165,49 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
   </tr>
   <tr>
     <td><strong>Eksml (SAX)</strong></td>
-    <td align="right"><strong>85,798 op/s</strong></td>
-    <td align="right"><strong>16,367 op/s</strong></td>
-    <td align="right"><strong>13,465 op/s</strong></td>
-    <td align="right"><strong>14,763 op/s</strong></td>
+    <td align="right"><strong>108,036 op/s</strong></td>
+    <td align="right"><strong>21,293 op/s</strong></td>
+    <td align="right"><strong>18,586 op/s</strong></td>
+    <td align="right"><strong>16,018 op/s</strong></td>
+  </tr>
+  <tr>
+    <td>easysax</td>
+    <td align="right">65,515 op/s</td>
+    <td align="right">19,032 op/s</td>
+    <td align="right">12,420 op/s</td>
+    <td align="right">14,406 op/s</td>
   </tr>
   <tr>
     <td>saxes</td>
-    <td align="right">34,370 op/s</td>
-    <td align="right">8,990 op/s</td>
-    <td align="right">8,484 op/s</td>
-    <td align="right">8,965 op/s</td>
+    <td align="right">28,240 op/s</td>
+    <td align="right">8,352 op/s</td>
+    <td align="right">8,062 op/s</td>
+    <td align="right">8,575 op/s</td>
   </tr>
   <tr>
     <td>htmlparser2</td>
-    <td align="right">28,558 op/s</td>
-    <td align="right">7,534 op/s</td>
-    <td align="right">6,126 op/s</td>
-    <td align="right">6,980 op/s</td>
+    <td align="right">22,945 op/s</td>
+    <td align="right">7,344 op/s</td>
+    <td align="right">5,640 op/s</td>
+    <td align="right">6,816 op/s</td>
   </tr>
   <tr>
     <td>sax</td>
-    <td align="right">15,331 op/s</td>
-    <td align="right">4,193 op/s</td>
-    <td align="right">3,183 op/s</td>
-    <td align="right">3,950 op/s</td>
+    <td align="right">10,278 op/s</td>
+    <td align="right">3,883 op/s</td>
+    <td align="right">3,087 op/s</td>
+    <td align="right">3,767 op/s</td>
+  </tr>
+  <tr>
+    <td>@tuananh/sax-parser</td>
+    <td align="right">10,191 op/s</td>
+    <td align="right">4,093 op/s</td>
+    <td align="right">3,172 op/s</td>
+    <td align="right">2,244 op/s</td>
   </tr>
 </table>
 
-Eksml's raw tokenizer is **2-2.5x faster than saxes**, **2-3x faster than htmlparser2**, and **4-6x faster than sax**.
+Eksml's raw tokenizer is **1.1-1.6x faster than easysax**, **1.9-3.8x faster than saxes**, **2.3-4.7x faster than htmlparser2**, and **4-10x faster than sax**.
 
 ## XML Serialization (tree to string)
 
@@ -273,5 +304,6 @@ All fixtures are in [`test/fixtures/`](./test/fixtures/).
 - **Tool**: [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) (wraps [tinybench](https://github.com/tinylibs/tinybench))
 - **Warmup**: Default tinybench warmup iterations
 - **Environment**: Single-threaded, synchronous execution on Node.js
-- **Comparison libraries**: tXml, htmlparser2, fast-xml-parser, xml2js, @xmldom/xmldom, sax, saxes
+- **Parser reuse**: In the SAX streaming and tokenization suites, every parser is constructed once and reused across iterations (all measured parsers support this; verified by comparing event streams across runs). This measures steady-state parse throughput rather than constructor cost. XmlParseStream is the exception, web streams are single-use, so it pays its constructor per iteration.
+- **Comparison libraries**: tXml, htmlparser2, fast-xml-parser, xml2js, @xmldom/xmldom, sax, saxes, easysax, @tuananh/sax-parser
 - **Source**: [`bench/`](./bench/) directory — `parse.bench.ts`, `stream.bench.ts`, `tokenize.bench.ts`, `writer.bench.ts`, `convert.bench.ts`
