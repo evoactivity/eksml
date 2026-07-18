@@ -155,7 +155,24 @@ img {
 
 .landing .subtitle {
   font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.landing .github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #888;
+  font-size: 0.9rem;
   margin-bottom: 40px;
+  transition: color 0.15s;
+}
+
+@media (hover: hover) {
+  .landing .github-link:hover {
+    color: #fff;
+    text-decoration: none;
+  }
 }
 
 .cards {
