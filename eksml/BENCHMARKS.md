@@ -227,24 +227,6 @@ Serialize a pre-parsed in-memory tree back to XML.
     <th align="right">EPG (~30 KB)</th>
   </tr>
   <tr>
-    <td><strong>Eksml</strong></td>
-    <td align="right">1,749,947 op/s</td>
-    <td align="right">291,007 op/s</td>
-    <td align="right">176,028 op/s</td>
-    <td align="right">78,439 op/s</td>
-    <td align="right"><strong>53,619 op/s</strong></td>
-    <td align="right">32,253 op/s</td>
-  </tr>
-  <tr>
-    <td><strong>Eksml (validate: false)</strong></td>
-    <td align="right">1,936,294 op/s</td>
-    <td align="right"><strong>357,848 op/s</strong></td>
-    <td align="right">204,989 op/s</td>
-    <td align="right">94,131 op/s</td>
-    <td align="right"><strong>64,960 op/s</strong></td>
-    <td align="right">36,462 op/s</td>
-  </tr>
-  <tr>
     <td><strong>tXml</strong></td>
     <td align="right"><strong>2,485,611 op/s</strong></td>
     <td align="right">--</td>
@@ -261,6 +243,24 @@ Serialize a pre-parsed in-memory tree back to XML.
     <td align="right">30,964 op/s</td>
     <td align="right">14,839 op/s</td>
     <td align="right">15,867 op/s</td>
+  </tr>
+  <tr>
+    <td><strong>Eksml (validate: false)</strong></td>
+    <td align="right">1,936,294 op/s</td>
+    <td align="right"><strong>357,848 op/s</strong></td>
+    <td align="right">204,989 op/s</td>
+    <td align="right">94,131 op/s</td>
+    <td align="right"><strong>64,960 op/s</strong></td>
+    <td align="right">36,462 op/s</td>
+  </tr>
+  <tr>
+    <td><strong>Eksml</strong></td>
+    <td align="right">1,749,947 op/s</td>
+    <td align="right">291,007 op/s</td>
+    <td align="right">176,028 op/s</td>
+    <td align="right">78,439 op/s</td>
+    <td align="right"><strong>53,619 op/s</strong></td>
+    <td align="right">32,253 op/s</td>
   </tr>
   <tr>
     <td>@xmldom/xmldom</td>
