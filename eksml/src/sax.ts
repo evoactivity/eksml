@@ -95,42 +95,112 @@ export function createSaxParser(options?: SaxParserOptions): SaxParser {
   const rawContentTags =
     opts.rawContentTags ?? (isHtml ? HTML_RAW_CONTENT_TAGS : []);
 
-  // Listener sets — one Set per event type
+  // Listener slots — one per event type. The overwhelmingly common case is
+  // exactly one listener per event, so each slot holds a `single` function
+  // dispatched with a direct call (no Set, no per-event iterator allocation).
+  // A Set is created lazily only when a second listener registers.
+  interface Slot<F> {
+    single: F | null;
+    multi: Set<F> | null;
+  }
+  const makeSlot = <F>(): Slot<F> => ({ single: null, multi: null });
+
   const listeners: {
-    [E in SaxEventName]: Set<SaxEventMap[E]>;
+    [E in SaxEventName]: Slot<SaxEventMap[E]>;
   } = {
-    openTag: new Set(),
-    closeTag: new Set(),
-    text: new Set(),
-    cdata: new Set(),
-    comment: new Set(),
-    processingInstruction: new Set(),
-    doctype: new Set(),
+    openTag: makeSlot(),
+    closeTag: makeSlot(),
+    text: makeSlot(),
+    cdata: makeSlot(),
+    comment: makeSlot(),
+    processingInstruction: makeSlot(),
+    doctype: makeSlot(),
   };
 
-  // Bridge handlers: call all registered listeners for each event
+  function addListener<F>(slot: Slot<F>, handler: F): void {
+    if (slot.multi !== null) {
+      slot.multi.add(handler);
+      return;
+    }
+    if (slot.single === null) {
+      slot.single = handler;
+      return;
+    }
+    if (slot.single === handler) return; // Set-style dedupe
+    slot.multi = new Set([slot.single, handler]);
+    slot.single = null;
+  }
+
+  function removeListener<F>(slot: Slot<F>, handler: F): void {
+    if (slot.multi !== null) {
+      slot.multi.delete(handler);
+      if (slot.multi.size === 1) {
+        // Collapse back to the fast single-dispatch path
+        for (const remaining of slot.multi) slot.single = remaining;
+        slot.multi = null;
+      }
+      return;
+    }
+    if (slot.single === handler) slot.single = null;
+  }
+
+  // Bridge handlers: direct call for a single listener, Set loop otherwise
   const handlers: SaxEngineHandlers = {
     onOpenTag(tagName: string, attributes: Attributes) {
-      for (const handler of listeners.openTag) handler(tagName, attributes);
+      const slot = listeners.openTag;
+      if (slot.single !== null) {
+        slot.single(tagName, attributes);
+      } else if (slot.multi !== null) {
+        for (const handler of slot.multi) handler(tagName, attributes);
+      }
     },
     onCloseTag(tagName: string) {
-      for (const handler of listeners.closeTag) handler(tagName);
+      const slot = listeners.closeTag;
+      if (slot.single !== null) {
+        slot.single(tagName);
+      } else if (slot.multi !== null) {
+        for (const handler of slot.multi) handler(tagName);
+      }
     },
     onText(text: string) {
-      for (const handler of listeners.text) handler(text);
+      const slot = listeners.text;
+      if (slot.single !== null) {
+        slot.single(text);
+      } else if (slot.multi !== null) {
+        for (const handler of slot.multi) handler(text);
+      }
     },
     onCdata(data: string) {
-      for (const handler of listeners.cdata) handler(data);
+      const slot = listeners.cdata;
+      if (slot.single !== null) {
+        slot.single(data);
+      } else if (slot.multi !== null) {
+        for (const handler of slot.multi) handler(data);
+      }
     },
     onComment(comment: string) {
-      for (const handler of listeners.comment) handler(comment);
+      const slot = listeners.comment;
+      if (slot.single !== null) {
+        slot.single(comment);
+      } else if (slot.multi !== null) {
+        for (const handler of slot.multi) handler(comment);
+      }
     },
     onProcessingInstruction(name: string, body: string) {
-      for (const handler of listeners.processingInstruction)
-        handler(name, body);
+      const slot = listeners.processingInstruction;
+      if (slot.single !== null) {
+        slot.single(name, body);
+      } else if (slot.multi !== null) {
+        for (const handler of slot.multi) handler(name, body);
+      }
     },
     onDoctype(tagName: string, attributes: Attributes) {
-      for (const handler of listeners.doctype) handler(tagName, attributes);
+      const slot = listeners.doctype;
+      if (slot.single !== null) {
+        slot.single(tagName, attributes);
+      } else if (slot.multi !== null) {
+        for (const handler of slot.multi) handler(tagName, attributes);
+      }
     },
   };
 
@@ -142,10 +212,10 @@ export function createSaxParser(options?: SaxParserOptions): SaxParser {
 
   return {
     on<E extends SaxEventName>(event: E, handler: SaxEventMap[E]): void {
-      listeners[event].add(handler);
+      addListener(listeners[event], handler);
     },
     off<E extends SaxEventName>(event: E, handler: SaxEventMap[E]): void {
-      listeners[event].delete(handler);
+      removeListener(listeners[event], handler);
     },
     write(chunk: string): void {
       parser.write(chunk);
