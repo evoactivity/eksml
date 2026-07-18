@@ -225,61 +225,70 @@ Serialize a pre-parsed in-memory tree back to XML.
   </tr>
   <tr>
     <td><strong>Eksml</strong></td>
-    <td align="right">1,217,141 op/s</td>
-    <td align="right"><strong>207,657 op/s</strong></td>
-    <td align="right">127,352 op/s</td>
-    <td align="right">62,793 op/s</td>
-    <td align="right">42,925 op/s</td>
-    <td align="right">22,876 op/s</td>
+    <td align="right">1,749,947 op/s</td>
+    <td align="right">291,007 op/s</td>
+    <td align="right">176,028 op/s</td>
+    <td align="right">78,439 op/s</td>
+    <td align="right"><strong>53,619 op/s</strong></td>
+    <td align="right">32,253 op/s</td>
+  </tr>
+  <tr>
+    <td><strong>Eksml (validate: false)</strong></td>
+    <td align="right">1,936,294 op/s</td>
+    <td align="right"><strong>357,848 op/s</strong></td>
+    <td align="right">204,989 op/s</td>
+    <td align="right">94,131 op/s</td>
+    <td align="right"><strong>64,960 op/s</strong></td>
+    <td align="right">36,462 op/s</td>
   </tr>
   <tr>
     <td><strong>tXml</strong></td>
-    <td align="right"><strong>2,431,257 op/s</strong></td>
+    <td align="right"><strong>2,485,611 op/s</strong></td>
     <td align="right">--</td>
-    <td align="right"><strong>244,751 op/s</strong></td>
-    <td align="right"><strong>97,433 op/s</strong></td>
-    <td align="right"><strong>49,523 op/s</strong></td>
-    <td align="right"><strong>42,427 op/s</strong></td>
+    <td align="right"><strong>225,162 op/s</strong></td>
+    <td align="right"><strong>96,822 op/s</strong></td>
+    <td align="right">48,394 op/s</td>
+    <td align="right"><strong>43,455 op/s</strong></td>
   </tr>
   <tr>
     <td>htmlparser2</td>
-    <td align="right">2,002,415 op/s</td>
-    <td align="right">102,403 op/s</td>
-    <td align="right">75,456 op/s</td>
-    <td align="right">29,333 op/s</td>
-    <td align="right">13,128 op/s</td>
-    <td align="right">16,713 op/s</td>
+    <td align="right">2,027,682 op/s</td>
+    <td align="right">100,516 op/s</td>
+    <td align="right">73,469 op/s</td>
+    <td align="right">30,964 op/s</td>
+    <td align="right">14,839 op/s</td>
+    <td align="right">15,867 op/s</td>
   </tr>
   <tr>
     <td>@xmldom/xmldom</td>
-    <td align="right">1,142,591 op/s</td>
-    <td align="right">45,022 op/s</td>
-    <td align="right">38,287 op/s</td>
-    <td align="right">13,643 op/s</td>
-    <td align="right">7,387 op/s</td>
-    <td align="right">10,098 op/s</td>
+    <td align="right">1,117,265 op/s</td>
+    <td align="right">45,503 op/s</td>
+    <td align="right">39,805 op/s</td>
+    <td align="right">15,015 op/s</td>
+    <td align="right">6,973 op/s</td>
+    <td align="right">10,019 op/s</td>
   </tr>
   <tr>
     <td>fast-xml-parser</td>
-    <td align="right">366,841 op/s</td>
-    <td align="right">22,280 op/s</td>
-    <td align="right">28,213 op/s</td>
-    <td align="right">10,828 op/s</td>
-    <td align="right">4,693 op/s</td>
-    <td align="right">3,593 op/s</td>
+    <td align="right">347,964 op/s</td>
+    <td align="right">23,913 op/s</td>
+    <td align="right">28,453 op/s</td>
+    <td align="right">11,452 op/s</td>
+    <td align="right">4,610 op/s</td>
+    <td align="right">3,609 op/s</td>
   </tr>
   <tr>
     <td>xml2js</td>
-    <td align="right">244,052 op/s</td>
-    <td align="right">16,015 op/s</td>
-    <td align="right">19,386 op/s</td>
-    <td align="right">8,558 op/s</td>
-    <td align="right">3,869 op/s</td>
-    <td align="right">4,305 op/s</td>
+    <td align="right">239,685 op/s</td>
+    <td align="right">15,809 op/s</td>
+    <td align="right">19,398 op/s</td>
+    <td align="right">8,295 op/s</td>
+    <td align="right">3,954 op/s</td>
+    <td align="right">3,898 op/s</td>
   </tr>
 </table>
 
-tXml leads serialization on most fixtures, with Eksml second (and first on the RSS feed, where tXml crashes). Eksml is **2-6x faster than @xmldom/xmldom** and **4-13x faster than fast-xml-parser/xml2js** at serialization on non-trivial documents.
+Eksml wins POM and RSS (where tXml crashes) and, with `validate: false`, ties tXml on Atom (0.97x); tXml keeps the lead on the small, SOAP, and EPG fixtures. Unlike tXml's stringify, Eksml's writer validates tag/attribute names by default, guards against circular references, and escapes mixed-quote attribute values — `validate: false` skips only the name validation. Eksml is **2-6x faster than @xmldom/xmldom** and **4-13x faster than fast-xml-parser/xml2js** at serialization on non-trivial documents.
 
 > [!note]
 > tXml crashed on the RSS fixture

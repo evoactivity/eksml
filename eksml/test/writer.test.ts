@@ -916,6 +916,87 @@ describe('write', () => {
     });
   });
 
+  describe('validate: false', () => {
+    it('produces identical output to the default for valid trees', () => {
+      const node: TNode = {
+        tagName: 'root',
+        attributes: { id: '1', flag: null },
+        children: [
+          { tagName: 'child', attributes: null, children: ['text'] },
+          'tail',
+        ],
+      };
+      expect(write(node, { validate: false })).toBe(write(node));
+    });
+
+    it('does not throw for invalid tag names, writes them verbatim', () => {
+      const node: TNode = {
+        tagName: 'foo bar',
+        attributes: null,
+        children: [],
+      };
+      expect(write(node, { validate: false })).toBe('<foo bar></foo bar>');
+    });
+
+    it('does not throw for invalid attribute names', () => {
+      const node: TNode = {
+        tagName: 'div',
+        attributes: { 'bad name': 'v' },
+        children: [],
+      };
+      expect(write(node, { validate: false })).toBe('<div bad name="v"></div>');
+    });
+
+    it('skips validation in entities mode too', () => {
+      const node: TNode = {
+        tagName: 'foo bar',
+        attributes: null,
+        children: ['a & b'],
+      };
+      expect(write(node, { validate: false, entities: true })).toBe(
+        '<foo bar>a &amp; b</foo bar>',
+      );
+    });
+
+    it('skips validation in pretty mode too', () => {
+      const node: TNode = {
+        tagName: 'foo bar',
+        attributes: null,
+        children: [],
+      };
+      expect(write(node, { validate: false, pretty: true })).toBe('<foo bar/>');
+    });
+
+    it('still detects circular references', () => {
+      const root: TNode = { tagName: 'a', attributes: null, children: [] };
+      let current = root;
+      for (let i = 0; i < 20; i++) {
+        const next: TNode = {
+          tagName: 'a',
+          attributes: null,
+          children: [],
+        };
+        current.children.push(next);
+        current = next;
+      }
+      current.children.push(root); // cycle back to the root
+      expect(() => write(root, { validate: false })).toThrow(
+        /Circular reference/,
+      );
+    });
+
+    it('handles PIs and declarations without validation', () => {
+      const nodes: TNode[] = [
+        { tagName: '?xml', attributes: { version: '1.0' }, children: [] },
+        { tagName: '!DOCTYPE', attributes: { html: null }, children: [] },
+        { tagName: 'root', attributes: null, children: [] },
+      ];
+      expect(write(nodes, { validate: false })).toBe(
+        '<?xml version="1.0"?><!DOCTYPE html><root></root>',
+      );
+    });
+  });
+
   // --- edge cases for input auto-detection ---
 
   describe('input auto-detection edge cases', () => {
