@@ -48,6 +48,40 @@ function xml2jsParse(xml) {
 // Declared once to avoid allocation in the hot loop.
 const noop = () => {};
 
+// ---------------------------------------------------------------------------
+// SAX consumption helpers
+//
+// Stream handlers CONSUME what each event delivers (tag name, attributes,
+// text) instead of ignoring it. This keeps the comparison fair: easysax
+// materializes attributes lazily (only when getAttr() is called), so
+// ignore-everything handlers would let it skip work every other parser is
+// forced to do. Consuming also matches how SAX parsers are actually used.
+// ---------------------------------------------------------------------------
+
+// Accumulator so the JIT cannot dead-code-eliminate the consumption.
+let sink = 0;
+
+/**
+ * @param {string} name
+ * @param {Record<string, string | null> | null | undefined} attrs
+ */
+function consumeOpenTag(name, attrs) {
+  sink += name.length;
+
+  if (attrs) {
+    for (const key in attrs) {
+      const value = attrs[key];
+
+      if (value) sink += value.length;
+    }
+  }
+}
+
+/** @param {string} text */
+function consumeText(text) {
+  sink += text.length;
+}
+
 const fxpInstance = new XMLParser({ ignoreAttributes: false });
 
 /** @type {Record<string, (xml: string) => unknown>} */
@@ -71,11 +105,11 @@ const PARSERS = {
   'eksml-stream': (xml) => {
     const p = createSaxParser();
 
-    p.on('openTag', noop);
+    p.on('openTag', consumeOpenTag);
     p.on('closeTag', noop);
-    p.on('text', noop);
-    p.on('cdata', noop);
-    p.on('comment', noop);
+    p.on('text', consumeText);
+    p.on('cdata', consumeText);
+    p.on('comment', consumeText);
     p.on('processingInstruction', noop);
     p.on('doctype', noop);
 
@@ -86,10 +120,10 @@ const PARSERS = {
   'htmlparser2-sax': (xml) => {
     const p = new HtmlParser(
       {
-        onopentag: noop,
+        onopentag: consumeOpenTag,
         onclosetag: noop,
-        ontext: noop,
-        oncomment: noop,
+        ontext: consumeText,
+        oncomment: consumeText,
         oncdatastart: noop,
         oncdataend: noop,
         onprocessinginstruction: noop,
@@ -104,11 +138,11 @@ const PARSERS = {
   sax: (xml) => {
     const p = sax.parser(true);
 
-    p.onopentag = noop;
+    p.onopentag = (node) => consumeOpenTag(node.name, node.attributes);
     p.onclosetag = noop;
-    p.ontext = noop;
-    p.oncdata = noop;
-    p.oncomment = noop;
+    p.ontext = consumeText;
+    p.oncdata = consumeText;
+    p.oncomment = consumeText;
     p.onprocessinginstruction = noop;
     p.write(xml).close();
   },
@@ -116,11 +150,11 @@ const PARSERS = {
   saxes: (xml) => {
     const p = new SaxesParser();
 
-    p.on('opentag', noop);
+    p.on('opentag', (node) => consumeOpenTag(node.name, node.attributes));
     p.on('closetag', noop);
-    p.on('text', noop);
-    p.on('cdata', noop);
-    p.on('comment', noop);
+    p.on('text', consumeText);
+    p.on('cdata', consumeText);
+    p.on('comment', consumeText);
     p.on('pi', noop);
     p.write(xml).close();
   },
@@ -128,11 +162,15 @@ const PARSERS = {
   easysax: (xml) => {
     const p = new EasySax();
 
-    p.on('startNode', noop);
+    p.on('startNode', (name, getAttr) => {
+      const attrs = getAttr();
+
+      consumeOpenTag(name, typeof attrs === 'object' ? attrs : null);
+    });
     p.on('endNode', noop);
-    p.on('textNode', noop);
-    p.on('cdata', noop);
-    p.on('comment', noop);
+    p.on('textNode', consumeText);
+    p.on('cdata', consumeText);
+    p.on('comment', consumeText);
     p.on('question', noop);
 
     p.write(xml);
@@ -174,7 +212,8 @@ self.onmessage = (event) => {
 
     const elapsed = performance.now() - (deadline - durationMs);
 
-    self.postMessage({ type: 'result', parserId, iterations, elapsed });
+    // `sink` escapes with the result so consumption cannot be optimized away.
+    self.postMessage({ type: 'result', parserId, iterations, elapsed, sink });
   } catch (err) {
     self.postMessage({
       type: 'error',

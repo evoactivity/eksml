@@ -171,7 +171,7 @@ export const SUITES: SuiteDef[] = [
     id: 'stream',
     label: 'Stream (SAX)',
     description:
-      'SAX-style event parsing — each library tokenises XML and fires callbacks for every event.',
+      'SAX-style event parsing — each library tokenises XML and fires callbacks that consume tag names, attributes, and text.',
     parsers: STREAM_PARSER_DEFS,
   },
 ];
