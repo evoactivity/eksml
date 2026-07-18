@@ -107,13 +107,13 @@ Performance is a core goal of Eksml. Every change to a hot path should be benchm
 
 Benchmarks use [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) (which wraps tinybench) and live in `eksml/bench/`:
 
-| File                | What it measures                                                       |
-| ------------------- | ---------------------------------------------------------------------- |
-| `tokenize.bench.ts` | Raw SAX tokenization throughput (no-op callbacks)                      |
-| `parse.bench.ts`    | DOM/tree parsing vs fast-xml-parser, xml2js, xmldom, htmlparser2, txml |
-| `stream.bench.ts`   | SAX streaming and XmlParseStream vs sax, saxes, htmlparser2            |
-| `writer.bench.ts`   | XML serialization (tree to string)                                     |
-| `convert.bench.ts`  | Object converters (lossy/lossless) vs fast-xml-parser, xml2js, txml    |
+| File                | What it measures                                                                          |
+| ------------------- | ----------------------------------------------------------------------------------------- |
+| `tokenize.bench.ts` | Raw SAX tokenization throughput (no-op callbacks)                                         |
+| `parse.bench.ts`    | DOM/tree parsing vs fast-xml-parser, xml2js, xmldom, htmlparser2, txml                    |
+| `stream.bench.ts`   | SAX streaming and XmlParseStream vs sax, saxes, htmlparser2, easysax, @tuananh/sax-parser |
+| `writer.bench.ts`   | XML serialization (tree to string)                                                        |
+| `convert.bench.ts`  | Object converters (lossy/lossless) vs fast-xml-parser, xml2js, txml                       |
 
 Run them:
 

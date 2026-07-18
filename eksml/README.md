@@ -519,12 +519,12 @@ import {
 
 ## Benchmarks
 
-Eksml is consistently the fastest across parsing, streaming, and serialization. Benchmarks run via [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) against real-world XML fixtures from ~100 B to ~30 KB.
+Eksml is consistently the fastest at parsing, streaming, and tokenization, and second only to tXml at serialization. Benchmarks run via [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) against real-world XML fixtures from ~100 B to ~30 KB.
 
-- **DOM parsing**: 1.2-1.5x faster than tXml, 3-4x faster than htmlparser2, 7-15x faster than fast-xml-parser/xml2js/xmldom
-- **SAX streaming**: 1.6-2.5x faster than htmlparser2/saxes, 3-6x faster than sax
-- **Raw tokenization**: 2-2.5x faster than saxes, 2-3x faster than htmlparser2, 4-6x faster than sax
-- **Serialization**: Trades top position with tXml; both are 3-7x faster than xmldom and 7-13x faster than fast-xml-parser/xml2js
+- **DOM parsing**: 1.3-1.5x faster than tXml, 2.7-4x faster than htmlparser2, 7-16x faster than fast-xml-parser/xml2js/xmldom
+- **SAX streaming**: 1.2-1.5x faster than easysax, 2.1-3.4x faster than htmlparser2/saxes, 4-6x faster than sax
+- **Raw tokenization**: 1.1-1.7x faster than easysax, 1.9-3.7x faster than saxes/htmlparser2, 4-8x faster than sax
+- **Serialization**: Second to tXml on most fixtures; 2-6x faster than xmldom and 4-13x faster than fast-xml-parser/xml2js
 
 Full results with per-fixture op/s tables: **[BENCHMARKS.md](https://github.com/evoactivity/eksml/blob/main/eksml/BENCHMARKS.md)**
 
