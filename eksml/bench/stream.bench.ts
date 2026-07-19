@@ -238,7 +238,8 @@ tuananhParser.on('text', (text: string) => {
 tuananhParser.on('cdata', (cdata: string) => {
   pushChild(cdata);
 });
-tuananhParser.on('endElement', () => {
+// Parameter declared so arity probing cannot skip materializing the name
+tuananhParser.on('endElement', (_name: string) => {
   stack.pop();
 });
 

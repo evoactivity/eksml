@@ -149,8 +149,8 @@ importers:
         version: 8.0.0
     devDependencies:
       '@tuananh/sax-parser':
-        specifier: ^1.2.0
-        version: 1.2.0
+        specifier: ^1.4.0
+        version: 1.4.0
       '@types/node':
         specifier: ^25.5.0
         version: 25.5.0
@@ -1580,60 +1580,60 @@ packages:
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
     engines: {node: '>= 6'}
 
-  '@tuananh/sax-parser-darwin-arm64@1.2.0':
-    resolution: {integrity: sha512-epRwVplpKMLYtIaTpOkuIXXeI+aM6N0W7m7MPDIJcwbAXu2m9qmGCl84senxr8gc1YnjvNN5drxoHQBwgQOtMQ==}
+  '@tuananh/sax-parser-darwin-arm64@1.4.0':
+    resolution: {integrity: sha512-PRT9p0PiYc9n1TfKypxq3g19uej/bTjAQ9FOENdEsnImtfZx3MheBKlZOVp1BVcjZb/uo6oBMyR2FOrf4ddclA==}
     engines: {node: '>= 18'}
     cpu: [arm64]
     os: [darwin]
 
-  '@tuananh/sax-parser-darwin-x64@1.2.0':
-    resolution: {integrity: sha512-Q1QT7oebbnn2yz1/NthQm4svyZCbKyKI2OgqA/iQVUx08dj3v+yCiNHkWqgTPNkpZQdpLeOlCLQdmX1RiFd4Xg==}
+  '@tuananh/sax-parser-darwin-x64@1.4.0':
+    resolution: {integrity: sha512-Dy9obEHGoKpcJy9xu0nyCahIOGhgNQYJFqoUGwQVgU0nrfXra228LvdDK1dlCyJvBh43N2XzUSube2Pmw0oR1Q==}
     engines: {node: '>= 18'}
     cpu: [x64]
     os: [darwin]
 
-  '@tuananh/sax-parser-linux-arm64-gnu@1.2.0':
-    resolution: {integrity: sha512-Prodgbi4GV9+r+dWfvX2Hka24lJgjWTFTm5rSGc4VCjQ+72FGtHbt5+0RksqNYamlwl+xVHNTcjli0bK4wxjrQ==}
+  '@tuananh/sax-parser-linux-arm64-gnu@1.4.0':
+    resolution: {integrity: sha512-2k6Dq2lOma0f8miPF8LMW+VUxu/xRWyc4UAYFg2y06BLVmJVurgfrXayT2BS4bWw8f2WS4U2EikDLKWcjUu+1g==}
     engines: {node: '>= 18'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@tuananh/sax-parser-linux-arm64-musl@1.2.0':
-    resolution: {integrity: sha512-1HAUzy6yMr38+3PEOv0s1k0LC5cnXAXXoL6RMTc2P/T71zVlN4y4ReUw6Eewvk8a8ePkV1DwN5QLiavVPtvniQ==}
+  '@tuananh/sax-parser-linux-arm64-musl@1.4.0':
+    resolution: {integrity: sha512-0RdDHE8e2tKYIzlrpA2gbchymySHqsngWqo1AW6tNfEX/dRhbsgvX1vt7lS6g0i9KYfwHZ3hkQBkWWGRZbLQTQ==}
     engines: {node: '>= 18'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@tuananh/sax-parser-linux-x64-gnu@1.2.0':
-    resolution: {integrity: sha512-qbOL6zfS5VVmK/IeTMiJDe7gqUjrVMCCBr+0LryKAzW424SPDsH8zmkvJrKwHEu+NIAJu5WyTbuzSebKUFANFA==}
+  '@tuananh/sax-parser-linux-x64-gnu@1.4.0':
+    resolution: {integrity: sha512-38lWUrgwn+yw2yIEFbx9JQf+YayNW9SBwY6dkO1jnQuzsB9EGD4aQr9WmkdXD2agos3xpSJT4TtHe9PElC0d1A==}
     engines: {node: '>= 18'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@tuananh/sax-parser-linux-x64-musl@1.2.0':
-    resolution: {integrity: sha512-iO00t6nSgDe4Kk63lUNq8nV6v+aO0L7e6fojMLRwbrO22k5V98IQDYpOn6LHiePf1zFeeRUJ662Q1qp5dbB8Mw==}
+  '@tuananh/sax-parser-linux-x64-musl@1.4.0':
+    resolution: {integrity: sha512-7+fR76kdubwUr5iZ0JpKh3sKigtYY2ScEpd8/bnehQWsOYofP20VtU6j6Zj2no7j2KkbLZwUmkmZrmffACmBow==}
     engines: {node: '>= 18'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@tuananh/sax-parser-win32-arm64-msvc@1.2.0':
-    resolution: {integrity: sha512-p28xhPsfBMMoUo2h0PkHXjxN1G2pMCe0ACfNB1nsySgr0N9G/edKE+dBsNBnulwVJpWcHwq0GzSDpCw1bIXVtQ==}
+  '@tuananh/sax-parser-win32-arm64-msvc@1.4.0':
+    resolution: {integrity: sha512-m8Y0CC/iFMMEhpeZuI0sjQmffBZZ6W46wqrjW33Uif4iCS4iOus5qtXd16KaD7kcPbRx2UhMg12dgDtKkaCqww==}
     engines: {node: '>= 18'}
     cpu: [arm64]
     os: [win32]
 
-  '@tuananh/sax-parser-win32-x64-msvc@1.2.0':
-    resolution: {integrity: sha512-LKxGbvDhwQJHZZXYqAxEP/MnRmGsMQVggg1L/y+O4GdCJ7akucwRiTEuk8ol/GKimuUWzPFSXhNIm4m+RNDU3Q==}
+  '@tuananh/sax-parser-win32-x64-msvc@1.4.0':
+    resolution: {integrity: sha512-Q+4UC7DYe1ACD6B5Cbzn7GRQQPl1RrdxWz1nMatQoYemsOcCGwBy1ms4B0d0WEVouf2ERDhPaWOJenER0JNQww==}
     engines: {node: '>= 18'}
     cpu: [x64]
     os: [win32]
 
-  '@tuananh/sax-parser@1.2.0':
-    resolution: {integrity: sha512-YmcxRNApC5M9g+OeounLl/8M6prrKH/hI4HALRTdS2heO718r431g0FuNiw3Fe4EQllwtE27LLJHptLXUA3+kw==}
+  '@tuananh/sax-parser@1.4.0':
+    resolution: {integrity: sha512-UxdyMxSkCuRg0km8hGfhcH3LROe/1iljMvZzOFxXrOXxJqpDYGIciUB1quTPLZ9X3lShSDiuJkKJDs0dIID8Rg==}
     engines: {node: '>= 18'}
 
   '@tybys/wasm-util@0.10.1':
@@ -6475,9 +6475,9 @@ snapshots:
       cosmiconfig: 9.0.1(typescript@6.0.2)
       ember-eslint: 0.6.1(@babel/core@7.29.0)(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2)
       eslint: 9.39.4(jiti@2.6.1)
-      eslint-import-resolver-typescript: 4.4.4(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1))
+      eslint-import-resolver-typescript: 4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
       eslint-plugin-decorator-position: 6.0.0(@babel/eslint-parser@7.28.6(@babel/core@7.29.0)(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
       eslint-plugin-json: 4.0.1
       eslint-plugin-n: 17.24.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2)
       eslint-plugin-simple-import-sort: 12.1.1(eslint@9.39.4(jiti@2.6.1))
@@ -6744,44 +6744,44 @@ snapshots:
 
   '@tootallnate/once@1.1.2': {}
 
-  '@tuananh/sax-parser-darwin-arm64@1.2.0':
+  '@tuananh/sax-parser-darwin-arm64@1.4.0':
     optional: true
 
-  '@tuananh/sax-parser-darwin-x64@1.2.0':
+  '@tuananh/sax-parser-darwin-x64@1.4.0':
     optional: true
 
-  '@tuananh/sax-parser-linux-arm64-gnu@1.2.0':
+  '@tuananh/sax-parser-linux-arm64-gnu@1.4.0':
     optional: true
 
-  '@tuananh/sax-parser-linux-arm64-musl@1.2.0':
+  '@tuananh/sax-parser-linux-arm64-musl@1.4.0':
     optional: true
 
-  '@tuananh/sax-parser-linux-x64-gnu@1.2.0':
+  '@tuananh/sax-parser-linux-x64-gnu@1.4.0':
     optional: true
 
-  '@tuananh/sax-parser-linux-x64-musl@1.2.0':
+  '@tuananh/sax-parser-linux-x64-musl@1.4.0':
     optional: true
 
-  '@tuananh/sax-parser-win32-arm64-msvc@1.2.0':
+  '@tuananh/sax-parser-win32-arm64-msvc@1.4.0':
     optional: true
 
-  '@tuananh/sax-parser-win32-x64-msvc@1.2.0':
+  '@tuananh/sax-parser-win32-x64-msvc@1.4.0':
     optional: true
 
-  '@tuananh/sax-parser@1.2.0':
+  '@tuananh/sax-parser@1.4.0':
     dependencies:
       bindings: 1.5.0
       detect-libc: 2.1.2
       node-addon-api: 8.9.0
     optionalDependencies:
-      '@tuananh/sax-parser-darwin-arm64': 1.2.0
-      '@tuananh/sax-parser-darwin-x64': 1.2.0
-      '@tuananh/sax-parser-linux-arm64-gnu': 1.2.0
-      '@tuananh/sax-parser-linux-arm64-musl': 1.2.0
-      '@tuananh/sax-parser-linux-x64-gnu': 1.2.0
-      '@tuananh/sax-parser-linux-x64-musl': 1.2.0
-      '@tuananh/sax-parser-win32-arm64-msvc': 1.2.0
-      '@tuananh/sax-parser-win32-x64-msvc': 1.2.0
+      '@tuananh/sax-parser-darwin-arm64': 1.4.0
+      '@tuananh/sax-parser-darwin-x64': 1.4.0
+      '@tuananh/sax-parser-linux-arm64-gnu': 1.4.0
+      '@tuananh/sax-parser-linux-arm64-musl': 1.4.0
+      '@tuananh/sax-parser-linux-x64-gnu': 1.4.0
+      '@tuananh/sax-parser-linux-x64-musl': 1.4.0
+      '@tuananh/sax-parser-win32-arm64-msvc': 1.4.0
+      '@tuananh/sax-parser-win32-x64-msvc': 1.4.0
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
@@ -8105,7 +8105,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1)):
+  eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       debug: 4.4.3
       eslint: 9.39.4(jiti@2.6.1)
@@ -8116,18 +8116,18 @@ snapshots:
       tinyglobby: 0.2.15
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2)
       eslint: 9.39.4(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 4.4.4(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.6.1))
+      eslint-import-resolver-typescript: 4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -8170,7 +8170,7 @@ snapshots:
       eslint: 9.39.4(jiti@2.6.1)
       eslint-compat-utils: 0.5.1(eslint@9.39.4(jiti@2.6.1))
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.6.1)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -8181,7 +8181,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.4(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.4(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3

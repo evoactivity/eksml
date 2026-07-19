@@ -66,7 +66,12 @@ const xmltvChunks64 = chunkString(xmltvEpg, 64);
 const attrHeavyChunks256 = chunkString(attrHeavy, 256);
 
 // No-op function used as callback
-const noop = () => {};
+// No-op callback with DECLARED parameters. Some parsers probe listener arity
+// (Function.length) and skip materializing event arguments for zero-arity
+// handlers (@tuananh/sax-parser 1.4 inflates ~3x this way). Every JS parser
+// here materializes arguments unconditionally, so the no-op declares
+// parameters to keep the measured work equal.
+const noop = (_a?: unknown, _b?: unknown) => {};
 
 // ---------------------------------------------------------------------------
 // eksml createSaxParser — persistent parser, no-op callbacks (close() resets)

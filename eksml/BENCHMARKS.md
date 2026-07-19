@@ -105,66 +105,66 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
   </tr>
   <tr>
     <td><strong>Eksml (SAX)</strong></td>
-    <td align="right"><strong>95,408 op/s</strong></td>
-    <td align="right"><strong>17,945 op/s</strong></td>
-    <td align="right"><strong>13,932 op/s</strong></td>
-    <td align="right"><strong>14,932 op/s</strong></td>
-    <td align="right"><strong>13,431 op/s</strong></td>
+    <td align="right"><strong>93,671 op/s</strong></td>
+    <td align="right"><strong>17,666 op/s</strong></td>
+    <td align="right"><strong>14,402 op/s</strong></td>
+    <td align="right"><strong>14,708 op/s</strong></td>
+    <td align="right"><strong>13,372 op/s</strong></td>
   </tr>
   <tr>
     <td>easysax</td>
-    <td align="right">66,897 op/s</td>
-    <td align="right">14,591 op/s</td>
-    <td align="right">11,235 op/s</td>
-    <td align="right">10,517 op/s</td>
-    <td align="right">10,604 op/s</td>
+    <td align="right">61,700 op/s</td>
+    <td align="right">14,253 op/s</td>
+    <td align="right">11,063 op/s</td>
+    <td align="right">10,639 op/s</td>
+    <td align="right">10,204 op/s</td>
   </tr>
   <tr>
     <td>Eksml (XmlParseStream)</td>
-    <td align="right">30,549 op/s</td>
-    <td align="right">9,794 op/s</td>
-    <td align="right">8,947 op/s</td>
-    <td align="right">4,457 op/s</td>
-    <td align="right">8,690 op/s</td>
+    <td align="right">28,981 op/s</td>
+    <td align="right">9,531 op/s</td>
+    <td align="right">8,924 op/s</td>
+    <td align="right">4,670 op/s</td>
+    <td align="right">8,646 op/s</td>
   </tr>
   <tr>
     <td>htmlparser2</td>
-    <td align="right">30,083 op/s</td>
-    <td align="right">7,384 op/s</td>
-    <td align="right">5,461 op/s</td>
-    <td align="right">6,912 op/s</td>
-    <td align="right">6,877 op/s</td>
+    <td align="right">28,402 op/s</td>
+    <td align="right">6,277 op/s</td>
+    <td align="right">5,386 op/s</td>
+    <td align="right">6,807 op/s</td>
+    <td align="right">6,802 op/s</td>
   </tr>
   <tr>
     <td>saxes</td>
-    <td align="right">26,185 op/s</td>
-    <td align="right">6,602 op/s</td>
-    <td align="right">6,780 op/s</td>
-    <td align="right">5,821 op/s</td>
-    <td align="right">5,634 op/s</td>
-  </tr>
-  <tr>
-    <td>sax</td>
-    <td align="right">14,988 op/s</td>
-    <td align="right">3,561 op/s</td>
-    <td align="right">3,044 op/s</td>
-    <td align="right">3,806 op/s</td>
-    <td align="right">2,922 op/s</td>
+    <td align="right">27,406 op/s</td>
+    <td align="right">6,519 op/s</td>
+    <td align="right">6,732 op/s</td>
+    <td align="right">5,510 op/s</td>
+    <td align="right">4,499 op/s</td>
   </tr>
   <tr>
     <td>@tuananh/sax-parser</td>
-    <td align="right">14,084 op/s</td>
-    <td align="right">3,918 op/s</td>
-    <td align="right">3,249 op/s</td>
-    <td align="right">2,394 op/s</td>
-    <td align="right">2,410 op/s</td>
+    <td align="right">25,737 op/s</td>
+    <td align="right">6,579 op/s</td>
+    <td align="right">6,085 op/s</td>
+    <td align="right">6,196 op/s</td>
+    <td align="right">4,189 op/s</td>
+  </tr>
+  <tr>
+    <td>sax</td>
+    <td align="right">14,841 op/s</td>
+    <td align="right">3,550 op/s</td>
+    <td align="right">3,016 op/s</td>
+    <td align="right">3,792 op/s</td>
+    <td align="right">2,909 op/s</td>
   </tr>
 </table>
 
-Eksml's SAX parser is **1.2-1.4x faster than easysax**, **2-3.6x faster than htmlparser2/saxes**, and **3.9-6.4x faster than sax**.
+Eksml's SAX parser is **1.2-1.5x faster than easysax**, **2-3.4x faster than htmlparser2/saxes**, and **3.9-6.3x faster than sax**.
 
 > [!note]
-> @tuananh/sax-parser is a native C++ addon; every `write()` crosses the JS↔C++ boundary, which dominates in chunked streaming.
+> @tuananh/sax-parser is a native C++ addon; marshalling event arguments across the JS↔C++ boundary dominates its chunked-streaming cost. Since 1.4 it skips argument materialization for zero-arity listeners, so the no-op benchmark callbacks declare parameters — every other parser materializes arguments unconditionally, and the comparison requires equal work.
 
 ## Raw Tokenization (no-op callbacks)
 
@@ -181,55 +181,55 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
   </tr>
   <tr>
     <td><strong>Eksml (SAX)</strong></td>
-    <td align="right"><strong>104,122 op/s</strong></td>
-    <td align="right"><strong>20,970 op/s</strong></td>
-    <td align="right"><strong>19,927 op/s</strong></td>
-    <td align="right"><strong>17,063 op/s</strong></td>
-    <td align="right"><strong>15,605 op/s</strong></td>
+    <td align="right"><strong>113,482 op/s</strong></td>
+    <td align="right"><strong>20,462 op/s</strong></td>
+    <td align="right"><strong>18,506 op/s</strong></td>
+    <td align="right"><strong>17,186 op/s</strong></td>
+    <td align="right"><strong>17,462 op/s</strong></td>
   </tr>
   <tr>
     <td>easysax</td>
-    <td align="right">73,389 op/s</td>
-    <td align="right">15,678 op/s</td>
-    <td align="right">11,899 op/s</td>
-    <td align="right">11,982 op/s</td>
-    <td align="right">11,933 op/s</td>
+    <td align="right">74,171 op/s</td>
+    <td align="right">15,868 op/s</td>
+    <td align="right">12,637 op/s</td>
+    <td align="right">11,124 op/s</td>
+    <td align="right">11,316 op/s</td>
   </tr>
   <tr>
     <td>saxes</td>
-    <td align="right">35,355 op/s</td>
-    <td align="right">9,492 op/s</td>
-    <td align="right">7,290 op/s</td>
-    <td align="right">8,870 op/s</td>
-    <td align="right">8,562 op/s</td>
+    <td align="right">33,493 op/s</td>
+    <td align="right">9,434 op/s</td>
+    <td align="right">8,241 op/s</td>
+    <td align="right">7,690 op/s</td>
+    <td align="right">7,885 op/s</td>
   </tr>
   <tr>
     <td>htmlparser2</td>
-    <td align="right">30,520 op/s</td>
-    <td align="right">7,647 op/s</td>
-    <td align="right">6,334 op/s</td>
-    <td align="right">6,475 op/s</td>
-    <td align="right">7,145 op/s</td>
-  </tr>
-  <tr>
-    <td>sax</td>
-    <td align="right">15,307 op/s</td>
-    <td align="right">3,679 op/s</td>
-    <td align="right">3,184 op/s</td>
-    <td align="right">3,928 op/s</td>
-    <td align="right">3,315 op/s</td>
+    <td align="right">28,743 op/s</td>
+    <td align="right">7,347 op/s</td>
+    <td align="right">6,309 op/s</td>
+    <td align="right">7,122 op/s</td>
+    <td align="right">7,081 op/s</td>
   </tr>
   <tr>
     <td>@tuananh/sax-parser</td>
-    <td align="right">12,907 op/s</td>
-    <td align="right">4,197 op/s</td>
-    <td align="right">3,217 op/s</td>
-    <td align="right">2,388 op/s</td>
-    <td align="right">2,608 op/s</td>
+    <td align="right">27,172 op/s</td>
+    <td align="right">7,496 op/s</td>
+    <td align="right">6,145 op/s</td>
+    <td align="right">6,001 op/s</td>
+    <td align="right">5,036 op/s</td>
+  </tr>
+  <tr>
+    <td>sax</td>
+    <td align="right">15,458 op/s</td>
+    <td align="right">3,997 op/s</td>
+    <td align="right">2,945 op/s</td>
+    <td align="right">3,664 op/s</td>
+    <td align="right">3,252 op/s</td>
   </tr>
 </table>
 
-Eksml's tokenizer is **1.3-1.7x faster than easysax**, **1.8-3.4x faster than saxes/htmlparser2**, and **4.3-6.8x faster than sax**.
+Eksml's tokenizer is **1.3-1.6x faster than easysax**, **2.2-4x faster than saxes/htmlparser2**, and **4.7-7.3x faster than sax**.
 
 > [!note]
 > easysax parses attributes lazily (`startNode` receives a `getAttr()` thunk); the benchmark invokes it so every parser materializes attributes, the work all other parsers do unconditionally for their open-tag events.
