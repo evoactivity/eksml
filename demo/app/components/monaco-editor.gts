@@ -36,6 +36,10 @@ export default class MonacoEditor extends Component<MonacoEditorSignature> {
   private destroyed = false;
 
   private setupEditor = modifier((element: HTMLDivElement) => {
+    if (import.meta.env.SSR) {
+      return;
+    }
+
     this.destroyed = false;
 
     const setup = async () => {
