@@ -734,41 +734,53 @@ describe('saxEngine', () => {
   // Issue 1 — Prototype pollution via plain {} for attributes
   // =========================================================================
   describe('prototype pollution (issue 1)', () => {
-    it('attributes objects have null prototype (no Object.prototype properties)', () => {
+    it('parsing attributes does not pollute Object.prototype', () => {
       const e = parseEvents('<foo bar="baz">x</foo>');
       const attrs = e.opens[0]!.attrs;
-      // Object.create(null) produces an object with no prototype
-      expect(Object.getPrototypeOf(attrs)).toBeNull();
+      expect(Object.prototype.hasOwnProperty.call(attrs, 'bar')).toBe(true);
+      expect(attrs.bar).toBe('baz');
+      expect(({} as Record<string, unknown>).bar).toBeUndefined();
     });
 
-    it('attribute named "constructor" does not shadow Object.prototype.constructor', () => {
+    it('attribute named "constructor" becomes an own property, not the inherited one', () => {
       const e = parseEvents('<foo constructor="bad">x</foo>');
       const attrs = e.opens[0]!.attrs;
-      // With Object.create(null), there is no inherited constructor
+      expect(Object.prototype.hasOwnProperty.call(attrs, 'constructor')).toBe(
+        true,
+      );
       expect(attrs.constructor).toBe('bad');
-      expect(Object.getPrototypeOf(attrs)).toBeNull();
+      // Object.prototype.constructor must be untouched
+      expect({}.constructor).toBe(Object);
     });
 
-    it('attribute named "__proto__" is stored as a plain key', () => {
+    it('attribute named "__proto__" is stored as an own key without mutating the prototype', () => {
       const e = parseEvents('<foo __proto__="polluted">x</foo>');
       const attrs = e.opens[0]!.attrs;
+      expect(Object.prototype.hasOwnProperty.call(attrs, '__proto__')).toBe(
+        true,
+      );
       expect(attrs['__proto__']).toBe('polluted');
-      // Should not actually pollute the prototype chain
-      expect(Object.getPrototypeOf(attrs)).toBeNull();
+      // The record's prototype chain and Object.prototype are unaffected
+      expect(Object.getPrototypeOf(attrs)).toBe(Object.prototype);
+      expect(
+        ({} as Record<string, unknown>)['polluted' as string],
+      ).toBeUndefined();
     });
 
-    it('DOCTYPE attributes have null prototype', () => {
-      const e = parseEvents('<!DOCTYPE html><root/>');
+    it('DOCTYPE attributes with dangerous names do not pollute Object.prototype', () => {
+      const e = parseEvents('<!DOCTYPE html "__proto__"><root/>');
       const attrs = e.doctypes[0]!.attrs;
-      expect(Object.getPrototypeOf(attrs)).toBeNull();
+      expect(Object.prototype.hasOwnProperty.call(attrs, '__proto__')).toBe(
+        true,
+      );
+      expect(Object.getPrototypeOf(attrs)).toBe(Object.prototype);
+      expect(({} as Record<string, unknown>).html).toBeUndefined();
     });
 
-    it('element with no explicit attributes still has null-prototype attributes', () => {
-      // When a tag opens, attributes = {} is created (line 339 in TAG_OPEN)
-      // Even if no attributes are parsed, the object should have null prototype
+    it('element with no explicit attributes gets an empty attributes record', () => {
       const e = parseEvents('<foo>x</foo>');
       const attrs = e.opens[0]!.attrs;
-      expect(Object.getPrototypeOf(attrs)).toBeNull();
+      expect(Object.keys(attrs)).toEqual([]);
     });
   });
 

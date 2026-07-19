@@ -33,6 +33,7 @@ import type {
   LossyObject,
   LossyMixedEntry,
 } from '#src/converters/lossy.ts';
+import { setOwnProperty } from '#src/utilities/setOwnProperty.ts';
 // @generated:char-codes:begin
 const DOLLAR = 36; // $
 // @generated:char-codes:end
@@ -157,12 +158,15 @@ function convertElement(
     } else if (key.charCodeAt(0) === DOLLAR) {
       // Attribute — strip the $ prefix
       if (attributes === null) {
-        attributes = Object.create(null) as Record<string, string | null>;
+        attributes = {};
       }
       const attributeName = key.substring(1);
       const attributeValue = objectValue[key];
-      attributes[attributeName] =
-        attributeValue === null ? null : String(attributeValue);
+      setOwnProperty(
+        attributes,
+        attributeName,
+        attributeValue === null ? null : String(attributeValue),
+      );
     } else {
       // Element child(ren)
       const childValue = objectValue[key]!;

@@ -52,6 +52,7 @@
  */
 
 import { parse, type TNode, type ParseOptions } from '#src/parser.ts';
+import { setOwnProperty } from '#src/utilities/setOwnProperty.ts';
 // @generated:char-codes:begin
 const DOLLAR = 36; // $
 // @generated:char-codes:end
@@ -98,8 +99,9 @@ function convertNode(node: TNode): LossyValue {
   }
 
   // --- Build object with attributes ---
-  // Use null-prototype object to prevent __proto__ / constructor pollution
-  const elementObject: LossyObject = Object.create(null);
+  // Plain object for V8 hidden-class sharing; dangerous keys (__proto__)
+  // are guarded by setOwnProperty and own-key checks use Object.hasOwn.
+  const elementObject: LossyObject = {};
 
   if (hasAttributes) {
     for (const key in attributes) {
@@ -165,8 +167,10 @@ function convertNode(node: TNode): LossyValue {
       if (mixed !== null) {
         mixed.push({ [tag]: convertedValue });
       } else {
-        if (!(tag in elementObject)) {
-          elementObject[tag] = convertedValue;
+        // Object.hasOwn (not `in`): on plain objects `in` sees inherited
+        // keys like `constructor`, which would corrupt sibling grouping.
+        if (!Object.hasOwn(elementObject, tag)) {
+          setOwnProperty(elementObject, tag, convertedValue);
         } else if (!Array.isArray(elementObject[tag])) {
           elementObject[tag] = [
             elementObject[tag] as LossyValue,
