@@ -30,7 +30,6 @@ export default defineConfig({
         'visualise',
         'benchmark',
       ],
-      rehydrate: true,
     }),
     removeCrossOrigin(),
   ],
