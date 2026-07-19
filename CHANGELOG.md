@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-07-19)
+
+* @eksml/xml 0.1.4 (patch)
+
+#### :bug: Bug Fix
+* `@eksml/xml`
+  * [#12](https://github.com/evoactivity/eksml/pull/12) perf: use plain records to avoid V8 IC churn from null prototypes ([@evoactivity](https://github.com/evoactivity))
+
+#### Committers: 1
+- Liam ([@evoactivity](https://github.com/evoactivity))
+
 ## Release (2026-07-18)
 
 * @eksml/xml 0.1.3 (patch)
