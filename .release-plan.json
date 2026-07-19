@@ -2,17 +2,21 @@
   "solution": {
     "@eksml/xml": {
       "impact": "patch",
-      "oldVersion": "0.1.4",
-      "newVersion": "0.1.5",
+      "oldVersion": "0.1.5",
+      "newVersion": "0.1.6",
       "tagName": "latest",
       "constraints": [
         {
           "impact": "patch",
           "reason": "Appears in changelog section :bug: Bug Fix"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :house: Internal"
         }
       ],
       "pkgJSONPath": "./eksml/package.json"
     }
   },
-  "description": "## Release (2026-07-19)\n\n* @eksml/xml 0.1.5 (patch)\n\n#### :bug: Bug Fix\n* `@eksml/xml`\n  * [#15](https://github.com/evoactivity/eksml/pull/15) perf(parser): specialized fast path for default-option parsing ([@evoactivity](https://github.com/evoactivity))\n\n#### :house: Internal\n* [#13](https://github.com/evoactivity/eksml/pull/13) feat: update SSR handling and dependencies in demo app ([@evoactivity](https://github.com/evoactivity))\n\n#### Committers: 1\n- Liam ([@evoactivity](https://github.com/evoactivity))\n"
+  "description": "## Release (2026-07-19)\n\n* @eksml/xml 0.1.6 (patch)\n\n#### :bug: Bug Fix\n* `@eksml/xml`\n  * [#16](https://github.com/evoactivity/eksml/pull/16) perf(sax): intern attribute names in the engine hot path ([@evoactivity](https://github.com/evoactivity))\n\n#### :house: Internal\n* `@eksml/xml`\n  * [#17](https://github.com/evoactivity/eksml/pull/17) bench: update @tuananh/sax-parser to 1.4 and police arity probing ([@evoactivity](https://github.com/evoactivity))\n\n#### Committers: 1\n- Liam ([@evoactivity](https://github.com/evoactivity))\n"
 }
