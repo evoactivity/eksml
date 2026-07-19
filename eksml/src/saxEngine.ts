@@ -161,6 +161,54 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
   let rawCloseTagMatchIndex = 0;
   let rawCloseTagTrailing = '';
 
+  // --- Attribute-name interning ---
+  //
+  // Attribute names repeat constantly (documents use a small vocabulary),
+  // and every fresh attribute-name substring handed to a keyed property
+  // store must be re-internalized by V8 before it can be used as a key.
+  // This small direct-mapped cache returns the same string instance for
+  // repeated names: repeat occurrences allocate nothing and the store
+  // receives an already-internalized key. Collisions simply overwrite the
+  // slot, so the table stays bounded and adapts to the current document.
+  //
+  // Scope is deliberate: interning is applied to attribute names only.
+  // Tag names are just handler arguments (never property keys), and
+  // benchmarks showed interning them is a significant net loss on
+  // element-dense documents (RSS -22%, POM -24%), while attribute-name
+  // interning gains 5-13% on attribute-heavy documents and is neutral on
+  // attribute-light ones.
+  const INTERN_SLOTS = 512; // power of two, so the mask below works
+  const INTERN_MAX_LENGTH = 32; // don't cache pathological name lengths
+  const internTable: (string | undefined)[] = new Array(INTERN_SLOTS);
+
+  function intern(source: string, start: number, end: number): string {
+    const length = end - start;
+    if (length === 0) return '';
+    if (length > INTERN_MAX_LENGTH) return source.substring(start, end);
+    // Cheap fingerprint (length + first + last char) instead of a full hash:
+    // the verify loop below catches collisions, so the hash only needs to
+    // spread typical vocabularies across slots, not be collision-free.
+    const hash =
+      (length << 10) ^
+      (source.charCodeAt(start) << 5) ^
+      source.charCodeAt(end - 1);
+    const slot = (hash ^ (hash >>> 16)) & (INTERN_SLOTS - 1);
+    const cached = internTable[slot];
+    if (cached !== undefined && cached.length === length) {
+      let matches = true;
+      for (let k = 0; k < length; k++) {
+        if (cached.charCodeAt(k) !== source.charCodeAt(start + k)) {
+          matches = false;
+          break;
+        }
+      }
+      if (matches) return cached;
+    }
+    const token = source.substring(start, end);
+    internTable[slot] = token;
+    return token;
+  }
+
   // --- Emit helpers ---
 
   function trimWhitespace(input: string): string {
@@ -508,7 +556,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                   i = chunkLength;
                   break fastPath;
                 }
-                const attrName = chunk.substring(i, k);
+                const attrName = intern(chunk, i, k);
                 c = chunk.charCodeAt(k);
                 i = k + 1;
                 if (c !== EQ) {
