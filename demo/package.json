@@ -21,9 +21,10 @@
     "./*": "./app/*"
   },
   "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "start": "vite",
+    "build": "pnpm run build:lib && vite build",
+    "build:lib": "pnpm --filter @eksml/xml build",
+    "dev": "pnpm run build:lib && vite",
+    "start": "pnpm run build:lib && vite",
     "lint:eslint": "eslint . --cache",
     "lint:eslint:fix": "eslint . --fix",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",
