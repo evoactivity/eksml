@@ -2,6 +2,20 @@
 
 ## Release (2026-07-19)
 
+* @eksml/xml 0.1.5 (patch)
+
+#### :bug: Bug Fix
+* `@eksml/xml`
+  * [#15](https://github.com/evoactivity/eksml/pull/15) perf(parser): specialized fast path for default-option parsing ([@evoactivity](https://github.com/evoactivity))
+
+#### :house: Internal
+* [#13](https://github.com/evoactivity/eksml/pull/13) feat: update SSR handling and dependencies in demo app ([@evoactivity](https://github.com/evoactivity))
+
+#### Committers: 1
+- Liam ([@evoactivity](https://github.com/evoactivity))
+
+## Release (2026-07-19)
+
 * @eksml/xml 0.1.4 (patch)
 
 #### :bug: Bug Fix
