@@ -34,10 +34,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Build library
-        run: pnpm build
-
       - name: Build demo
+        # Builds the library first via the demo's build:lib script
         run: pnpm build:demo
 
       - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
