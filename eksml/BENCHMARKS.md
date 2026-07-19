@@ -1,6 +1,6 @@
 # Benchmarks
 
-All benchmarks run via [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) on Node.js. Fixtures range from ~100 B to ~30 KB of real-world XML (RSS feeds, Atom feeds, SOAP envelopes, Maven POMs, XMLTV EPGs). Full benchmark source is in [`bench/`](./bench/).
+All benchmarks run via [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) on Node.js. Fixtures range from ~100 B to ~30 KB of real-world XML (RSS feeds, Atom feeds, SOAP envelopes, Maven POMs, XMLTV EPGs), plus a ~10 KB synthetic attribute-heavy stress document. Full benchmark source is in [`bench/`](./bench/).
 
 Run them yourself:
 
@@ -21,64 +21,71 @@ Parse an XML string into a tree structure.
     <th align="right">Atom (~3 KB)</th>
     <th align="right">POM (~5 KB)</th>
     <th align="right">EPG (~9 KB)</th>
+    <th align="right">attr-heavy (~10 KB)</th>
   </tr>
   <tr>
     <td><strong>Eksml</strong></td>
-    <td align="right"><strong>1,367,666 op/s</strong></td>
-    <td align="right"><strong>85,865 op/s</strong></td>
-    <td align="right"><strong>64,349 op/s</strong></td>
-    <td align="right"><strong>35,517 op/s</strong></td>
-    <td align="right"><strong>13,759 op/s</strong></td>
-    <td align="right"><strong>17,521 op/s</strong></td>
+    <td align="right"><strong>1,221,950 op/s</strong></td>
+    <td align="right"><strong>87,714 op/s</strong></td>
+    <td align="right"><strong>66,135 op/s</strong></td>
+    <td align="right"><strong>35,922 op/s</strong></td>
+    <td align="right"><strong>13,943 op/s</strong></td>
+    <td align="right"><strong>16,917 op/s</strong></td>
+    <td align="right"><strong>14,420 op/s</strong></td>
   </tr>
   <tr>
     <td>tXml</td>
-    <td align="right">933,149 op/s</td>
+    <td align="right">1,007,229 op/s</td>
     <td align="right">--</td>
-    <td align="right">48,483 op/s</td>
-    <td align="right">27,743 op/s</td>
-    <td align="right">10,431 op/s</td>
-    <td align="right">13,589 op/s</td>
+    <td align="right">45,389 op/s</td>
+    <td align="right">27,982 op/s</td>
+    <td align="right">9,383 op/s</td>
+    <td align="right">13,520 op/s</td>
+    <td align="right">11,369 op/s</td>
   </tr>
   <tr>
     <td>htmlparser2</td>
-    <td align="right">504,972 op/s</td>
-    <td align="right">24,360 op/s</td>
-    <td align="right">17,565 op/s</td>
-    <td align="right">9,660 op/s</td>
-    <td align="right">3,529 op/s</td>
-    <td align="right">4,902 op/s</td>
+    <td align="right">523,318 op/s</td>
+    <td align="right">25,204 op/s</td>
+    <td align="right">17,709 op/s</td>
+    <td align="right">10,151 op/s</td>
+    <td align="right">3,590 op/s</td>
+    <td align="right">4,942 op/s</td>
+    <td align="right">3,886 op/s</td>
   </tr>
   <tr>
     <td>fast-xml-parser</td>
-    <td align="right">166,395 op/s</td>
-    <td align="right">9,365 op/s</td>
-    <td align="right">7,477 op/s</td>
-    <td align="right">3,680 op/s</td>
-    <td align="right">1,339 op/s</td>
-    <td align="right">2,342 op/s</td>
+    <td align="right">171,272 op/s</td>
+    <td align="right">9,932 op/s</td>
+    <td align="right">7,520 op/s</td>
+    <td align="right">3,745 op/s</td>
+    <td align="right">1,360 op/s</td>
+    <td align="right">2,358 op/s</td>
+    <td align="right">1,282 op/s</td>
   </tr>
   <tr>
     <td>xml2js</td>
-    <td align="right">135,079 op/s</td>
-    <td align="right">9,673 op/s</td>
-    <td align="right">6,895 op/s</td>
-    <td align="right">3,912 op/s</td>
-    <td align="right">1,525 op/s</td>
-    <td align="right">2,068 op/s</td>
+    <td align="right">133,748 op/s</td>
+    <td align="right">9,809 op/s</td>
+    <td align="right">6,727 op/s</td>
+    <td align="right">3,951 op/s</td>
+    <td align="right">1,563 op/s</td>
+    <td align="right">2,080 op/s</td>
+    <td align="right">1,510 op/s</td>
   </tr>
   <tr>
     <td>@xmldom/xmldom</td>
-    <td align="right">93,167 op/s</td>
-    <td align="right">6,088 op/s</td>
-    <td align="right">4,924 op/s</td>
-    <td align="right">2,471 op/s</td>
-    <td align="right">853 op/s</td>
-    <td align="right">1,344 op/s</td>
+    <td align="right">89,126 op/s</td>
+    <td align="right">5,640 op/s</td>
+    <td align="right">5,112 op/s</td>
+    <td align="right">2,604 op/s</td>
+    <td align="right">895 op/s</td>
+    <td align="right">1,414 op/s</td>
+    <td align="right">702 op/s</td>
   </tr>
 </table>
 
-Eksml is **1.3-1.5x faster than tXml**, **2.7-4x faster than htmlparser2**, **7-10x faster than fast-xml-parser**, and **13-16x faster than xmldom**.
+Eksml is **1.2-1.5x faster than tXml**, **2.3-3.9x faster than htmlparser2**, **7-11x faster than fast-xml-parser**, and **12-21x faster than xmldom**.
 
 > [!note]
 > tXml crashed on the RSS fixture
@@ -94,59 +101,67 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
     <th align="right">EPG (~9 KB)</th>
     <th align="right">POM (~5 KB)</th>
     <th align="right">EPG 64 B stress</th>
+    <th align="right">attr-heavy (~10 KB)</th>
   </tr>
   <tr>
     <td><strong>Eksml (SAX)</strong></td>
-    <td align="right"><strong>83,958 op/s</strong></td>
-    <td align="right"><strong>17,182 op/s</strong></td>
-    <td align="right"><strong>14,213 op/s</strong></td>
-    <td align="right"><strong>13,714 op/s</strong></td>
+    <td align="right"><strong>95,408 op/s</strong></td>
+    <td align="right"><strong>17,945 op/s</strong></td>
+    <td align="right"><strong>13,932 op/s</strong></td>
+    <td align="right"><strong>14,932 op/s</strong></td>
+    <td align="right"><strong>13,431 op/s</strong></td>
   </tr>
   <tr>
     <td>easysax</td>
-    <td align="right">65,233 op/s</td>
-    <td align="right">14,352 op/s</td>
-    <td align="right">10,898 op/s</td>
-    <td align="right">11,075 op/s</td>
+    <td align="right">66,897 op/s</td>
+    <td align="right">14,591 op/s</td>
+    <td align="right">11,235 op/s</td>
+    <td align="right">10,517 op/s</td>
+    <td align="right">10,604 op/s</td>
   </tr>
   <tr>
     <td>Eksml (XmlParseStream)</td>
-    <td align="right">30,238 op/s</td>
-    <td align="right">8,432 op/s</td>
-    <td align="right">7,916 op/s</td>
-    <td align="right">4,679 op/s</td>
+    <td align="right">30,549 op/s</td>
+    <td align="right">9,794 op/s</td>
+    <td align="right">8,947 op/s</td>
+    <td align="right">4,457 op/s</td>
+    <td align="right">8,690 op/s</td>
   </tr>
   <tr>
     <td>htmlparser2</td>
-    <td align="right">29,467 op/s</td>
-    <td align="right">7,269 op/s</td>
-    <td align="right">5,977 op/s</td>
-    <td align="right">6,703 op/s</td>
+    <td align="right">30,083 op/s</td>
+    <td align="right">7,384 op/s</td>
+    <td align="right">5,461 op/s</td>
+    <td align="right">6,912 op/s</td>
+    <td align="right">6,877 op/s</td>
   </tr>
   <tr>
     <td>saxes</td>
-    <td align="right">28,439 op/s</td>
-    <td align="right">6,233 op/s</td>
-    <td align="right">6,621 op/s</td>
-    <td align="right">5,665 op/s</td>
+    <td align="right">26,185 op/s</td>
+    <td align="right">6,602 op/s</td>
+    <td align="right">6,780 op/s</td>
+    <td align="right">5,821 op/s</td>
+    <td align="right">5,634 op/s</td>
   </tr>
   <tr>
     <td>sax</td>
-    <td align="right">14,498 op/s</td>
-    <td align="right">3,757 op/s</td>
-    <td align="right">2,918 op/s</td>
-    <td align="right">3,724 op/s</td>
+    <td align="right">14,988 op/s</td>
+    <td align="right">3,561 op/s</td>
+    <td align="right">3,044 op/s</td>
+    <td align="right">3,806 op/s</td>
+    <td align="right">2,922 op/s</td>
   </tr>
   <tr>
     <td>@tuananh/sax-parser</td>
-    <td align="right">13,598 op/s</td>
-    <td align="right">4,283 op/s</td>
-    <td align="right">3,309 op/s</td>
-    <td align="right">2,444 op/s</td>
+    <td align="right">14,084 op/s</td>
+    <td align="right">3,918 op/s</td>
+    <td align="right">3,249 op/s</td>
+    <td align="right">2,394 op/s</td>
+    <td align="right">2,410 op/s</td>
   </tr>
 </table>
 
-Eksml's SAX parser is **1.2-1.3x faster than easysax**, **2-3x faster than htmlparser2/saxes**, and **3.5-6x faster than sax**.
+Eksml's SAX parser is **1.2-1.4x faster than easysax**, **2-3.6x faster than htmlparser2/saxes**, and **3.9-6.4x faster than sax**.
 
 > [!note]
 > @tuananh/sax-parser is a native C++ addon; every `write()` crosses the JS↔C++ boundary, which dominates in chunked streaming.
@@ -162,52 +177,59 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
     <th align="right">EPG (~9 KB)</th>
     <th align="right">POM (~5 KB)</th>
     <th align="right">EPG 64 B stress</th>
+    <th align="right">attr-heavy (~10 KB)</th>
   </tr>
   <tr>
     <td><strong>Eksml (SAX)</strong></td>
-    <td align="right"><strong>105,293 op/s</strong></td>
-    <td align="right"><strong>20,197 op/s</strong></td>
-    <td align="right"><strong>16,401 op/s</strong></td>
-    <td align="right"><strong>16,656 op/s</strong></td>
+    <td align="right"><strong>104,122 op/s</strong></td>
+    <td align="right"><strong>20,970 op/s</strong></td>
+    <td align="right"><strong>19,927 op/s</strong></td>
+    <td align="right"><strong>17,063 op/s</strong></td>
+    <td align="right"><strong>15,605 op/s</strong></td>
   </tr>
   <tr>
     <td>easysax</td>
-    <td align="right">66,841 op/s</td>
-    <td align="right">15,552 op/s</td>
-    <td align="right">12,501 op/s</td>
-    <td align="right">12,026 op/s</td>
+    <td align="right">73,389 op/s</td>
+    <td align="right">15,678 op/s</td>
+    <td align="right">11,899 op/s</td>
+    <td align="right">11,982 op/s</td>
+    <td align="right">11,933 op/s</td>
   </tr>
   <tr>
     <td>saxes</td>
-    <td align="right">31,800 op/s</td>
-    <td align="right">9,408 op/s</td>
-    <td align="right">8,328 op/s</td>
-    <td align="right">8,885 op/s</td>
+    <td align="right">35,355 op/s</td>
+    <td align="right">9,492 op/s</td>
+    <td align="right">7,290 op/s</td>
+    <td align="right">8,870 op/s</td>
+    <td align="right">8,562 op/s</td>
   </tr>
   <tr>
     <td>htmlparser2</td>
-    <td align="right">30,724 op/s</td>
-    <td align="right">7,404 op/s</td>
-    <td align="right">5,771 op/s</td>
-    <td align="right">7,058 op/s</td>
+    <td align="right">30,520 op/s</td>
+    <td align="right">7,647 op/s</td>
+    <td align="right">6,334 op/s</td>
+    <td align="right">6,475 op/s</td>
+    <td align="right">7,145 op/s</td>
   </tr>
   <tr>
     <td>sax</td>
-    <td align="right">14,970 op/s</td>
-    <td align="right">3,936 op/s</td>
-    <td align="right">3,144 op/s</td>
-    <td align="right">3,557 op/s</td>
+    <td align="right">15,307 op/s</td>
+    <td align="right">3,679 op/s</td>
+    <td align="right">3,184 op/s</td>
+    <td align="right">3,928 op/s</td>
+    <td align="right">3,315 op/s</td>
   </tr>
   <tr>
     <td>@tuananh/sax-parser</td>
-    <td align="right">14,904 op/s</td>
-    <td align="right">4,513 op/s</td>
-    <td align="right">3,463 op/s</td>
-    <td align="right">2,307 op/s</td>
+    <td align="right">12,907 op/s</td>
+    <td align="right">4,197 op/s</td>
+    <td align="right">3,217 op/s</td>
+    <td align="right">2,388 op/s</td>
+    <td align="right">2,608 op/s</td>
   </tr>
 </table>
 
-Eksml's tokenizer is **1.3-1.6x faster than easysax**, **1.9-3.4x faster than saxes/htmlparser2**, and **4.5-7x faster than sax**.
+Eksml's tokenizer is **1.3-1.7x faster than easysax**, **1.8-3.4x faster than saxes/htmlparser2**, and **4.3-6.8x faster than sax**.
 
 > [!note]
 > easysax parses attributes lazily (`startNode` receives a `getAttr()` thunk); the benchmark invokes it so every parser materializes attributes, the work all other parsers do unconditionally for their open-tag events.
@@ -227,85 +249,86 @@ Serialize a pre-parsed in-memory tree back to XML.
     <th align="right">EPG (~30 KB)</th>
   </tr>
   <tr>
-    <td><strong>tXml</strong></td>
-    <td align="right"><strong>2,485,611 op/s</strong></td>
-    <td align="right">--</td>
-    <td align="right"><strong>225,162 op/s</strong></td>
-    <td align="right"><strong>96,822 op/s</strong></td>
-    <td align="right">48,394 op/s</td>
-    <td align="right"><strong>43,455 op/s</strong></td>
-  </tr>
-  <tr>
-    <td>htmlparser2</td>
-    <td align="right">2,027,682 op/s</td>
-    <td align="right">100,516 op/s</td>
-    <td align="right">73,469 op/s</td>
-    <td align="right">30,964 op/s</td>
-    <td align="right">14,839 op/s</td>
-    <td align="right">15,867 op/s</td>
-  </tr>
-  <tr>
     <td><strong>Eksml (validate: false)</strong></td>
-    <td align="right">1,936,294 op/s</td>
-    <td align="right"><strong>357,848 op/s</strong></td>
-    <td align="right">204,989 op/s</td>
-    <td align="right">94,131 op/s</td>
-    <td align="right"><strong>64,960 op/s</strong></td>
-    <td align="right">36,462 op/s</td>
+    <td align="right"><strong>2,956,198 op/s</strong></td>
+    <td align="right"><strong>398,598 op/s</strong></td>
+    <td align="right">242,411 op/s</td>
+    <td align="right"><strong>105,006 op/s</strong></td>
+    <td align="right"><strong>67,255 op/s</strong></td>
+    <td align="right"><strong>50,517 op/s</strong></td>
+  </tr>
+  <tr>
+    <td>tXml</td>
+    <td align="right">2,594,809 op/s</td>
+    <td align="right">--</td>
+    <td align="right">205,646 op/s</td>
+    <td align="right">84,696 op/s</td>
+    <td align="right">44,360 op/s</td>
+    <td align="right">39,346 op/s</td>
   </tr>
   <tr>
     <td><strong>Eksml</strong></td>
-    <td align="right">1,749,947 op/s</td>
-    <td align="right">291,007 op/s</td>
-    <td align="right">176,028 op/s</td>
-    <td align="right">78,439 op/s</td>
-    <td align="right"><strong>53,619 op/s</strong></td>
-    <td align="right">32,253 op/s</td>
+    <td align="right">2,290,597 op/s</td>
+    <td align="right">319,812 op/s</td>
+    <td align="right"><strong>246,313 op/s</strong></td>
+    <td align="right">101,814 op/s</td>
+    <td align="right">53,384 op/s</td>
+    <td align="right">36,384 op/s</td>
+  </tr>
+  <tr>
+    <td>htmlparser2</td>
+    <td align="right">2,144,522 op/s</td>
+    <td align="right">103,346 op/s</td>
+    <td align="right">75,736 op/s</td>
+    <td align="right">31,101 op/s</td>
+    <td align="right">14,203 op/s</td>
+    <td align="right">17,500 op/s</td>
   </tr>
   <tr>
     <td>@xmldom/xmldom</td>
-    <td align="right">1,117,265 op/s</td>
-    <td align="right">45,503 op/s</td>
-    <td align="right">39,805 op/s</td>
-    <td align="right">15,015 op/s</td>
-    <td align="right">6,973 op/s</td>
-    <td align="right">10,019 op/s</td>
+    <td align="right">1,133,615 op/s</td>
+    <td align="right">42,888 op/s</td>
+    <td align="right">40,083 op/s</td>
+    <td align="right">14,805 op/s</td>
+    <td align="right">7,392 op/s</td>
+    <td align="right">10,422 op/s</td>
   </tr>
   <tr>
     <td>fast-xml-parser</td>
-    <td align="right">347,964 op/s</td>
-    <td align="right">23,913 op/s</td>
-    <td align="right">28,453 op/s</td>
-    <td align="right">11,452 op/s</td>
-    <td align="right">4,610 op/s</td>
-    <td align="right">3,609 op/s</td>
+    <td align="right">333,373 op/s</td>
+    <td align="right">24,028 op/s</td>
+    <td align="right">29,116 op/s</td>
+    <td align="right">12,108 op/s</td>
+    <td align="right">4,785 op/s</td>
+    <td align="right">3,645 op/s</td>
   </tr>
   <tr>
     <td>xml2js</td>
-    <td align="right">239,685 op/s</td>
-    <td align="right">15,809 op/s</td>
-    <td align="right">19,398 op/s</td>
-    <td align="right">8,295 op/s</td>
-    <td align="right">3,954 op/s</td>
-    <td align="right">3,898 op/s</td>
+    <td align="right">239,138 op/s</td>
+    <td align="right">17,067 op/s</td>
+    <td align="right">20,056 op/s</td>
+    <td align="right">8,778 op/s</td>
+    <td align="right">4,332 op/s</td>
+    <td align="right">4,174 op/s</td>
   </tr>
 </table>
 
-Eksml wins POM and RSS (where tXml crashes) and, with `validate: false`, ties tXml on Atom (0.97x); tXml keeps the lead on the small, SOAP, and EPG fixtures. Unlike tXml's stringify, Eksml's writer validates tag/attribute names by default, guards against circular references, and escapes mixed-quote attribute values — `validate: false` skips only the name validation. Eksml is **2-6x faster than @xmldom/xmldom** and **4-13x faster than fast-xml-parser/xml2js** at serialization on non-trivial documents.
+With `validate: false`, Eksml leads every fixture (tXml crashes on RSS). With validation on (the default), Eksml still wins RSS, SOAP, Atom, and POM; tXml edges out the small and EPG fixtures. Unlike tXml's stringify, Eksml's writer validates tag/attribute names by default, guards against circular references, and escapes mixed-quote attribute values — `validate: false` skips only the name validation. Eksml is **2-7x faster than @xmldom/xmldom** and **7-19x faster than fast-xml-parser/xml2js** at serialization on non-trivial documents.
 
 > [!note]
 > tXml crashed on the RSS fixture
 
 ## Fixtures
 
-| Fixture | Size     | Description                          |
-| ------- | -------- | ------------------------------------ |
-| small   | ~100 B   | Minimal XML element                  |
-| RSS     | ~3 KB    | Real-world RSS feed (`rss-feed.xml`) |
-| SOAP    | ~2-3 KB  | SOAP envelope (`soap-envelope.xml`)  |
-| Atom    | ~3-6 KB  | Atom feed (`atom-feed.xml`)          |
-| POM     | ~5-8 KB  | Maven POM (`pom.xml`)                |
-| EPG     | ~9-30 KB | XMLTV EPG listing (`xmltv-epg.xml`)  |
+| Fixture    | Size     | Description                                                                                                                        |
+| ---------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| small      | ~100 B   | Minimal XML element                                                                                                                |
+| RSS        | ~3 KB    | Real-world RSS feed (`rss-feed.xml`)                                                                                               |
+| SOAP       | ~2-3 KB  | SOAP envelope (`soap-envelope.xml`)                                                                                                |
+| Atom       | ~3-6 KB  | Atom feed (`atom-feed.xml`)                                                                                                        |
+| POM        | ~5-8 KB  | Maven POM (`pom.xml`)                                                                                                              |
+| EPG        | ~9-30 KB | XMLTV EPG listing (`xmltv-epg.xml`)                                                                                                |
+| attr-heavy | ~10 KB   | Synthetic stress doc mirroring @tuananh/sax-parser's benchmark: 158 tiny elements, one attribute each (`attr-heavy-synthetic.xml`) |
 
 Size varies between tables because parsing benchmarks measure input size while serialization benchmarks measure output size (which includes indentation and formatting).
 

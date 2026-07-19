@@ -41,6 +41,11 @@ const fixture = (name: string) =>
 const rssFeed = fixture('rss-feed.xml');
 const xmltvEpg = fixture('xmltv-epg.xml');
 const pomXml = fixture('pom.xml');
+// Mirrors the ~10 KB synthetic document from @tuananh/sax-parser's benchmark:
+// 158 tiny <item id="N"> elements, one attribute each, ~8 bytes per SAX
+// event. Attribute-dense worst case, complements the attribute-light real
+// fixtures above.
+const attrHeavy = fixture('attr-heavy-synthetic.xml');
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -58,6 +63,7 @@ const rssChunks256 = chunkString(rssFeed, 256);
 const xmltvChunks256 = chunkString(xmltvEpg, 256);
 const pomChunks256 = chunkString(pomXml, 256);
 const xmltvChunks64 = chunkString(xmltvEpg, 64);
+const attrHeavyChunks256 = chunkString(attrHeavy, 256);
 
 // No-op function used as callback
 const noop = () => {};
@@ -290,5 +296,34 @@ describe('tokenize: XMLTV EPG (64 B chunks — stress)', () => {
 
   bench('easysax', () => {
     easysaxStream(xmltvChunks64);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Attr-heavy synthetic (sax-parser bench mirror) — 256 B chunks
+// ---------------------------------------------------------------------------
+describe('tokenize: attr-heavy synthetic (256 B chunks)', () => {
+  bench('eksml', () => {
+    eksmlSaxEngine(attrHeavyChunks256);
+  });
+
+  bench('sax', () => {
+    saxStream(attrHeavyChunks256);
+  });
+
+  bench('saxes', () => {
+    saxesStream(attrHeavyChunks256);
+  });
+
+  bench('htmlparser2', () => {
+    htmlparser2Stream(attrHeavyChunks256);
+  });
+
+  bench('@tuananh/sax-parser', () => {
+    tuananhStream(attrHeavyChunks256);
+  });
+
+  bench('easysax', () => {
+    easysaxStream(attrHeavyChunks256);
   });
 });

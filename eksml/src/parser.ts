@@ -1,5 +1,6 @@
 import { decodeXML, decodeHTML } from 'entities';
 import { escapeRegExp } from '#src/utilities/escapeRegExp.ts';
+import { setOwnProperty } from '#src/utilities/setOwnProperty.ts';
 import { filter } from '#src/utilities/filter.ts';
 import {
   HTML_VOID_ELEMENTS,
@@ -344,9 +345,8 @@ export function parse(
                   break;
                 }
                 const token = S.substring(pos + 1, closePos);
-                if (declAttributes === null)
-                  declAttributes = Object.create(null);
-                declAttributes![token] = null;
+                if (declAttributes === null) declAttributes = {};
+                setOwnProperty(declAttributes!, token, null);
                 pos = closePos + 1;
                 continue;
               }
@@ -358,8 +358,8 @@ export function parse(
                 pos++;
               }
               const token = S.substring(tokenStart, pos);
-              if (declAttributes === null) declAttributes = Object.create(null);
-              declAttributes![token] = null;
+              if (declAttributes === null) declAttributes = {};
+              setOwnProperty(declAttributes!, token, null);
             }
 
             // Skip internal DTD subset ([...]) if present
@@ -460,8 +460,8 @@ export function parse(
               value = null;
               pos--;
             }
-            if (attributes === null) attributes = Object.create(null);
-            attributes![name] = value;
+            if (attributes === null) attributes = {};
+            setOwnProperty(attributes!, name, value);
           }
           pos++;
         }
@@ -636,8 +636,8 @@ export function parse(
           pos--;
         }
         // Allocate attributes object lazily on first attribute
-        if (attributes === null) attributes = Object.create(null);
-        attributes![name] = value;
+        if (attributes === null) attributes = {};
+        setOwnProperty(attributes!, name, value);
       }
       pos++;
     }

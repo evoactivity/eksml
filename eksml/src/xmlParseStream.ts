@@ -5,6 +5,7 @@ import {
   HTML_VOID_ELEMENTS,
   HTML_RAW_CONTENT_TAGS,
 } from '#src/utilities/htmlConstants.ts';
+import { setOwnProperty } from '#src/utilities/setOwnProperty.ts';
 import { convertItemToLossy } from '#src/converters/lossy.ts';
 import type { LossyValue } from '#src/converters/lossy.ts';
 import { convertItemToLossless } from '#src/converters/lossless.ts';
@@ -107,16 +108,17 @@ const SPACE = 32; // (space)
 /**
  * Convert a SAX `Attributes` object into the format used by `parse()`:
  * - Returns `null` when there are no attributes.
- * - Returns an `Object.create(null)` prototype-free record otherwise.
+ * - Returns a plain-object record otherwise (dangerous keys such as
+ *   `__proto__` are stored as own properties via setOwnProperty).
  */
 function toNodeAttributes(
   attributes: Attributes,
 ): Record<string, string | null> | null {
   const keys = Object.keys(attributes);
   if (keys.length === 0) return null;
-  const out: Record<string, string | null> = Object.create(null);
+  const out: Record<string, string | null> = {};
   for (let i = 0; i < keys.length; i++) {
-    out[keys[i]!] = attributes[keys[i]!]!;
+    setOwnProperty(out, keys[i]!, attributes[keys[i]!]!);
   }
   return out;
 }
@@ -130,7 +132,7 @@ function toNodeAttributes(
  * format that consumers expect.
  *
  * Returns `null` when the body contains no attributes, matching `parse()`.
- * Uses `Object.create(null)` for prototype-free attribute records.
+ * Uses plain-object records; dangerous keys are guarded by setOwnProperty.
  */
 function parsePIAttributes(body: string): Record<string, string | null> | null {
   let attributes: Record<string, string | null> | null = null;
@@ -171,7 +173,7 @@ function parsePIAttributes(body: string): Record<string, string | null> | null {
     const name = body.substring(nameStart, i);
 
     // Allocate attributes object lazily on first attribute
-    if (attributes === null) attributes = Object.create(null);
+    if (attributes === null) attributes = {};
 
     // Skip whitespace
     while (i < bodyLength) {
@@ -210,10 +212,14 @@ function parsePIAttributes(body: string): Record<string, string | null> | null {
           const valueStartIndex = i;
           const end = body.indexOf(quoteCharacter, i);
           if (end === -1) {
-            attributes![name] = body.substring(valueStartIndex);
+            setOwnProperty(attributes!, name, body.substring(valueStartIndex));
             i = bodyLength;
           } else {
-            attributes![name] = body.substring(valueStartIndex, end);
+            setOwnProperty(
+              attributes!,
+              name,
+              body.substring(valueStartIndex, end),
+            );
             i = end + 1;
           }
         } else {
@@ -230,14 +236,14 @@ function parsePIAttributes(body: string): Record<string, string | null> | null {
               break;
             i++;
           }
-          attributes![name] = body.substring(valueStartIndex, i);
+          setOwnProperty(attributes!, name, body.substring(valueStartIndex, i));
         }
       } else {
-        attributes![name] = null;
+        setOwnProperty(attributes!, name, null);
       }
     } else {
       // Boolean attribute (no value)
-      attributes![name] = null;
+      setOwnProperty(attributes!, name, null);
     }
   }
 

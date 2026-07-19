@@ -36,6 +36,10 @@ const atomFeed = fixture('atom-feed.xml');
 const xhtmlPage = fixture('xhtml-page.xml');
 const pomXml = fixture('pom.xml');
 const xmltvEpg = fixture('xmltv-epg.xml');
+// Mirrors the ~10 KB synthetic document from @tuananh/sax-parser's benchmark:
+// 158 tiny <item id="N"> elements, one attribute each. Attribute-dense worst
+// case, complements the attribute-light real fixtures above.
+const attrHeavy = fixture('attr-heavy-synthetic.xml');
 
 // Pre-instantiate reusable parser instances
 const fxp = new XMLParser();
@@ -237,5 +241,34 @@ describe('XMLTV EPG (~9 KB)', () => {
 
   bench('txml', () => {
     txmlParse(xmltvEpg);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Attr-heavy synthetic (sax-parser bench mirror) — ~10 KB
+// ---------------------------------------------------------------------------
+describe('attr-heavy synthetic (~10 KB)', () => {
+  bench('eksml', () => {
+    parse(attrHeavy);
+  });
+
+  bench('fast-xml-parser', () => {
+    fxp.parse(attrHeavy);
+  });
+
+  bench('xml2js', async () => {
+    await parseStringPromise(attrHeavy);
+  });
+
+  bench('@xmldom/xmldom', () => {
+    domParser.parseFromString(attrHeavy, 'text/xml');
+  });
+
+  bench('htmlparser2', () => {
+    parseDocument(attrHeavy);
+  });
+
+  bench('txml', () => {
+    txmlParse(attrHeavy);
   });
 });

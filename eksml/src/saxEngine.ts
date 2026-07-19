@@ -10,6 +10,8 @@
  * to extract tokens via a single substring() rather than per-character +=.
  */
 
+import { setOwnProperty } from '#src/utilities/setOwnProperty.ts';
+
 // @generated:char-codes:begin
 const GT = 62; // >
 const SLASH = 47; // /
@@ -147,11 +149,12 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
   let tagName = '';
   let attributeName = '';
   let attributeValue = '';
-  // Null-prototype object to prevent prototype pollution via attribute names
-  // (e.g. `__proto__`, `constructor`). The `{ __proto__: null }` literal keeps
-  // the null prototype while letting V8 use fast in-object properties, which
-  // `Object.create(null)` does not (it forces slow dictionary mode).
-  let attributes: Attributes = { __proto__: null } as Attributes;
+  // Plain object so V8 shares hidden classes across attribute records and
+  // the attribute store site stays monomorphic (null-prototype objects get a
+  // unique dictionary-mode map each, which permanently blocks optimization
+  // of this function). Pollution via dangerous attribute names is prevented
+  // by setOwnProperty(), which stores `__proto__` as an own property.
+  let attributes: Attributes = {};
   let special = '';
   let rawTag = '';
   let rawText = '';
@@ -227,7 +230,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
     const tagName = '!' + body.substring(0, i);
 
     // Parse space-separated tokens as null-valued attributes
-    const attributes: Attributes = Object.create(null);
+    const attributes: Attributes = {};
     while (i < bodyLength) {
       const charCode = body.charCodeAt(i);
       // Skip whitespace
@@ -246,10 +249,10 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         const closeIndex = body.indexOf(quoteChar, i + 1);
         if (closeIndex === -1) {
           // Unclosed quote — take rest as token
-          attributes[body.substring(i + 1)] = null;
+          setOwnProperty(attributes, body.substring(i + 1), null);
           break;
         }
-        attributes[body.substring(i + 1, closeIndex)] = null;
+        setOwnProperty(attributes, body.substring(i + 1, closeIndex), null);
         i = closeIndex + 1;
         continue;
       }
@@ -266,7 +269,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           break;
         i++;
       }
-      attributes[body.substring(tokenStart, i)] = null;
+      setOwnProperty(attributes, body.substring(tokenStart, i), null);
     }
 
     onDoctype!(tagName, attributes);
@@ -427,16 +430,14 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
             }
             if (j >= chunkLength) {
               tagName = chunk.substring(i);
-              attributes = { __proto__: null } as Attributes;
+              attributes = {};
               state = State.OPEN_TAG_NAME;
               i = chunkLength;
               break fastPath;
             }
             const name = chunk.substring(i, j);
             const attrs: Attributes | null =
-              handleOpenTag !== undefined
-                ? ({ __proto__: null } as Attributes)
-                : null;
+              handleOpenTag !== undefined ? ({} as Attributes) : null;
             let selfClosed = false;
             let c = chunk.charCodeAt(j);
 
@@ -453,10 +454,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
               body: while (true) {
                 if (i >= chunkLength) {
                   tagName = name;
-                  attributes =
-                    attrs !== null
-                      ? attrs
-                      : ({ __proto__: null } as Attributes);
+                  attributes = attrs !== null ? attrs : ({} as Attributes);
                   state = State.OPEN_TAG_BODY;
                   break fastPath;
                 }
@@ -473,10 +471,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                   i++;
                   if (i >= chunkLength) {
                     tagName = name;
-                    attributes =
-                      attrs !== null
-                        ? attrs
-                        : ({ __proto__: null } as Attributes);
+                    attributes = attrs !== null ? attrs : ({} as Attributes);
                     state = State.SELF_CLOSING;
                     break fastPath;
                   }
@@ -507,10 +502,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                 }
                 if (k >= chunkLength) {
                   tagName = name;
-                  attributes =
-                    attrs !== null
-                      ? attrs
-                      : ({ __proto__: null } as Attributes);
+                  attributes = attrs !== null ? attrs : ({} as Attributes);
                   attributeName = chunk.substring(i);
                   state = State.ATTR_NAME;
                   i = chunkLength;
@@ -521,11 +513,11 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                 i = k + 1;
                 if (c !== EQ) {
                   if (c === GT) {
-                    if (attrs !== null) attrs[attrName] = null;
+                    if (attrs !== null) setOwnProperty(attrs, attrName, null);
                     break emitTag;
                   }
                   if (c === SLASH) {
-                    if (attrs !== null) attrs[attrName] = null;
+                    if (attrs !== null) setOwnProperty(attrs, attrName, null);
                     i = k; // body's slash branch re-handles it
                     continue body;
                   }
@@ -538,10 +530,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                   }
                   if (i >= chunkLength) {
                     tagName = name;
-                    attributes =
-                      attrs !== null
-                        ? attrs
-                        : ({ __proto__: null } as Attributes);
+                    attributes = attrs !== null ? attrs : ({} as Attributes);
                     attributeName = attrName;
                     state = State.ATTR_AFTER_NAME;
                     break fastPath;
@@ -550,7 +539,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                   if (cc !== EQ) {
                     // boolean attribute; '>' ends tag, '/' or a new attr
                     // name is re-processed by the body loop
-                    if (attrs !== null) attrs[attrName] = null;
+                    if (attrs !== null) setOwnProperty(attrs, attrName, null);
                     if (cc === GT) {
                       i++;
                       break emitTag;
@@ -569,10 +558,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                 }
                 if (i >= chunkLength) {
                   tagName = name;
-                  attributes =
-                    attrs !== null
-                      ? attrs
-                      : ({ __proto__: null } as Attributes);
+                  attributes = attrs !== null ? attrs : ({} as Attributes);
                   attributeName = attrName;
                   state = State.ATTR_AFTER_EQ;
                   break fastPath;
@@ -585,10 +571,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                   );
                   if (quoteIndex === -1) {
                     tagName = name;
-                    attributes =
-                      attrs !== null
-                        ? attrs
-                        : ({ __proto__: null } as Attributes);
+                    attributes = attrs !== null ? attrs : ({} as Attributes);
                     attributeName = attrName;
                     attributeValue = chunk.substring(i + 1);
                     state =
@@ -600,12 +583,12 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                   // Mirror the baseline's stale attributeValue so the
                   // maxBufferSize check in write() behaves identically.
                   if (maxBufferSize !== undefined) attributeValue = value;
-                  if (attrs !== null) attrs[attrName] = value;
+                  if (attrs !== null) setOwnProperty(attrs, attrName, value);
                   i = quoteIndex + 1;
                   continue body;
                 }
                 if (c === GT) {
-                  if (attrs !== null) attrs[attrName] = '';
+                  if (attrs !== null) setOwnProperty(attrs, attrName, '');
                   i++;
                   break emitTag;
                 }
@@ -626,10 +609,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                 }
                 if (m >= chunkLength) {
                   tagName = name;
-                  attributes =
-                    attrs !== null
-                      ? attrs
-                      : ({ __proto__: null } as Attributes);
+                  attributes = attrs !== null ? attrs : ({} as Attributes);
                   attributeName = attrName;
                   attributeValue = chunk.substring(i);
                   state = State.ATTR_VALUE_UQ;
@@ -638,7 +618,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                 }
                 const value = chunk.substring(i, m);
                 if (maxBufferSize !== undefined) attributeValue = value;
-                if (attrs !== null) attrs[attrName] = value;
+                if (attrs !== null) setOwnProperty(attrs, attrName, value);
                 c = chunk.charCodeAt(m);
                 if (c === GT) {
                   i = m + 1;
@@ -690,7 +670,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           } else {
             state = State.OPEN_TAG_NAME;
             tagName = '';
-            attributes = { __proto__: null } as Attributes;
+            attributes = {};
           }
           continue;
         }
@@ -784,12 +764,12 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
             state = State.ATTR_AFTER_EQ;
             i = j + 1;
           } else if (charCode === GT) {
-            attributes[attributeName] = null;
+            setOwnProperty(attributes, attributeName, null);
             state = State.TEXT;
             i = j + 1;
             finishOpenTag();
           } else if (charCode === SLASH) {
-            attributes[attributeName] = null;
+            setOwnProperty(attributes, attributeName, null);
             state = State.SELF_CLOSING;
             i = j + 1;
           } else {
@@ -816,17 +796,17 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           ) {
             i++;
           } else if (charCode === GT) {
-            attributes[attributeName] = null;
+            setOwnProperty(attributes, attributeName, null);
             state = State.TEXT;
             i++;
             finishOpenTag();
           } else if (charCode === SLASH) {
-            attributes[attributeName] = null;
+            setOwnProperty(attributes, attributeName, null);
             state = State.SELF_CLOSING;
             i++;
           } else {
             // New attribute — boolean (no value)
-            attributes[attributeName] = null;
+            setOwnProperty(attributes, attributeName, null);
             state = State.ATTR_NAME;
             attributeName = '';
           }
@@ -854,7 +834,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           ) {
             i++;
           } else if (charCode === GT) {
-            attributes[attributeName] = '';
+            setOwnProperty(attributes, attributeName, '');
             state = State.TEXT;
             i++;
             finishOpenTag();
@@ -877,7 +857,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           } else {
             if (quoteIndex > i)
               attributeValue += chunk.substring(i, quoteIndex);
-            attributes[attributeName] = attributeValue;
+            setOwnProperty(attributes, attributeName, attributeValue);
             state = State.OPEN_TAG_BODY;
             i = quoteIndex + 1;
           }
@@ -895,7 +875,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           } else {
             if (quoteIndex > i)
               attributeValue += chunk.substring(i, quoteIndex);
-            attributes[attributeName] = attributeValue;
+            setOwnProperty(attributes, attributeName, attributeValue);
             state = State.OPEN_TAG_BODY;
             i = quoteIndex + 1;
           }
@@ -927,7 +907,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           }
 
           const charCode = chunk.charCodeAt(j);
-          attributes[attributeName] = attributeValue;
+          setOwnProperty(attributes, attributeName, attributeValue);
           if (charCode === GT) {
             state = State.TEXT;
             i = j + 1;

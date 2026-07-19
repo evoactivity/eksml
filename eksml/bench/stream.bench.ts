@@ -50,6 +50,10 @@ const fixture = (name: string) =>
 const rssFeed = fixture('rss-feed.xml');
 const xmltvEpg = fixture('xmltv-epg.xml');
 const pomXml = fixture('pom.xml');
+// Mirrors the ~10 KB synthetic document from @tuananh/sax-parser's benchmark:
+// 158 tiny <item id="N"> elements, one attribute each. Attribute-dense worst
+// case, complements the attribute-light real fixtures above.
+const attrHeavy = fixture('attr-heavy-synthetic.xml');
 
 // ---------------------------------------------------------------------------
 // Shared tree node type (equivalent to eksml's TNode)
@@ -76,6 +80,7 @@ const rssChunks256 = chunkString(rssFeed, 256);
 const xmltvChunks256 = chunkString(xmltvEpg, 256);
 const pomChunks256 = chunkString(pomXml, 256);
 const xmltvChunks64 = chunkString(xmltvEpg, 64);
+const attrHeavyChunks256 = chunkString(attrHeavy, 256);
 
 // Shared tree-builder state, reset before each run.
 let roots: (Node | string)[] = [];
@@ -466,5 +471,42 @@ describe('stream: XMLTV EPG (64 B chunks — stress)', () => {
 
   bench('fast-xml-parser (sync, no streaming)', () => {
     fxpSync(xmltvEpg);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Attr-heavy synthetic (sax-parser bench mirror) — chunked streaming
+// ---------------------------------------------------------------------------
+describe('stream: attr-heavy synthetic (256 B chunks)', () => {
+  bench('eksml (XmlParseStream)', async () => {
+    await eksmlStream(attrHeavyChunks256);
+  });
+
+  bench('eksml (SAX)', () => {
+    eksmlSaxEngine(attrHeavyChunks256);
+  });
+
+  bench('sax', () => {
+    saxStream(attrHeavyChunks256);
+  });
+
+  bench('saxes', () => {
+    saxesStream(attrHeavyChunks256);
+  });
+
+  bench('htmlparser2', () => {
+    htmlparser2Stream(attrHeavyChunks256);
+  });
+
+  bench('@tuananh/sax-parser', () => {
+    tuananhStream(attrHeavyChunks256);
+  });
+
+  bench('easysax', () => {
+    easysaxStream(attrHeavyChunks256);
+  });
+
+  bench('fast-xml-parser (sync, no streaming)', () => {
+    fxpSync(attrHeavy);
   });
 });
