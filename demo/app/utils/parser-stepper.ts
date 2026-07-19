@@ -2,13 +2,28 @@
  * A stepping XML parser that yields at each interesting point in the parse,
  * designed for the visualisation demo.
  *
- * This is a direct copy of the real parser's parseChildren loop (parser.ts)
- * with snap() calls inserted at each interesting point. Features not needed
- * for visualisation (strict mode, decode, trimWhitespace, selfClosingTags,
+ * The real parser (eksml/src/parser.ts) has two implementations of the same
+ * algorithm: `parseRootFast` (the specialized default-options path) and
+ * `parseChildren` inside the general path. Both make identical scanning
+ * decisions and produce identical trees; they differ only in mechanics
+ * (the fast path defers whitespace-only text as index ranges, verifies
+ * close tags with an offset range-compare instead of a substring, and has
+ * an inline name="value" attribute shortcut). This stepper mirrors the
+ * shared algorithm, following the general path's structure because it is
+ * the easier of the two to read alongside; step descriptions call out the
+ * fast-path mechanics where they differ. Features not needed for
+ * visualisation (strict mode, decode, trimWhitespace, selfClosingTags,
  * rawContentTags, keepComments, filter) are stripped.
  *
- * When the real parser changes, this file should be updated to match by
- * re-copying and re-adding the snap() calls.
+ * When the real parser's ALGORITHM changes (what is scanned, matched, or
+ * emitted — not micro-optimizations), this file must be updated to match.
+ * Cross-references below name functions and branches rather than line
+ * numbers so they survive refactors. Behavioral contract last verified
+ * against parser.ts @ perf(parser) fast-path rewrite: mismatched close
+ * tags throw even in non-strict mode; unclosed constructs recover by
+ * unwinding; CDATA matching is case-insensitive; comments are dropped
+ * unless keepComments; DOCTYPE internal subsets are skipped; PIs
+ * self-close; whitespace-only text is dropped in element-only containers.
  */
 
 export type Phase =
@@ -184,7 +199,7 @@ export function generateSteps(S: string): Step[] {
   while (S[pos]) {
     if (S.charCodeAt(pos) === LT) {
       if (S.charCodeAt(pos + 1) === SLASH) {
-        // ---- Close tag ---- (parser.ts line ~224)
+        // ---- Close tag ---- (parseChildren: close-tag branch; parseRootFast verifies the name with an offset range-compare instead of a substring)
         const closeStart = pos + 2;
         const startPos = pos;
 
@@ -204,7 +219,7 @@ export function generateSteps(S: string): Step[] {
             },
           );
 
-          // Unwind entire stack (mirrors parser.ts line ~234-247)
+          // Unwind entire stack (mirrors parseChildren: unclosed-close-tag unwind)
           while (stack.length > 0) {
             stack.pop();
             nodesEmitted++;
@@ -220,7 +235,7 @@ export function generateSteps(S: string): Step[] {
 
         const closeTag = S.substring(closeStart, pos).trimEnd();
 
-        // Real parser always throws on mismatch (parser.ts line ~251-254)
+        // Real parser always throws on mismatch (parseChildren & parseRootFast: mismatch check)
         // even in non-strict mode. Show this as an error step.
         const expectedTag = stack[stack.length - 1]?.tagName ?? '';
 
@@ -240,7 +255,7 @@ export function generateSteps(S: string): Step[] {
           currentTagName: closeTag,
         });
 
-        // Pop the stack (mirrors parser.ts line ~267)
+        // Pop the stack (mirrors parseChildren: frame pop)
         if (stack.length > 0) {
           stack.pop();
         }
@@ -253,11 +268,11 @@ export function generateSteps(S: string): Step[] {
           nodesEmitted++;
         }
 
-        if (pos + 1) pos += 1; // skip > (mirrors parser.ts line 257)
+        if (pos + 1) pos += 1; // skip > (mirrors parseChildren: skip >)
         continue;
       } else if (S.charCodeAt(pos + 1) === BANG) {
         if (S.charCodeAt(pos + 2) === DASH) {
-          // ---- Comment ---- (parser.ts line ~283)
+          // ---- Comment ---- (parseChildren: comment branch)
           const startCommentPos = pos;
 
           pos = S.indexOf('-->', pos + 3);
@@ -282,14 +297,14 @@ export function generateSteps(S: string): Step[] {
             commentParent.textCount++;
           }
 
-          pos++; // mirrors parser.ts line 400
+          pos++; // mirrors parseChildren: trailing pos++
           continue;
         } else if (
           S.charCodeAt(pos + 2) === LBRACKET &&
           S.charCodeAt(pos + 8) === LBRACKET &&
           S.substring(pos + 3, pos + 8).toLowerCase() === 'cdata'
         ) {
-          // ---- CDATA ---- (parser.ts line ~300)
+          // ---- CDATA ---- (parseChildren: CDATA branch — case-insensitive match)
           const cdataStart = pos;
           const cdataEndIndex = S.indexOf(']]>', pos);
 
@@ -312,10 +327,10 @@ export function generateSteps(S: string): Step[] {
             cdataParent.textCount++;
           }
 
-          continue; // mirrors parser.ts line 314 (continue skips line 400 pos++)
+          continue; // mirrors parseChildren: CDATA continue (skips the trailing pos++)
         } else {
           // ---- Declaration (<!DOCTYPE ...>, <!ENTITY ...>) ----
-          // (parser.ts line ~316)
+          // (parseChildren: declaration branch)
           const declStart = pos;
 
           pos += 2; // skip '<!'
@@ -420,7 +435,7 @@ export function generateSteps(S: string): Step[] {
           }
 
           // Skip internal DTD subset ([...]) if present
-          // (parser.ts line ~365)
+          // (parseChildren: DOCTYPE internal-subset skip)
           if (pos < S.length && S.charCodeAt(pos) === LBRACKET) {
             const subsetStart = pos;
 
@@ -472,12 +487,12 @@ export function generateSteps(S: string): Step[] {
           }
         }
 
-        pos++; // mirrors parser.ts line 400
+        pos++; // mirrors parseChildren: trailing pos++
         continue;
       }
 
       // ---- Open tag (including processing instructions <?xml ...?>) ----
-      // (parser.ts line ~403)
+      // (parseChildren: open-tag name scan)
       const tagStart = pos;
 
       snap('open-tag-start', 'Found < — beginning of tag', [pos, pos + 1]);
@@ -492,7 +507,7 @@ export function generateSteps(S: string): Step[] {
 
       let attributes: Record<string, string | null> | null = null;
 
-      // ---- Attribute loop ---- (parser.ts line ~409)
+      // ---- Attribute loop ---- (parseChildren: attribute loop; parseRootFast adds an inline name="value" shortcut)
       // Copied verbatim: while (S.charCodeAt(pos) !== GT && S[pos])
       while (S.charCodeAt(pos) !== GT && S[pos]) {
         const charCode = S.charCodeAt(pos);
@@ -519,7 +534,7 @@ export function generateSteps(S: string): Step[] {
             },
           );
 
-          // search beginning of the string (parser.ts line ~419)
+          // search beginning of the string (parseChildren: attr-name scan)
           let code = S.charCodeAt(pos);
 
           while (
@@ -548,7 +563,7 @@ export function generateSteps(S: string): Step[] {
 
             if (pos === -1) {
               // Unterminated attribute string — emit node with what we have
-              // and unwind entire stack (mirrors parser.ts line ~439-455)
+              // and unwind entire stack (mirrors parseChildren: unterminated-attribute unwind)
               if (attributes === null)
                 attributes = Object.create(null) as Record<
                   string,
@@ -598,7 +613,7 @@ export function generateSteps(S: string): Step[] {
             );
           } else {
             value = null;
-            pos--; // (parser.ts line 460)
+            pos--; // (parseChildren: boolean-attribute backtrack)
           }
 
           if (attributes === null)
@@ -606,11 +621,11 @@ export function generateSteps(S: string): Step[] {
           attributes[name] = value;
         }
 
-        pos++; // unconditional (parser.ts line 465)
+        pos++; // unconditional (parseChildren: unconditional pos++)
       }
 
       // After the attribute loop, pos is at '>' (or past end)
-      // (parser.ts line ~471)
+      // (parseChildren: self-closing/children decision)
 
       // Determine if this node has children or is self-closing
       if (
@@ -619,7 +634,7 @@ export function generateSteps(S: string): Step[] {
         tagName.charCodeAt(0) !== BANG
       ) {
         // Node has children — push frame and descend
-        // (parser.ts line ~497: selfClosingSet check omitted for visualiser)
+        // (parseChildren: descend into children; selfClosingSet check omitted for visualiser)
         snap(
           'open-tag-end',
           `Opened <${tagName}> — descending into children`,
@@ -627,7 +642,7 @@ export function generateSteps(S: string): Step[] {
           { currentTagName: tagName, currentAttributes: attributes ?? {} },
         );
 
-        pos++; // skip > (parser.ts line 499)
+        pos++; // skip > (parseChildren: skip >)
         stack.push({
           tagName,
           attributes: attributes ?? {},
@@ -636,7 +651,7 @@ export function generateSteps(S: string): Step[] {
         });
       } else {
         // Explicit self-closing (/>) or processing instruction (?>) or declaration
-        // (parser.ts line ~513)
+        // (parseChildren: self-close/PI emit)
         const isPI = tagName.charCodeAt(0) === QUESTION;
         const label = isPI
           ? `Processing instruction: <${tagName}?>`
@@ -647,7 +662,7 @@ export function generateSteps(S: string): Step[] {
           currentAttributes: attributes ?? {},
         });
 
-        pos++; // skip > (parser.ts line 515)
+        pos++; // skip > (parseChildren: skip >)
 
         const parent = stack[stack.length - 1];
 
@@ -658,7 +673,7 @@ export function generateSteps(S: string): Step[] {
         }
       }
     } else {
-      // ---- Text content ---- (parser.ts line ~523)
+      // ---- Text content ---- (parseChildren: text branch; parseRootFast fuses the scan with ws classification)
       const textStart = pos;
       const text = parseText();
 
@@ -667,7 +682,7 @@ export function generateSteps(S: string): Step[] {
         const label =
           trimmed.length > 0
             ? `Text: "${truncate(trimmed, 50)}"`
-            : 'Whitespace text node';
+            : 'Whitespace-only text — dropped later unless its container is text-only';
 
         snap(trimmed.length > 0 ? 'reading-text' : 'scanning', label, [
           textStart,
@@ -687,12 +702,12 @@ export function generateSteps(S: string): Step[] {
         }
       }
 
-      pos++; // advance to '<' (parser.ts line 536)
+      pos++; // advance to '<' (parseChildren: advance to <)
     }
   }
 
   // Unwind any remaining stack frames — unclosed tags
-  // (mirrors parser.ts line ~544-556)
+  // (mirrors parseChildren: end-of-input unwind)
   while (stack.length > 0) {
     stack.pop();
     nodesEmitted++;
