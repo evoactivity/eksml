@@ -25,67 +25,67 @@ Parse an XML string into a tree structure.
   </tr>
   <tr>
     <td><strong>Eksml</strong></td>
-    <td align="right"><strong>1,221,950 op/s</strong></td>
-    <td align="right"><strong>87,714 op/s</strong></td>
-    <td align="right"><strong>66,135 op/s</strong></td>
-    <td align="right"><strong>35,922 op/s</strong></td>
-    <td align="right"><strong>13,943 op/s</strong></td>
-    <td align="right"><strong>16,917 op/s</strong></td>
-    <td align="right"><strong>14,420 op/s</strong></td>
+    <td align="right"><strong>1,687,050 op/s</strong></td>
+    <td align="right"><strong>137,518 op/s</strong></td>
+    <td align="right"><strong>91,376 op/s</strong></td>
+    <td align="right"><strong>52,689 op/s</strong></td>
+    <td align="right"><strong>20,580 op/s</strong></td>
+    <td align="right"><strong>23,075 op/s</strong></td>
+    <td align="right"><strong>18,117 op/s</strong></td>
   </tr>
   <tr>
     <td>tXml</td>
-    <td align="right">1,007,229 op/s</td>
+    <td align="right">880,187 op/s</td>
     <td align="right">--</td>
-    <td align="right">45,389 op/s</td>
-    <td align="right">27,982 op/s</td>
-    <td align="right">9,383 op/s</td>
-    <td align="right">13,520 op/s</td>
-    <td align="right">11,369 op/s</td>
+    <td align="right">49,093 op/s</td>
+    <td align="right">23,746 op/s</td>
+    <td align="right">11,110 op/s</td>
+    <td align="right">11,358 op/s</td>
+    <td align="right">10,858 op/s</td>
   </tr>
   <tr>
     <td>htmlparser2</td>
-    <td align="right">523,318 op/s</td>
-    <td align="right">25,204 op/s</td>
-    <td align="right">17,709 op/s</td>
-    <td align="right">10,151 op/s</td>
-    <td align="right">3,590 op/s</td>
-    <td align="right">4,942 op/s</td>
-    <td align="right">3,886 op/s</td>
+    <td align="right">540,625 op/s</td>
+    <td align="right">24,978 op/s</td>
+    <td align="right">16,564 op/s</td>
+    <td align="right">9,935 op/s</td>
+    <td align="right">3,237 op/s</td>
+    <td align="right">4,910 op/s</td>
+    <td align="right">3,935 op/s</td>
   </tr>
   <tr>
     <td>fast-xml-parser</td>
-    <td align="right">171,272 op/s</td>
-    <td align="right">9,932 op/s</td>
-    <td align="right">7,520 op/s</td>
-    <td align="right">3,745 op/s</td>
-    <td align="right">1,360 op/s</td>
-    <td align="right">2,358 op/s</td>
-    <td align="right">1,282 op/s</td>
+    <td align="right">174,929 op/s</td>
+    <td align="right">9,687 op/s</td>
+    <td align="right">7,397 op/s</td>
+    <td align="right">3,277 op/s</td>
+    <td align="right">1,332 op/s</td>
+    <td align="right">2,193 op/s</td>
+    <td align="right">1,113 op/s</td>
   </tr>
   <tr>
     <td>xml2js</td>
-    <td align="right">133,748 op/s</td>
-    <td align="right">9,809 op/s</td>
-    <td align="right">6,727 op/s</td>
-    <td align="right">3,951 op/s</td>
-    <td align="right">1,563 op/s</td>
-    <td align="right">2,080 op/s</td>
-    <td align="right">1,510 op/s</td>
+    <td align="right">120,589 op/s</td>
+    <td align="right">8,880 op/s</td>
+    <td align="right">7,095 op/s</td>
+    <td align="right">3,905 op/s</td>
+    <td align="right">1,591 op/s</td>
+    <td align="right">2,060 op/s</td>
+    <td align="right">1,275 op/s</td>
   </tr>
   <tr>
     <td>@xmldom/xmldom</td>
-    <td align="right">89,126 op/s</td>
-    <td align="right">5,640 op/s</td>
-    <td align="right">5,112 op/s</td>
-    <td align="right">2,604 op/s</td>
-    <td align="right">895 op/s</td>
-    <td align="right">1,414 op/s</td>
-    <td align="right">702 op/s</td>
+    <td align="right">96,819 op/s</td>
+    <td align="right">6,170 op/s</td>
+    <td align="right">5,033 op/s</td>
+    <td align="right">2,563 op/s</td>
+    <td align="right">881 op/s</td>
+    <td align="right">1,398 op/s</td>
+    <td align="right">718 op/s</td>
   </tr>
 </table>
 
-Eksml is **1.2-1.5x faster than tXml**, **2.3-3.9x faster than htmlparser2**, **7-11x faster than fast-xml-parser**, and **12-21x faster than xmldom**.
+Eksml is **1.7-2.2x faster than tXml**, **3-6x faster than htmlparser2**, **10-16x faster than fast-xml-parser**, and **16-25x faster than xmldom**.
 
 > [!note]
 > tXml crashed on the RSS fixture
