@@ -2,6 +2,21 @@
 
 ## Release (2026-07-19)
 
+* @eksml/xml 0.1.6 (patch)
+
+#### :bug: Bug Fix
+* `@eksml/xml`
+  * [#16](https://github.com/evoactivity/eksml/pull/16) perf(sax): intern attribute names in the engine hot path ([@evoactivity](https://github.com/evoactivity))
+
+#### :house: Internal
+* `@eksml/xml`
+  * [#17](https://github.com/evoactivity/eksml/pull/17) bench: update @tuananh/sax-parser to 1.4 and police arity probing ([@evoactivity](https://github.com/evoactivity))
+
+#### Committers: 1
+- Liam ([@evoactivity](https://github.com/evoactivity))
+
+## Release (2026-07-19)
+
 * @eksml/xml 0.1.5 (patch)
 
 #### :bug: Bug Fix
