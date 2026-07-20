@@ -289,6 +289,44 @@ describe('XmlParseStream', () => {
   });
 });
 
+describe('XmlParseStream bufferSize option', () => {
+  it('produces the same output as unbatched parsing for tiny chunks', async () => {
+    const xml = readFileSync(
+      resolve(__dirname, 'fixtures', 'rss-feed.xml'),
+      'utf-8',
+    );
+    const chunks: string[] = [];
+    for (let i = 0; i < xml.length; i += 64) {
+      chunks.push(xml.slice(i, i + 64));
+    }
+    const unbatched = await collect(new XmlParseStream(), [xml]);
+    const batched = await collect(
+      new XmlParseStream({ bufferSize: 1024 }),
+      chunks,
+    );
+    expect(batched).toEqual(unbatched);
+  });
+
+  it('flushes buffered input smaller than bufferSize on close', async () => {
+    const stream = new XmlParseStream({ bufferSize: 4096 });
+    const results = await collect(stream, ['<a>1</a>', '<b>2</b>']);
+    const tags = results
+      .filter((r): r is TNode => typeof r === 'object')
+      .map((r) => r.tagName);
+    expect(tags).toEqual(['a', 'b']);
+  });
+
+  it('works together with the offset option', async () => {
+    const stream = new XmlParseStream({ offset: 4, bufferSize: 1024 });
+    const results = await collect(stream, ['JU', 'NK<a>t', 'ext</a>']);
+    const a = results.find(
+      (r) => typeof r === 'object' && r.tagName === 'a',
+    ) as TNode;
+    expect(a).toBeDefined();
+    expect(a.children).toEqual(['text']);
+  });
+});
+
 // =================================================================
 // Helper: split a string into chunks of a given size
 // =================================================================

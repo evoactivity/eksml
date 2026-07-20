@@ -90,6 +90,18 @@ export interface XmlParseStreamOptions {
    *   (`LosslessEntry`).
    */
   output?: 'dom' | 'lossy' | 'lossless';
+  /**
+   * Coalesce incoming chunks into an internal buffer of at least this many
+   * characters before running the parser. Sources that deliver very small
+   * chunks (tens of bytes) spend most of their time on per-chunk overhead;
+   * batching them into ~1-4 KB parses at near full-document speed.
+   *
+   * The trade-off is emission latency: parsed nodes are only produced once
+   * the buffer fills (or the stream flushes), so a slow trickle of input
+   * delays output by up to `bufferSize` characters. Leave unset (default)
+   * to parse every chunk as it arrives.
+   */
+  bufferSize?: number;
 }
 
 // Re-export converter output types so consumers can import them from the
@@ -108,19 +120,21 @@ const SPACE = 32; // (space)
 /**
  * Convert a SAX `Attributes` object into the format used by `parse()`:
  * - Returns `null` when there are no attributes.
- * - Returns a plain-object record otherwise (dangerous keys such as
- *   `__proto__` are stored as own properties via setOwnProperty).
+ * - Returns the engine's record as-is otherwise. The engine hands out a
+ *   fresh object per tag and never mutates it after the callback, so the
+ *   stream takes ownership directly instead of copying. Dangerous keys such
+ *   as `__proto__` are already stored as own properties by the engine.
  */
 function toNodeAttributes(
   attributes: Attributes,
 ): Record<string, string | null> | null {
-  const keys = Object.keys(attributes);
-  if (keys.length === 0) return null;
-  const out: Record<string, string | null> = {};
-  for (let i = 0; i < keys.length; i++) {
-    setOwnProperty(out, keys[i]!, attributes[keys[i]!]!);
+  // for...in with an immediate return is an allocation-free emptiness check
+  // (Object.keys would allocate an array on every open tag).
+  for (const key in attributes) {
+    void key;
+    return attributes;
   }
-  return out;
+  return null;
 }
 
 /**
@@ -425,7 +439,6 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
     }
 
     function defaultOnComment(comment: string): void {
-      if (!keepComments) return;
       const parent = currentParent();
       if (parent) {
         parent.children.push(comment);
@@ -478,6 +491,8 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
         }
       } else if (selectSet!.has(tagName)) {
         // This element matches the selector — start a new selected subtree.
+        // Text now matters again: lift the engine's text suppression.
+        parser.setTextSuppression(false);
         selectDepths.push(depth);
         const node: TNode = {
           tagName,
@@ -499,6 +514,11 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
             streamController.enqueue(convert(node));
           }
           selectDepths.pop();
+          // Left the outermost selected subtree — text is discarded until
+          // the next selection opens, so let the engine skip it entirely.
+          if (selectDepths.length === 0) {
+            parser.setTextSuppression(true);
+          }
         } else {
           // A descendant of the selected element is closing — already
           // attached to its parent via onOpenTag, just pop from stack.
@@ -525,7 +545,6 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
     }
 
     function selectOnComment(comment: string): void {
-      if (!keepComments) return;
       if (!insideSelection()) return;
       const parent = selectParent();
       if (parent) {
@@ -570,35 +589,78 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
       onCloseTag: selectSet ? selectOnCloseTag : defaultOnCloseTag,
       onText: selectSet ? selectOnText : defaultOnText,
       onCdata: selectSet ? selectOnCdata : defaultOnCdata,
-      onComment: selectSet ? selectOnComment : defaultOnComment,
+      // Registered only when comments are kept — an absent handler lets the
+      // engine skip comment-text accumulation entirely.
+      onComment: keepComments
+        ? selectSet
+          ? selectOnComment
+          : defaultOnComment
+        : undefined,
       onProcessingInstruction: selectSet
         ? selectOnProcessingInstruction
         : defaultOnProcessingInstruction,
       onDoctype: selectSet ? selectOnDoctype : defaultOnDoctype,
     });
 
-    super({
-      transform(
-        chunk: string,
-        controller: TransformStreamDefaultController<TOutput>,
-      ): void {
-        streamController = controller;
-        // Handle offset: skip leading bytes from the first chunk(s)
-        if (skipBytes > 0) {
-          if (chunk.length <= skipBytes) {
-            skipBytes -= chunk.length;
-            return;
-          }
-          chunk = chunk.substring(skipBytes);
-          skipBytes = 0;
-        }
-        parser.write(chunk);
-      },
+    // In select mode the stream starts outside any selection, so text is
+    // discarded until the first selected element opens — tell the engine to
+    // skip trimming/extracting it. Toggled by the selectOn* handlers above.
+    if (selectSet) {
+      parser.setTextSuppression(true);
+    }
 
-      flush(controller: TransformStreamDefaultController<TOutput>): void {
-        streamController = controller;
-        parser.close();
+    // Chunk coalescing state (only used when the bufferSize option is set).
+    const bufferSize = resolvedOptions.bufferSize ?? 0;
+    const pending: string[] = [];
+    let pendingLength = 0;
+
+    super(
+      {
+        transform(
+          chunk: string,
+          controller: TransformStreamDefaultController<TOutput>,
+        ): void {
+          streamController = controller;
+          // Handle offset: skip leading bytes from the first chunk(s)
+          if (skipBytes > 0) {
+            if (chunk.length <= skipBytes) {
+              skipBytes -= chunk.length;
+              return;
+            }
+            chunk = chunk.substring(skipBytes);
+            skipBytes = 0;
+          }
+          if (bufferSize > 0) {
+            pending.push(chunk);
+            pendingLength += chunk.length;
+            if (pendingLength < bufferSize) return;
+            chunk = pending.length === 1 ? pending[0]! : pending.join('');
+            pending.length = 0;
+            pendingLength = 0;
+          }
+          parser.write(chunk);
+        },
+
+        flush(controller: TransformStreamDefaultController<TOutput>): void {
+          streamController = controller;
+          if (pendingLength > 0) {
+            parser.write(pending.length === 1 ? pending[0]! : pending.join(''));
+            pending.length = 0;
+            pendingLength = 0;
+          }
+          parser.close();
+        },
       },
-    });
+      // Queuing strategies: the spec defaults (writable HWM 1, readable HWM 0)
+      // make every write toggle the writable backpressure flag and every
+      // enqueue re-arm readable backpressure, which costs a promise round-trip
+      // per chunk in the streams machinery. The transform is synchronous and
+      // cheap per chunk, so a deeper writable buffer only changes *when*
+      // backpressure signals (after 64 buffered chunks instead of 1), not
+      // whether it works. Readable HWM 1 lets one completed subtree sit in the
+      // readable queue without stalling the writable side.
+      { highWaterMark: 64 },
+      { highWaterMark: 1 },
+    );
   }
 }

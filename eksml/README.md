@@ -390,6 +390,12 @@ while (true) {
     <td><code>'dom'</code></td>
     <td>Output format — <code>'dom'</code> emits <code>TNode | string</code>, <code>'lossy'</code> emits <code>LossyValue</code>, <code>'lossless'</code> emits <code>LosslessEntry</code></td>
   </tr>
+  <tr>
+    <td><code>bufferSize</code></td>
+    <td><code>number</code></td>
+    <td><code>0</code> (off)</td>
+    <td>Coalesce incoming chunks until at least this many characters are buffered before parsing. Improves throughput when the source produces tiny chunks (network streams), at the cost of delaying output by up to <code>bufferSize</code> characters</td>
+  </tr>
 </table>
 
 The `select` option is particularly useful for large feeds:
