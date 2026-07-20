@@ -429,19 +429,37 @@ describe('fixture: html-page.html', () => {
     expect(HTML_VOID_ELEMENTS).toContain('embed');
     expect(HTML_VOID_ELEMENTS).toHaveLength(14);
 
-    expect(HTML_RAW_CONTENT_TAGS).toEqual(['script', 'style']);
+    expect(HTML_RAW_CONTENT_TAGS).toEqual([
+      'script',
+      'style',
+      'textarea',
+      'title',
+    ]);
+  });
+
+  it('treats textarea and title content as raw text in html mode', () => {
+    const result = parse(
+      '<div><textarea><b>bold</b></textarea><title>a < b</title></div>',
+      { html: true },
+    );
+    const textarea = filter(result, (n) => n.tagName === 'textarea');
+    expect(textarea[0]!.children).toEqual(['<b>bold</b>']);
+    const title = filter(result, (n) => n.tagName === 'title');
+    expect(title[0]!.children).toEqual(['a < b']);
   });
 
   it('allows overriding rawContentTags in html mode', () => {
-    // Override to also treat <textarea> as raw content
+    // Override drops textarea from the raw content list, so it parses
     const result = parse('<div><textarea><b>bold</b></textarea></div>', {
       html: true,
-      rawContentTags: ['script', 'style', 'textarea'],
+      rawContentTags: ['script', 'style'],
     });
     const textarea = filter(result, (n) => n.tagName === 'textarea');
     expect(textarea.length).toBe(1);
-    // Content should be raw text, not parsed
-    expect(textarea[0]!.children).toEqual(['<b>bold</b>']);
+    // Content is parsed markup, not raw text
+    expect(textarea[0]!.children).toEqual([
+      { tagName: 'b', attributes: null, children: ['bold'] },
+    ]);
   });
 
   it('allows overriding selfClosingTags in html mode', () => {
