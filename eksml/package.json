@@ -1,6 +1,6 @@
 {
   "name": "@eksml/xml",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "description": "Fast, lightweight XML/HTML parser, serializer, and streaming toolkit",
   "type": "module",
   "sideEffects": false,

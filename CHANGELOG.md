@@ -1,5 +1,25 @@
 # Changelog
 
+## Release (2026-07-20)
+
+* @eksml/xml 0.2.0 (minor)
+
+#### :rocket: Enhancement
+* `@eksml/xml`
+  * [#23](https://github.com/evoactivity/eksml/pull/23) docs: rewrite README as a getting-started guide, add topic docs ([@evoactivity](https://github.com/evoactivity))
+  * [#22](https://github.com/evoactivity/eksml/pull/22) perf(stream): faster XmlParseStream ([@evoactivity](https://github.com/evoactivity))
+
+#### :memo: Documentation
+* `@eksml/xml`
+  * [#23](https://github.com/evoactivity/eksml/pull/23) docs: rewrite README as a getting-started guide, add topic docs ([@evoactivity](https://github.com/evoactivity))
+
+#### :house: Internal
+* [#21](https://github.com/evoactivity/eksml/pull/21) demo: sync parser stepper with the dual-path parser ([@evoactivity](https://github.com/evoactivity))
+* [#19](https://github.com/evoactivity/eksml/pull/19) demo: rebuild the workspace lib before build and dev ([@evoactivity](https://github.com/evoactivity))
+
+#### Committers: 1
+- Liam ([@evoactivity](https://github.com/evoactivity))
+
 ## Release (2026-07-19)
 
 * @eksml/xml 0.1.6 (patch)
