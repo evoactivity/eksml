@@ -1,22 +1,22 @@
 {
   "solution": {
     "@eksml/xml": {
-      "impact": "patch",
-      "oldVersion": "0.1.5",
-      "newVersion": "0.1.6",
+      "impact": "minor",
+      "oldVersion": "0.1.6",
+      "newVersion": "0.2.0",
       "tagName": "latest",
       "constraints": [
         {
-          "impact": "patch",
-          "reason": "Appears in changelog section :bug: Bug Fix"
+          "impact": "minor",
+          "reason": "Appears in changelog section :rocket: Enhancement"
         },
         {
           "impact": "patch",
-          "reason": "Appears in changelog section :house: Internal"
+          "reason": "Appears in changelog section :memo: Documentation"
         }
       ],
       "pkgJSONPath": "./eksml/package.json"
     }
   },
-  "description": "## Release (2026-07-19)\n\n* @eksml/xml 0.1.6 (patch)\n\n#### :bug: Bug Fix\n* `@eksml/xml`\n  * [#16](https://github.com/evoactivity/eksml/pull/16) perf(sax): intern attribute names in the engine hot path ([@evoactivity](https://github.com/evoactivity))\n\n#### :house: Internal\n* `@eksml/xml`\n  * [#17](https://github.com/evoactivity/eksml/pull/17) bench: update @tuananh/sax-parser to 1.4 and police arity probing ([@evoactivity](https://github.com/evoactivity))\n\n#### Committers: 1\n- Liam ([@evoactivity](https://github.com/evoactivity))\n"
+  "description": "## Release (2026-07-20)\n\n* @eksml/xml 0.2.0 (minor)\n\n#### :rocket: Enhancement\n* `@eksml/xml`\n  * [#23](https://github.com/evoactivity/eksml/pull/23) docs: rewrite README as a getting-started guide, add topic docs ([@evoactivity](https://github.com/evoactivity))\n  * [#22](https://github.com/evoactivity/eksml/pull/22) perf(stream): faster XmlParseStream ([@evoactivity](https://github.com/evoactivity))\n\n#### :memo: Documentation\n* `@eksml/xml`\n  * [#23](https://github.com/evoactivity/eksml/pull/23) docs: rewrite README as a getting-started guide, add topic docs ([@evoactivity](https://github.com/evoactivity))\n\n#### :house: Internal\n* [#21](https://github.com/evoactivity/eksml/pull/21) demo: sync parser stepper with the dual-path parser ([@evoactivity](https://github.com/evoactivity))\n* [#19](https://github.com/evoactivity/eksml/pull/19) demo: rebuild the workspace lib before build and dev ([@evoactivity](https://github.com/evoactivity))\n\n#### Committers: 1\n- Liam ([@evoactivity](https://github.com/evoactivity))\n"
 }
