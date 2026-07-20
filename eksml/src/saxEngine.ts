@@ -78,6 +78,16 @@ export interface SaxEngineParser {
   write(chunk: string): void;
   /** Signal end-of-input and flush any remaining buffered data. */
   close(): void;
+  /**
+   * Toggle text suppression. While suppressed, onText is not called and text
+   * runs are neither trimmed nor extracted (no allocation). Intended for
+   * consumers that know upcoming text will be discarded (e.g. XmlParseStream
+   * outside a `select` subtree). Suppression state is read at text-emission
+   * time, so toggling from within onOpenTag/onCloseTag takes effect for the
+   * very next text run. When maxBufferSize is set, cross-chunk text is still
+   * accumulated so the overflow guard keeps firing.
+   */
+  setTextSuppression(suppressed: boolean): void;
 }
 
 // ---------------------------------------------------------------------------
@@ -141,10 +151,20 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
 
   const voidSet: Set<string> | null =
     selfClosingTags.length > 0 ? new Set(selfClosingTags) : null;
+  // Handler elision: when nobody listens for comments, skip accumulating
+  // comment text entirely (the state machine still tracks the --> terminator).
+  // Accumulation is kept when maxBufferSize is set so oversized comments
+  // still trigger the buffer-overflow guard in write().
+  const accumulateComment =
+    onComment !== undefined || maxBufferSize !== undefined;
   const rawSet: Set<string> | null =
     rawContentTags.length > 0 ? new Set(rawContentTags) : null;
 
   let state: State = State.TEXT;
+  // See SaxEngineParser.setTextSuppression. Read at text-emission points
+  // only (once per text run), so the cost to non-users is a single
+  // well-predicted branch per run.
+  let textSuppressed = false;
   let text = '';
   let tagName = '';
   let attributeName = '';
@@ -243,7 +263,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
 
   function emitText(): void {
     if (text.length === 0) return;
-    if (onText) {
+    if (onText && !textSuppressed) {
       const trimmed = trimWhitespace(text);
       if (trimmed.length > 0) onText(trimmed);
     }
@@ -388,7 +408,11 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
               break fastPath;
             }
             if (text.length === 0) {
-              if (handleText !== undefined && lessThanIndex > i) {
+              if (
+                handleText !== undefined &&
+                lessThanIndex > i &&
+                !textSuppressed
+              ) {
                 // Fused trim: compute trim bounds on the chunk itself, then
                 // substring once. Whitespace-only runs allocate nothing.
                 let s = i;
@@ -1050,11 +1074,14 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           // Batch: scan for '-' which might start '-->'
           const dashIndex = chunk.indexOf('-', i);
           if (dashIndex === -1) {
-            special += i === 0 ? chunk : chunk.substring(i);
+            if (accumulateComment)
+              special += i === 0 ? chunk : chunk.substring(i);
             i = chunkLength;
           } else {
-            if (dashIndex > i) special += chunk.substring(i, dashIndex);
-            special += '-';
+            if (accumulateComment) {
+              if (dashIndex > i) special += chunk.substring(i, dashIndex);
+              special += '-';
+            }
             state = State.COMMENT_END1;
             i = dashIndex + 1;
           }
@@ -1068,11 +1095,11 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           const charCode = chunk.charCodeAt(i);
           if (charCode === DASH) {
             state = State.COMMENT_END2;
-            special += '-';
+            if (accumulateComment) special += '-';
             i++;
           } else {
             state = State.COMMENT;
-            special += chunk[i];
+            if (accumulateComment) special += chunk[i];
             i++;
           }
           continue;
@@ -1084,17 +1111,16 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         case State.COMMENT_END2: {
           const charCode = chunk.charCodeAt(i);
           if (charCode === GT) {
-            special += '>';
-            if (onComment) onComment(special);
+            if (onComment) onComment(special + '>');
             special = '';
             state = State.TEXT;
             i++;
           } else if (charCode === DASH) {
-            special += '-';
+            if (accumulateComment) special += '-';
             i++;
           } else {
             state = State.COMMENT;
-            special += chunk[i];
+            if (accumulateComment) special += chunk[i];
             i++;
           }
           continue;
@@ -1404,7 +1430,8 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           } else {
             const charCode = chunk.charCodeAt(i);
             if (charCode === GT) {
-              if (onText && rawText.length > 0) onText(rawText);
+              if (onText && !textSuppressed && rawText.length > 0)
+                onText(rawText);
               if (onCloseTag) onCloseTag(rawTag);
               rawText = '';
               rawTag = '';
@@ -1434,7 +1461,8 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         case State.RAW_END_3: {
           const charCode = chunk.charCodeAt(i);
           if (charCode === GT) {
-            if (onText && rawText.length > 0) onText(rawText);
+            if (onText && !textSuppressed && rawText.length > 0)
+              onText(rawText);
             if (onCloseTag) onCloseTag(rawTag);
             rawText = '';
             rawTag = '';
@@ -1468,6 +1496,10 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
   }
 
   return {
+    setTextSuppression(suppressed: boolean): void {
+      textSuppressed = suppressed;
+    },
+
     write(chunk: string): void {
       if (chunk.length === 0) return;
       processChunk(chunk);
@@ -1497,7 +1529,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         emitText();
       } else if (state === State.RAW_END_3) {
         // Full tag name matched + trailing whitespace — treat as valid close
-        if (onText && rawText.length > 0) onText(rawText);
+        if (onText && !textSuppressed && rawText.length > 0) onText(rawText);
         if (onCloseTag) onCloseTag(rawTag);
         rawText = '';
         rawTag = '';
@@ -1513,7 +1545,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
         } else if (state === State.RAW_END_2) {
           rawText += '</' + rawTag.substring(0, rawCloseTagMatchIndex);
         }
-        if (onText && rawText.length > 0) onText(rawText);
+        if (onText && !textSuppressed && rawText.length > 0) onText(rawText);
         if (onCloseTag) onCloseTag(rawTag);
         rawText = '';
         rawTag = '';

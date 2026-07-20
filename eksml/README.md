@@ -317,9 +317,52 @@ parser.off('openTag', myHandler);
   </tr>
 </table>
 
----
+#### Using with Node streams
 
-### `new XmlParseStream(options?)`
+The parser is not a Node stream itself, but bridging is a few lines. `parser.write()` is a plain synchronous call, so this path has no streaming machinery overhead.
+
+With async iteration:
+
+```ts
+import { createReadStream } from 'node:fs';
+
+const parser = createSaxParser();
+parser.on('openTag', (tagName, attributes) => {
+  /* ... */
+});
+
+const stream = createReadStream('feed.xml');
+stream.setEncoding('utf8');
+
+for await (const chunk of stream) {
+  parser.write(chunk);
+}
+parser.close();
+```
+
+Or wrapped in a `Writable` for `.pipe()` / `pipeline()`:
+
+```ts
+import { Writable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+
+const sink = new Writable({
+  decodeStrings: false,
+  write(chunk, _encoding, callback) {
+    parser.write(chunk);
+    callback();
+  },
+  final(callback) {
+    parser.close();
+    callback();
+  },
+});
+
+await pipeline(createReadStream('feed.xml', { encoding: 'utf8' }), sink);
+```
+
+> [!important]
+> `parser.write()` accepts strings, not Buffers. Set an encoding on the readable (`setEncoding('utf8')` or the `encoding` option) so Node decodes for you — it handles multibyte characters split across chunk boundaries. Calling `chunk.toString()` on raw Buffers yourself does not.
 
 A Web Streams `TransformStream` that parses XML chunks into `TNode` subtrees. Works in browsers, Node.js 18+, Deno, and Bun. Follows the platform stream class convention (`TextDecoderStream`, `DecompressionStream`, etc.).
 
@@ -337,6 +380,16 @@ while (true) {
   if (done) break;
   console.log(value); // TNode or string
 }
+```
+
+Node streams can be bridged with `Readable.toWeb()`:
+
+```ts
+import { Readable } from 'node:stream';
+
+Readable.toWeb(createReadStream('feed.xml'))
+  .pipeThrough(new TextDecoderStream())
+  .pipeThrough(new XmlParseStream());
 ```
 
 #### `XmlParseStreamOptions`
@@ -389,6 +442,12 @@ while (true) {
     <td><code>'dom' | 'lossy' | 'lossless'</code></td>
     <td><code>'dom'</code></td>
     <td>Output format — <code>'dom'</code> emits <code>TNode | string</code>, <code>'lossy'</code> emits <code>LossyValue</code>, <code>'lossless'</code> emits <code>LosslessEntry</code></td>
+  </tr>
+  <tr>
+    <td><code>bufferSize</code></td>
+    <td><code>number</code></td>
+    <td><code>0</code> (off)</td>
+    <td>Coalesce incoming chunks until at least this many characters are buffered before parsing. Improves throughput when the source produces tiny chunks (network streams), at the cost of delaying output by up to <code>bufferSize</code> characters</td>
   </tr>
 </table>
 

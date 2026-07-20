@@ -105,66 +105,77 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
   </tr>
   <tr>
     <td><strong>Eksml (SAX)</strong></td>
-    <td align="right"><strong>93,671 op/s</strong></td>
-    <td align="right"><strong>17,666 op/s</strong></td>
-    <td align="right"><strong>14,402 op/s</strong></td>
-    <td align="right"><strong>14,708 op/s</strong></td>
-    <td align="right"><strong>13,372 op/s</strong></td>
+    <td align="right"><strong>94,345 op/s</strong></td>
+    <td align="right"><strong>18,070 op/s</strong></td>
+    <td align="right"><strong>15,222 op/s</strong></td>
+    <td align="right"><strong>15,334 op/s</strong></td>
+    <td align="right"><strong>14,359 op/s</strong></td>
   </tr>
   <tr>
     <td>easysax</td>
-    <td align="right">61,700 op/s</td>
-    <td align="right">14,253 op/s</td>
-    <td align="right">11,063 op/s</td>
-    <td align="right">10,639 op/s</td>
-    <td align="right">10,204 op/s</td>
+    <td align="right">67,106 op/s</td>
+    <td align="right">14,223 op/s</td>
+    <td align="right">10,839 op/s</td>
+    <td align="right">11,231 op/s</td>
+    <td align="right">10,515 op/s</td>
   </tr>
   <tr>
     <td>Eksml (XmlParseStream)</td>
-    <td align="right">28,981 op/s</td>
-    <td align="right">9,531 op/s</td>
-    <td align="right">8,924 op/s</td>
-    <td align="right">4,670 op/s</td>
-    <td align="right">8,646 op/s</td>
-  </tr>
-  <tr>
-    <td>htmlparser2</td>
-    <td align="right">28,402 op/s</td>
-    <td align="right">6,277 op/s</td>
-    <td align="right">5,386 op/s</td>
-    <td align="right">6,807 op/s</td>
-    <td align="right">6,802 op/s</td>
+    <td align="right">34,741 op/s</td>
+    <td align="right">10,990 op/s</td>
+    <td align="right">9,123 op/s</td>
+    <td align="right">5,351 op/s</td>
+    <td align="right">9,627 op/s</td>
   </tr>
   <tr>
     <td>saxes</td>
-    <td align="right">27,406 op/s</td>
-    <td align="right">6,519 op/s</td>
-    <td align="right">6,732 op/s</td>
-    <td align="right">5,510 op/s</td>
-    <td align="right">4,499 op/s</td>
+    <td align="right">29,564 op/s</td>
+    <td align="right">6,497 op/s</td>
+    <td align="right">6,671 op/s</td>
+    <td align="right">6,272 op/s</td>
+    <td align="right">5,558 op/s</td>
+  </tr>
+  <tr>
+    <td>htmlparser2</td>
+    <td align="right">29,354 op/s</td>
+    <td align="right">7,236 op/s</td>
+    <td align="right">5,983 op/s</td>
+    <td align="right">6,789 op/s</td>
+    <td align="right">6,807 op/s</td>
   </tr>
   <tr>
     <td>@tuananh/sax-parser</td>
-    <td align="right">25,737 op/s</td>
-    <td align="right">6,579 op/s</td>
-    <td align="right">6,085 op/s</td>
-    <td align="right">6,196 op/s</td>
-    <td align="right">4,189 op/s</td>
+    <td align="right">25,873 op/s</td>
+    <td align="right">7,271 op/s</td>
+    <td align="right">6,468 op/s</td>
+    <td align="right">6,222 op/s</td>
+    <td align="right">4,751 op/s</td>
   </tr>
   <tr>
     <td>sax</td>
-    <td align="right">14,841 op/s</td>
-    <td align="right">3,550 op/s</td>
-    <td align="right">3,016 op/s</td>
-    <td align="right">3,792 op/s</td>
-    <td align="right">2,909 op/s</td>
+    <td align="right">14,816 op/s</td>
+    <td align="right">3,826 op/s</td>
+    <td align="right">3,010 op/s</td>
+    <td align="right">3,773 op/s</td>
+    <td align="right">3,073 op/s</td>
+  </tr>
+  <tr>
+    <td>fast-xml-parser (sync, no streaming)</td>
+    <td align="right">9,887 op/s</td>
+    <td align="right">1,590 op/s</td>
+    <td align="right">1,693 op/s</td>
+    <td align="right">1,560 op/s</td>
+    <td align="right">1,285 op/s</td>
   </tr>
 </table>
 
-Eksml's SAX parser is **1.2-1.5x faster than easysax**, **2-3.4x faster than htmlparser2/saxes**, and **3.9-6.3x faster than sax**.
+Eksml's SAX parser is **1.3-1.4x faster than easysax**, **2.1-3.2x faster than htmlparser2/saxes**, and **4.1-6.4x faster than sax**.
 
 > [!note]
 > @tuananh/sax-parser is a native C++ addon; marshalling event arguments across the JS↔C++ boundary dominates its chunked-streaming cost. Since 1.4 it skips argument materialization for zero-arity listeners, so the no-op benchmark callbacks declare parameters — every other parser materializes arguments unconditionally, and the comparison requires equal work.
+
+> [!note]
+> fast-xml-parser cannot stream; its row parses the fully buffered document synchronously and is included as a reference point.
 
 ## Raw Tokenization (no-op callbacks)
 
