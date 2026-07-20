@@ -22,5 +22,9 @@ export const HTML_VOID_ELEMENTS = [
 /**
  * HTML elements whose content is raw text (not parsed as markup).
  * Used as the default for `rawContentTags` when `html: true`.
+ *
+ * Covers the WHATWG raw text elements (`script`, `style`) and the RCDATA
+ * elements (`textarea`, `title`), whose content can never contain child
+ * elements.
  */
-export const HTML_RAW_CONTENT_TAGS = ['script', 'style'];
+export const HTML_RAW_CONTENT_TAGS = ['script', 'style', 'textarea', 'title'];

@@ -531,6 +531,30 @@ describe('write', () => {
       // Should be <br>, not <br/> or <br />
       expect(write(tree, { html: true, pretty: true })).toBe('<br>');
     });
+
+    it('selfClosingTags overrides the void element list', () => {
+      const custom: TNode = { tagName: 'icon', attributes: null, children: [] };
+      const br: TNode = { tagName: 'br', attributes: null, children: [] };
+      // Custom void writes without a closing tag
+      expect(write(custom, { html: true, selfClosingTags: ['icon'] })).toBe(
+        '<icon>',
+      );
+      // br is no longer in the overridden list, so it closes normally
+      expect(write(br, { html: true, selfClosingTags: ['icon'] })).toBe(
+        '<br></br>',
+      );
+      // Works in pretty mode too
+      expect(
+        write(custom, { html: true, pretty: true, selfClosingTags: ['icon'] }),
+      ).toBe('<icon>');
+    });
+
+    it('selfClosingTags is ignored without html mode', () => {
+      const custom: TNode = { tagName: 'icon', attributes: null, children: [] };
+      expect(write(custom, { selfClosingTags: ['icon'] })).toBe(
+        '<icon></icon>',
+      );
+    });
   });
 
   // --- html + entities combined ---

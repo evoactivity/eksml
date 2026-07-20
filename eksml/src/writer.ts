@@ -88,22 +88,30 @@ export interface WriterOptions {
    */
   pretty?: boolean | string;
   /**
-   * Encode special characters in text content and attribute values as XML
-   * entities. In XML mode (default), `&`, `<`, `>` are encoded in text and
-   * `&`, `"`, `'` are encoded in attributes. In HTML mode (`html: true`),
-   * the full HTML named entity set is used (e.g. `&copy;`, `&eacute;`).
+   * Encode special characters in text content and attribute values.
+   * In XML mode (default), `&`, `<`, `>` are encoded in text and `&`, `"`
+   * in attributes. In HTML mode (`html: true`), the reserved characters
+   * `&`, `<`, `>`, `"`, `'` are encoded as named entities and all other
+   * characters are written as literal UTF-8.
    *
    * Defaults to `false` — text and attribute values are written verbatim.
    */
   entities?: boolean;
   /**
    * Enable HTML mode. When enabled:
-   * - Void elements (`<br>`, `<img>`, `<hr>`, etc.) are self-closed without
-   *   a closing tag (e.g. `<br>` instead of `<br></br>` or `<br/>`).
-   * - When `entities` is also `true`, uses HTML named entities
-   *   (e.g. `&copy;` instead of `&#xa9;`) for encoding.
+   * - Void elements (`<br>`, `<img>`, `<hr>`, etc.) are written without
+   *   a closing tag (e.g. `<br>` instead of `<br></br>`).
+   * - When `entities` is also `true`, reserved characters are encoded as
+   *   named entities (`&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`).
    */
   html?: boolean;
+  /**
+   * Tag names written without a closing tag in HTML mode (e.g. `<br>`).
+   * Defaults to the standard HTML void elements (`HTML_VOID_ELEMENTS`).
+   * Only consulted when `html: true` — XML output always writes explicit
+   * closing tags, which round-trip identically.
+   */
+  selfClosingTags?: string[];
   /**
    * Validate tag and attribute names against forbidden characters
    * (`<`, `>`, `=`, quotes, whitespace). Defaults to `true`.
@@ -472,7 +480,7 @@ function fullWriter(
 
   // HTML void elements — self-close without </tag> in html mode
   const voidSet: Set<string> | null = htmlMode
-    ? new Set(HTML_VOID_ELEMENTS)
+    ? new Set(options.selfClosingTags ?? HTML_VOID_ELEMENTS)
     : null;
 
   // Compact path with entities/html support

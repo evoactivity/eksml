@@ -11,7 +11,7 @@
 [![npm](https://img.shields.io/npm/v/@eksml/xml)](https://www.npmjs.com/package/@eksml/xml)
 [![license](https://img.shields.io/npm/l/@eksml/xml)](https://github.com/evoactivity/eksml/blob/main/LICENSE)
 
-A fast, lightweight XML/HTML parser, serializer, and streaming toolkit for JavaScript and TypeScript. Import only what you need — tree parsing, SAX streaming, object conversion, or serialization — each as a standalone export.
+A fast, lightweight XML/HTML parser, serializer, and streaming toolkit for JavaScript and TypeScript. Import only what you need, tree parsing, SAX streaming, object conversion, or serialization, each as a standalone export.
 
 Built on the same core parsing architecture as [tXml](https://github.com/tobiasNickel/tXml) by Tobias Nickel, Eksml improves the performance and extends it with additional features.
 
@@ -21,639 +21,149 @@ Built on the same core parsing architecture as [tXml](https://github.com/tobiasN
 
 ```bash
 pnpm add @eksml/xml
+# or: npm install @eksml/xml / yarn add @eksml/xml
 ```
 
-```bash
-npm install @eksml/xml
-```
+Eksml is **ESM-only** and requires Node.js 18+ (or any modern browser, Deno, or Bun). There are no CommonJS exports.
 
-```bash
-yarn add @eksml/xml
-```
+## Parsing
 
-Eksml is **ESM-only**. It requires Node.js 18+ and a runtime that supports ES modules. There are no CommonJS exports.
-
-## Quick Start
-
-```ts
-import { parse } from '@eksml/xml/parser';
-import { write } from '@eksml/xml/writer';
-
-const dom = parse('<root><item id="1">Hello</item></root>');
-const str = write(dom);
-```
-
----
-
-## API
+`parse()` turns an XML string into an array of plain-object nodes:
 
 ```ts
 import { parse } from '@eksml/xml/parser';
 
-const dom = parse('<root><item>Hello</item></root>');
+const dom = parse('<feed><item id="1">Hello</item></feed>');
+// [
+//   {
+//     tagName: 'feed',
+//     attributes: null,
+//     children: [
+//       { tagName: 'item', attributes: { id: '1' }, children: ['Hello'] },
+//     ],
+//   },
+// ]
 ```
 
-#### `ParseOptions`
+Every element is a `TNode`, `{ tagName, attributes, children }`, and text is a plain string. That's the whole tree model, it's JSON-serializable and safe to clone.
 
-<table>
-  <tr>
-    <th>Option</th>
-    <th>Type</th>
-    <th>Default</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><code>pos</code></td>
-    <td><code>number</code></td>
-    <td><code>0</code></td>
-    <td>Starting character position in the string</td>
-  </tr>
-  <tr>
-    <td><code>html</code></td>
-    <td><code>boolean</code></td>
-    <td><code>false</code></td>
-    <td>Enable HTML mode (sets void element and raw content tag defaults)</td>
-  </tr>
-  <tr>
-    <td><code>selfClosingTags</code></td>
-    <td><code>string[]</code></td>
-    <td><code>[]</code> / HTML voids</td>
-    <td>Tag names treated as self-closing void elements</td>
-  </tr>
-  <tr>
-    <td><code>rawContentTags</code></td>
-    <td><code>string[]</code></td>
-    <td><code>[]</code> / <code>['script','style']</code></td>
-    <td>Tag names whose content is raw text (not parsed)</td>
-  </tr>
-  <tr>
-    <td><code>keepComments</code></td>
-    <td><code>boolean</code></td>
-    <td><code>false</code></td>
-    <td>Include XML/HTML comments in the output tree</td>
-  </tr>
-  <tr>
-    <td><code>trimWhitespace</code></td>
-    <td><code>boolean</code></td>
-    <td><code>false</code></td>
-    <td>Trim text nodes and discard whitespace-only text</td>
-  </tr>
-  <tr>
-    <td><code>strict</code></td>
-    <td><code>boolean</code></td>
-    <td><code>false</code></td>
-    <td>Throw on malformed XML instead of recovering silently</td>
-  </tr>
-  <tr>
-    <td><code>entities</code></td>
-    <td><code>boolean</code></td>
-    <td><code>false</code></td>
-    <td>Decode XML/HTML entities in text and attributes</td>
-  </tr>
-  <tr>
-    <td><code>attrName</code></td>
-    <td><code>string</code></td>
-    <td><code>'id'</code></td>
-    <td>Attribute name to search for (used with <code>attrValue</code>)</td>
-  </tr>
-  <tr>
-    <td><code>attrValue</code></td>
-    <td><code>string</code></td>
-    <td>--</td>
-    <td>Regex pattern to match attribute values (fast-path filter)</td>
-  </tr>
-  <tr>
-    <td><code>filter</code></td>
-    <td><code>(node, index, depth, path) =&gt; boolean</code></td>
-    <td>--</td>
-    <td>Predicate to filter nodes during parsing</td>
-  </tr>
-</table>
-
-#### `TNode`
-
-```ts
-interface TNode {
-  tagName: string;
-  attributes: Record<string, string | null> | null;
-  children: (TNode | string)[];
-}
-```
-
-- `attributes` is `null` when the element has no attributes.
-- Attribute values are `string` for valued attributes, `null` for boolean attributes (e.g. `<input disabled>`).
-
----
-
-### `write(input, options?)`
-
-Serialize a DOM tree, lossy object, or lossless entries back to an XML/HTML string.
-Input format is auto-detected — no manual conversion needed.
-
-```ts
-import { write } from '@eksml/xml/writer';
-
-// DOM input
-const xml = write(dom);
-const pretty = write(dom, { pretty: true });
-const html = write(dom, { html: true, entities: true });
-
-// Lossy input — converted to DOM automatically
-const fromObj = write({ user: { name: 'Alice', age: 30 } });
-// -> '<user><name>Alice</name><age>30</age></user>'
-
-// Lossless input — converted to DOM automatically
-const fromEntries = write([
-  { user: [{ name: ['Alice'] }, { role: ['admin'] }] },
-]);
-// -> '<user><name>Alice</name><role>admin</role></user>'
-```
-
-#### `WriterOptions`
-
-<table>
-  <tr>
-    <th>Option</th>
-    <th>Type</th>
-    <th>Default</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><code>pretty</code></td>
-    <td><code>boolean | string</code></td>
-    <td><code>false</code></td>
-    <td>
-      Pretty-print with indentation. <code>true</code> uses 2 spaces; a string
-      value is used as the indent (e.g. <code>'\t'</code>).
-    </td>
-  </tr>
-  <tr>
-    <td><code>entities</code></td>
-    <td><code>boolean</code></td>
-    <td><code>false</code></td>
-    <td>Encode special characters as XML/HTML entities</td>
-  </tr>
-  <tr>
-    <td><code>html</code></td>
-    <td><code>boolean</code></td>
-    <td><code>false</code></td>
-    <td>
-      HTML mode: void elements emit as <code>&lt;br&gt;</code> instead of
-      <code>&lt;br/&gt;</code>, and HTML named entities are used when
-      <code>entities</code> is also <code>true</code>
-    </td>
-  </tr>
-  <tr>
-    <td><code>validate</code></td>
-    <td><code>boolean</code></td>
-    <td><code>true</code></td>
-    <td>
-      Validate tag and attribute names against forbidden characters. Set to
-      <code>false</code> for maximum throughput when the tree is trusted
-      (e.g. serializing unmodified parser output); forbidden characters in
-      names are then written verbatim and can produce malformed XML.
-      Circular-reference protection stays active either way.
-    </td>
-  </tr>
-</table>
-
----
-
-### `createSaxParser(options?)`
-
-A high-performance EventEmitter-style SAX parser. Feed it chunks of XML and receive events via `.on()` / `.off()` handlers. Handlers can be added and removed dynamically at any time.
-
-```ts
-import { createSaxParser } from '@eksml/xml/sax';
-
-const parser = createSaxParser();
-
-parser.on('openTag', (tagName, attributes) => {
-  console.log('opened:', tagName, attributes);
-});
-parser.on('text', (text) => {
-  console.log('text:', text);
-});
-
-parser.write('<root><item>1</item>');
-parser.write('<item>2</item></root>');
-parser.close();
-
-// Remove a handler
-parser.off('openTag', myHandler);
-```
-
-#### `SaxParserOptions`
-
-<table>
-  <tr>
-    <th>Option</th>
-    <th>Type</th>
-    <th>Default</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><code>html</code></td>
-    <td><code>boolean</code></td>
-    <td><code>false</code></td>
-    <td>Enable HTML mode (sets void element and raw content tag defaults)</td>
-  </tr>
-  <tr>
-    <td><code>selfClosingTags</code></td>
-    <td><code>string[]</code></td>
-    <td><code>[]</code> / HTML voids</td>
-    <td>Tag names treated as self-closing void elements</td>
-  </tr>
-  <tr>
-    <td><code>rawContentTags</code></td>
-    <td><code>string[]</code></td>
-    <td><code>[]</code> / <code>['script','style']</code></td>
-    <td>Tag names whose content is raw text</td>
-  </tr>
-</table>
-
-#### SAX Events
-
-<table>
-  <tr>
-    <th>Event</th>
-    <th>Handler signature</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><code>openTag</code></td>
-    <td><code>(tagName, attributes) =&gt; void</code></td>
-    <td>Opening tag with parsed attributes</td>
-  </tr>
-  <tr>
-    <td><code>closeTag</code></td>
-    <td><code>(tagName) =&gt; void</code></td>
-    <td>Closing tag</td>
-  </tr>
-  <tr>
-    <td><code>text</code></td>
-    <td><code>(text) =&gt; void</code></td>
-    <td>Text content between tags</td>
-  </tr>
-  <tr>
-    <td><code>cdata</code></td>
-    <td><code>(data) =&gt; void</code></td>
-    <td>CDATA section content</td>
-  </tr>
-  <tr>
-    <td><code>comment</code></td>
-    <td><code>(comment) =&gt; void</code></td>
-    <td>Comment (full <code>&lt;!-- ... --&gt;</code> string including delimiters)</td>
-  </tr>
-  <tr>
-    <td><code>processingInstruction</code></td>
-    <td><code>(name, body) =&gt; void</code></td>
-    <td>Processing instruction</td>
-  </tr>
-  <tr>
-    <td><code>doctype</code></td>
-    <td><code>(tagName, attributes) =&gt; void</code></td>
-    <td>DOCTYPE declaration</td>
-  </tr>
-</table>
-
-#### Using with Node streams
-
-The parser is not a Node stream itself, but bridging is a few lines. `parser.write()` is a plain synchronous call, so this path has no streaming machinery overhead.
-
-With async iteration:
-
-```ts
-import { createReadStream } from 'node:fs';
-
-const parser = createSaxParser();
-parser.on('openTag', (tagName, attributes) => {
-  /* ... */
-});
-
-const stream = createReadStream('feed.xml');
-stream.setEncoding('utf8');
-
-for await (const chunk of stream) {
-  parser.write(chunk);
-}
-parser.close();
-```
-
-Or wrapped in a `Writable` for `.pipe()` / `pipeline()`:
-
-```ts
-import { Writable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
-
-const sink = new Writable({
-  decodeStrings: false,
-  write(chunk, _encoding, callback) {
-    parser.write(chunk);
-    callback();
-  },
-  final(callback) {
-    parser.close();
-    callback();
-  },
-});
-
-await pipeline(createReadStream('feed.xml', { encoding: 'utf8' }), sink);
-```
-
-> [!important]
-> `parser.write()` accepts strings, not Buffers. Set an encoding on the readable (`setEncoding('utf8')` or the `encoding` option) so Node decodes for you — it handles multibyte characters split across chunk boundaries. Calling `chunk.toString()` on raw Buffers yourself does not.
-
-A Web Streams `TransformStream` that parses XML chunks into `TNode` subtrees. Works in browsers, Node.js 18+, Deno, and Bun. Follows the platform stream class convention (`TextDecoderStream`, `DecompressionStream`, etc.).
-
-```ts
-import { XmlParseStream } from '@eksml/xml/stream';
-
-const response = await fetch('/feed.xml');
-const reader = response.body
-  .pipeThrough(new TextDecoderStream())
-  .pipeThrough(new XmlParseStream())
-  .getReader();
-
-while (true) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  console.log(value); // TNode or string
-}
-```
-
-Node streams can be bridged with `Readable.toWeb()`:
-
-```ts
-import { Readable } from 'node:stream';
-
-Readable.toWeb(createReadStream('feed.xml'))
-  .pipeThrough(new TextDecoderStream())
-  .pipeThrough(new XmlParseStream());
-```
-
-#### `XmlParseStreamOptions`
-
-<table>
-  <tr>
-    <th>Option</th>
-    <th>Type</th>
-    <th>Default</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><code>offset</code></td>
-    <td><code>number | string</code></td>
-    <td><code>0</code></td>
-    <td>Starting byte offset — skip this many leading characters. When a string is passed, its <code>.length</code> is used.</td>
-  </tr>
-  <tr>
-    <td><code>html</code></td>
-    <td><code>boolean</code></td>
-    <td><code>false</code></td>
-    <td>Enable HTML mode</td>
-  </tr>
-  <tr>
-    <td><code>selfClosingTags</code></td>
-    <td><code>string[]</code></td>
-    <td><code>[]</code> / HTML voids</td>
-    <td>Tag names treated as self-closing</td>
-  </tr>
-  <tr>
-    <td><code>rawContentTags</code></td>
-    <td><code>string[]</code></td>
-    <td><code>[]</code> / <code>['script','style']</code></td>
-    <td>Tag names whose content is raw text</td>
-  </tr>
-  <tr>
-    <td><code>keepComments</code></td>
-    <td><code>boolean</code></td>
-    <td><code>false</code></td>
-    <td>Include comments in the output</td>
-  </tr>
-  <tr>
-    <td><code>select</code></td>
-    <td><code>string | string[]</code></td>
-    <td>--</td>
-    <td>Emit only elements matching these tag names as they close, regardless of nesting depth</td>
-  </tr>
-  <tr>
-    <td><code>output</code></td>
-    <td><code>'dom' | 'lossy' | 'lossless'</code></td>
-    <td><code>'dom'</code></td>
-    <td>Output format — <code>'dom'</code> emits <code>TNode | string</code>, <code>'lossy'</code> emits <code>LossyValue</code>, <code>'lossless'</code> emits <code>LosslessEntry</code></td>
-  </tr>
-  <tr>
-    <td><code>bufferSize</code></td>
-    <td><code>number</code></td>
-    <td><code>0</code> (off)</td>
-    <td>Coalesce incoming chunks until at least this many characters are buffered before parsing. Improves throughput when the source produces tiny chunks (network streams), at the cost of delaying output by up to <code>bufferSize</code> characters</td>
-  </tr>
-</table>
-
-The `select` option is particularly useful for large feeds:
-
-```ts
-// Emit each <item> independently instead of waiting for the root to close
-const stream = new XmlParseStream({ select: 'item' });
-```
-
----
-
-### `lossy(input, options?)`
-
-Convert XML into compact JavaScript objects. Ideal when you need a simple JS representation and don't care about preserving document order between mixed siblings.
-
-`input` is `string | (TNode | string)[]` — pass a raw XML string, or a pre-parsed DOM array (from `parse()` or `stream()`).
+Prefer working with simple objects instead of a tree? Convert directly:
 
 ```ts
 import { lossy } from '@eksml/xml/lossy';
 
 lossy('<user><name>Alice</name><age>30</age></user>');
-// => { user: { name: "Alice", age: "30" } }
+// => { user: { name: 'Alice', age: '30' } }
 ```
 
-- Text-only elements become string values
-- Empty/void elements become `null`
-- Attributes are `$`-prefixed keys (e.g. `$href`)
-- Repeated same-name siblings become arrays
-- Mixed content (text interleaved with elements) is stored in a `$$` array
+See [parsing](https://github.com/evoactivity/eksml/blob/main/docs/parsing.md) for all options (HTML mode, strict mode, entity decoding, targeted extraction) and [converters](https://github.com/evoactivity/eksml/blob/main/docs/converters.md) for the lossy and lossless object formats.
 
-> [!note]
-> Accepts the same ParseOptions as parse().
+## Writing
 
----
-
-### `lossless(input, options?)`
-
-Convert XML into an order-preserving JSON-friendly structure. Every node, attribute, text segment, and comment is represented in document order.
-
-`input` is `string | (TNode | string)[]` — pass a raw XML string, or a pre-parsed DOM array (from `parse()` or `stream()`).
+`write()` serializes a tree (or a lossy/lossless object, auto-detected) back to a string:
 
 ```ts
-import { lossless } from '@eksml/xml/lossless';
-
-lossless('<user id="1"><name>Alice</name></user>');
-// => [{ user: [{ $attr: { id: "1" } }, { name: [{ $text: "Alice" }] }] }]
-```
-
-Each entry type:
-
-- Element: `{ tagName: children[] }`
-- Text: `{ $text: "..." }`
-- Attributes: `{ $attr: { ... } }` (first child of its element)
-- Comment: `{ $comment: "..." }`
-
-> [!note]
-> Accepts the same ParseOptions as parse().
-
----
-
-### `fromLossy(input)` / `fromLossless(entries)`
-
-Convert lossy or lossless representations back into `TNode` DOM trees.
-
-> **Note:** `write()` auto-detects lossy and lossless inputs, so you rarely
-> need these directly. They're useful when you want the DOM tree for inspection
-> or further manipulation before serializing.
-
-```ts
-import { fromLossy } from '@eksml/xml/from-lossy';
-import { fromLossless } from '@eksml/xml/from-lossless';
 import { write } from '@eksml/xml/writer';
 
-// Explicit conversion (when you need the DOM tree)
-const dom = fromLossy({ user: { name: 'Alice' } });
-write(dom); // => '<user><name>Alice</name></user>'
+write(dom);
+// => '<feed><item id="1">Hello</item></feed>'
 
-// Or just pass lossy/lossless directly to write()
-write({ user: { name: 'Alice' } }); // same result
+write(dom, { pretty: true });
+// => '<feed>\n  <item id="1">Hello</item>\n</feed>'
+
+write({ user: { name: 'Alice' } });
+// => '<user><name>Alice</name></user>'
 ```
 
----
+See [writing](https://github.com/evoactivity/eksml/blob/main/docs/writing.md) for pretty-printing, entity encoding, HTML output, and validation options.
 
-### Utilities
+## Streaming
+
+For documents too large to hold in memory, or data arriving over the network, `XmlParseStream` is a standard web `TransformStream` that emits parsed subtrees as they complete:
 
 ```ts
-import {
-  filter,
-  getElementById,
-  getElementsByClassName,
-  toContentString,
-  isTextNode,
-  isElementNode,
-  HTML_VOID_ELEMENTS,
-  HTML_RAW_CONTENT_TAGS,
-} from '@eksml/xml/utilities';
+import { XmlParseStream } from '@eksml/xml/stream';
+
+const response = await fetch('/feed.xml');
+const nodes = response.body
+  .pipeThrough(new TextDecoderStream())
+  .pipeThrough(new XmlParseStream({ select: 'item' }));
+
+for await (const item of nodes) {
+  console.log(item.tagName); // each <item> as soon as it closes
+}
 ```
+
+The `select` option emits matching elements individually instead of waiting for the whole document. Works in browsers, Node.js 18+, Deno, and Bun; Node streams bridge in with `Readable.toWeb()`.
+
+If you want raw events instead of trees (or maximum throughput), there's also an EventEmitter-style SAX parser:
+
+```ts
+import { createSaxParser } from '@eksml/xml/sax';
+
+const parser = createSaxParser();
+parser.on('openTag', (tagName, attributes) => console.log(tagName));
+parser.write('<feed><item id="1">');
+parser.write('Hello</item></feed>');
+parser.close();
+```
+
+See [web streams](https://github.com/evoactivity/eksml/blob/main/docs/web-streams.md) and [SAX parser](https://github.com/evoactivity/eksml/blob/main/docs/sax-parser.md) for options, output formats, and Node stream interop.
+
+## Documentation
 
 <table>
   <tr>
-    <th>Export</th>
-    <th>Description</th>
+    <th>Topic</th>
+    <th>Covers</th>
   </tr>
   <tr>
-    <td><code>filter(input, predicate)</code></td>
-    <td>Recursively walk a tree and return all <code>TNode</code>s matching a predicate</td>
+    <td><a href="https://github.com/evoactivity/eksml/blob/main/docs/parsing.md">Parsing</a></td>
+    <td><code>parse()</code>, all options, the <code>TNode</code> tree model, strict mode, entity decoding, targeted extraction</td>
   </tr>
   <tr>
-    <td><code>getElementById(input, id)</code></td>
-    <td>Find an element by its <code>id</code> attribute</td>
+    <td><a href="https://github.com/evoactivity/eksml/blob/main/docs/writing.md">Writing</a></td>
+    <td><code>write()</code>, pretty-printing, entity encoding, validation, input auto-detection</td>
   </tr>
   <tr>
-    <td><code>getElementsByClassName(input, className)</code></td>
-    <td>Find elements by class name (supports multi-class attributes)</td>
+    <td><a href="https://github.com/evoactivity/eksml/blob/main/docs/web-streams.md">Web streams</a></td>
+    <td><code>XmlParseStream</code>, the <code>select</code> option, output formats, chunk buffering, Node interop</td>
   </tr>
   <tr>
-    <td><code>toContentString(node)</code></td>
-    <td>Extract concatenated text content from a node or tree</td>
+    <td><a href="https://github.com/evoactivity/eksml/blob/main/docs/sax-parser.md">SAX parser</a></td>
+    <td><code>createSaxParser()</code>, events, dynamic handlers, using with Node streams</td>
   </tr>
   <tr>
-    <td><code>isTextNode(node)</code></td>
-    <td>Type guard: <code>node is string</code></td>
+    <td><a href="https://github.com/evoactivity/eksml/blob/main/docs/converters.md">Converters</a></td>
+    <td><code>lossy()</code>, <code>lossless()</code>, shape rules, round-tripping back to XML</td>
   </tr>
   <tr>
-    <td><code>isElementNode(node)</code></td>
-    <td>Type guard: <code>node is TNode</code></td>
+    <td><a href="https://github.com/evoactivity/eksml/blob/main/docs/utilities.md">Utilities</a></td>
+    <td><code>filter()</code>, <code>getElementById()</code>, <code>getElementsByClassName()</code>, type guards, HTML constants</td>
   </tr>
   <tr>
-    <td><code>HTML_VOID_ELEMENTS</code></td>
-    <td>Standard HTML void element tag names</td>
+    <td><a href="https://github.com/evoactivity/eksml/blob/main/docs/html.md">HTML support</a></td>
+    <td>What <code>html: true</code> does in each API, and where Eksml stops short of a spec-compliant HTML parser</td>
   </tr>
   <tr>
-    <td><code>HTML_RAW_CONTENT_TAGS</code></td>
-    <td>HTML raw content tag names (<code>script</code>, <code>style</code>)</td>
+    <td><a href="https://github.com/evoactivity/eksml/blob/main/docs/security.md">Security</a></td>
+    <td>Prototype pollution and circular reference protections, why billion laughs and XXE don't apply</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/evoactivity/eksml/blob/main/docs/limitations.md">Limitations</a></td>
+    <td>No DTD/schema validation, no namespace resolution, no XPath, and the workarounds</td>
   </tr>
 </table>
 
----
-
 ## Benchmarks
 
-Eksml is consistently the fastest at parsing, streaming, and tokenization, and leads serialization with `validate: false`. Benchmarks run via [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) against real-world XML fixtures from ~100 B to ~30 KB, plus a synthetic attribute-heavy stress document.
+Eksml is consistently the fastest JavaScript library at DOM parsing, SAX streaming, and raw tokenization, and leads serialization with `validate: false`. Full per-fixture results: **[BENCHMARKS.md](https://github.com/evoactivity/eksml/blob/main/eksml/BENCHMARKS.md)**.
 
-- **DOM parsing**: 1.7-2.2x faster than tXml, 3-6x faster than htmlparser2, 10-25x faster than fast-xml-parser/xml2js/xmldom
-- **SAX streaming**: 1.2-1.5x faster than easysax, 2-3.4x faster than htmlparser2/saxes, 3.9-6.3x faster than sax
-- **Raw tokenization**: 1.3-1.6x faster than easysax, 2.2-4x faster than saxes/htmlparser2, 4.7-7.3x faster than sax
-- **Serialization**: Fastest on every fixture with `validate: false`; with validation on (the default), wins RSS/SOAP/Atom/POM while tXml edges small/EPG; 2-7x faster than xmldom and 7-19x faster than fast-xml-parser/xml2js
-
-Full results with per-fixture op/s tables: **[BENCHMARKS.md](https://github.com/evoactivity/eksml/blob/main/eksml/BENCHMARKS.md)**
-
-Run similar benchmarks in your browser: **[Interactive benchmark](https://evoactivity.github.io/eksml/benchmark)**
-
----
-
-## HTML Support
-
-Eksml can parse and serialize HTML, but it is **not an HTML spec-compliant parser**. It does not implement the [WHATWG HTML parsing algorithm](https://html.spec.whatwg.org/multipage/parsing.html) — there is no tokenizer state machine, no tree construction stage, no implicit element insertion, and no error recovery for malformed markup.
-
-What Eksml does provide is a set of **HTML-aware options** that cover the most common differences between XML and HTML:
-
-- **Void elements** — `<br>`, `<img>`, `<input>`, etc. are recognized as self-closing when `html: true` is set (or when you provide a custom `selfClosingTags` list). The full list is exported as `HTML_VOID_ELEMENTS` from `@eksml/xml/utilities`.
-- **Raw content tags** — `<script>` and `<style>` content is treated as raw text (not parsed for child elements) when `html: true` is set. Customizable via `rawContentTags`. Exported as `HTML_RAW_CONTENT_TAGS`.
-- **Entity encoding** — The writer uses HTML named entities (e.g. `&nbsp;`, `&copy;`) instead of numeric references when `html: true` and `entities: true` are both set.
-- **Serialization style** — Void elements serialize as `<br>` instead of `<br/>` in HTML mode.
-
-This is sufficient for well-formed HTML and most real-world documents. However, Eksml will not handle things like:
-
-- Optional closing tags (`<li>` without `</li>`, `<p>` auto-closed by a sibling `<p>`)
-- Implicit elements (`<html>`, `<head>`, `<body>` inserted by the spec when missing)
-- Misnested formatting tags (the adoption agency algorithm)
-- `<table>` foster parenting
-
-If you need full HTML spec compliance, use a dedicated HTML parser like [parse5](https://github.com/inikulin/parse5) or the browser's built-in `DOMParser`.
-
----
+There is also an **[interactive benchmark](https://evoactivity.github.io/eksml/benchmark)** that runs in your browser. It is a separate suite from BENCHMARKS.md: it only includes libraries that run on the web, and uses its own fixtures (or XML you paste in), so its numbers are not directly comparable.
 
 ## Acknowledgments
 
-Eksml's DOM parser is built on the work of **[Tobias Nickel](https://github.com/tobiasNickel)** and his [tXml](https://github.com/tobiasNickel/tXml) library. The core parsing architecture, a single-pass, position-tracking string scanner that builds the tree as it goes, is what makes both libraries so fast. tXml demonstrated that you don't need a separate tokenizer-then-tree-builder pipeline to parse XML at high speed, and Eksml carries that insight forward.
-
-Eksml extends tXml's foundation with:
-
-- A high-performance SAX streaming engine with an EventEmitter-style API (`createSaxParser`)
-- A Web Streams `TransformStream` for incremental parsing (`XmlParseStream`)
-- Lossy and lossless JSON converters with round-trip support
-- HTML-aware parsing and serialization (void elements, raw content tags, entity encoding)
-- Strict mode validation
-- Entity decoding (XML and full HTML named entities)
-
-Thank you, Tobias, for the elegant approach that made all of this possible.
-
----
-
-## Limitations
-
-Eksml optimizes for speed and simplicity, which means it intentionally does not cover every XML use case:
-
-- **Not a validating parser.** Eksml does not validate against DTDs or XML Schema. It parses structure, not semantics.
-- **No namespace support.** Namespace prefixes are preserved in tag and attribute names (e.g. `soap:Envelope`) but not resolved to URIs. There is no namespace-aware API.
-- **No XPath or CSS selectors.** Querying uses simple functions like `filter()`, `getElementById()`, and `getElementsByClassName()`. For complex queries, use the DOM output with a dedicated query library.
-- **Entity decoding is opt-in.** By default, entities like `&amp;` and `&#x20;` are left as-is in text and attribute values. Pass `entities: true` to decode them.
-- **Not a drop-in replacement for the W3C DOM.** `TNode` is a plain object with `tagName`, `attributes`, and `children` -- not a `Node`/`Element`/`Document` with methods like `querySelector`, `parentNode`, etc.
-- **Single-threaded.** Parsing runs synchronously on the calling thread. For CPU-bound workloads with very large documents, consider offloading to a Web Worker.
-
----
+Eksml's DOM parser is built on the work of **[Tobias Nickel](https://github.com/tobiasNickel)** and his [tXml](https://github.com/tobiasNickel/tXml) library. The core parsing architecture, a single-pass, position-tracking string scanner that builds the tree as it goes, is what makes both libraries so fast. Thank you, Tobias, for the elegant approach that made all of this possible.
 
 ## License
 
