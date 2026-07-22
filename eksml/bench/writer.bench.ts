@@ -20,9 +20,9 @@ import { Builder, parseStringPromise } from 'xml2js';
 import {
   parse as txmlParse,
   stringify as txmlStringify,
-  type tNode,
+  type TNode as tNode,
   // @ts-ignore
-} from 'txml/dist/txml.js';
+} from 'txml/txml';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import { parseDocument, DomUtils } from 'htmlparser2';
 
