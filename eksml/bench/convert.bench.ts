@@ -18,9 +18,9 @@ import {
   parse as txmlParse,
   simplify as txmlSimplify,
   simplifyLostLess,
-  type tNode,
+  type TNode as tNode,
   // @ts-ignore
-} from 'txml/dist/txml.js';
+} from 'txml/txml';
 
 // ---------------------------------------------------------------------------
 // Fixtures

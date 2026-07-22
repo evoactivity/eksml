@@ -149,8 +149,8 @@ importers:
         version: 8.0.0
     devDependencies:
       '@tuananh/sax-parser':
-        specifier: ^1.4.0
-        version: 1.4.0
+        specifier: ^1.6.0
+        version: 1.6.0
       '@types/node':
         specifier: ^25.5.0
         version: 25.5.0
@@ -188,8 +188,8 @@ importers:
         specifier: ^0.21.7
         version: 0.21.7(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(typescript@6.0.2)
       txml:
-        specifier: ^5.2.1
-        version: 5.2.1
+        specifier: ^6.0.0
+        version: 6.0.0
       typescript:
         specifier: ^6.0.2
         version: 6.0.2
@@ -1580,60 +1580,60 @@ packages:
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
     engines: {node: '>= 6'}
 
-  '@tuananh/sax-parser-darwin-arm64@1.4.0':
-    resolution: {integrity: sha512-PRT9p0PiYc9n1TfKypxq3g19uej/bTjAQ9FOENdEsnImtfZx3MheBKlZOVp1BVcjZb/uo6oBMyR2FOrf4ddclA==}
+  '@tuananh/sax-parser-darwin-arm64@1.6.0':
+    resolution: {integrity: sha512-ZF1O8TEbduDj8X2zivoGsPjafzcGV8axRgF4j+BpGHaLXyfS8BNSz05apEdqexUJDDCxemiNbOhu6UcKKzXOLg==}
     engines: {node: '>= 18'}
     cpu: [arm64]
     os: [darwin]
 
-  '@tuananh/sax-parser-darwin-x64@1.4.0':
-    resolution: {integrity: sha512-Dy9obEHGoKpcJy9xu0nyCahIOGhgNQYJFqoUGwQVgU0nrfXra228LvdDK1dlCyJvBh43N2XzUSube2Pmw0oR1Q==}
+  '@tuananh/sax-parser-darwin-x64@1.6.0':
+    resolution: {integrity: sha512-c1PsZrxADUtXZ0Zfx9OJsILmWLmG/VGY0IoVW92eiDUetwtmheg9XsKmahHHDSw0lOdVBNa2Dkx+yQboEh5rEQ==}
     engines: {node: '>= 18'}
     cpu: [x64]
     os: [darwin]
 
-  '@tuananh/sax-parser-linux-arm64-gnu@1.4.0':
-    resolution: {integrity: sha512-2k6Dq2lOma0f8miPF8LMW+VUxu/xRWyc4UAYFg2y06BLVmJVurgfrXayT2BS4bWw8f2WS4U2EikDLKWcjUu+1g==}
+  '@tuananh/sax-parser-linux-arm64-gnu@1.6.0':
+    resolution: {integrity: sha512-mDG5ty3HOl8qUrYfN/NSPLb6/9a0Aj6CLlWwW5VTwtAmSgFtbg9Xa1twhZsAS7ypK8ysdSDFkSH5fwS7/vxCng==}
     engines: {node: '>= 18'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@tuananh/sax-parser-linux-arm64-musl@1.4.0':
-    resolution: {integrity: sha512-0RdDHE8e2tKYIzlrpA2gbchymySHqsngWqo1AW6tNfEX/dRhbsgvX1vt7lS6g0i9KYfwHZ3hkQBkWWGRZbLQTQ==}
+  '@tuananh/sax-parser-linux-arm64-musl@1.6.0':
+    resolution: {integrity: sha512-pci78rOkH7cC4Y1vILyt/iyA6lYXyYzpXqLZMJOCZbbaArva1i96+/duu17cMphdeJw/Unmx5j1Zt4umJ/SolA==}
     engines: {node: '>= 18'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@tuananh/sax-parser-linux-x64-gnu@1.4.0':
-    resolution: {integrity: sha512-38lWUrgwn+yw2yIEFbx9JQf+YayNW9SBwY6dkO1jnQuzsB9EGD4aQr9WmkdXD2agos3xpSJT4TtHe9PElC0d1A==}
+  '@tuananh/sax-parser-linux-x64-gnu@1.6.0':
+    resolution: {integrity: sha512-beB0khG2FKCT6uF7zSpsJgBdndRtRHpB+wfPdJJZwmTKy5PsR5tx0vP9L+fNVheOtHqo4P/SqC0MQcF06wkTeg==}
     engines: {node: '>= 18'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@tuananh/sax-parser-linux-x64-musl@1.4.0':
-    resolution: {integrity: sha512-7+fR76kdubwUr5iZ0JpKh3sKigtYY2ScEpd8/bnehQWsOYofP20VtU6j6Zj2no7j2KkbLZwUmkmZrmffACmBow==}
+  '@tuananh/sax-parser-linux-x64-musl@1.6.0':
+    resolution: {integrity: sha512-+/Bo1Z4oCwq/dpetZT5KopQAetLwQp4TWj+dPuiP/ZOG+y9+k+30wD5Emra0XqMF7D+ZVXHUynZmsAgcD1XCUA==}
     engines: {node: '>= 18'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@tuananh/sax-parser-win32-arm64-msvc@1.4.0':
-    resolution: {integrity: sha512-m8Y0CC/iFMMEhpeZuI0sjQmffBZZ6W46wqrjW33Uif4iCS4iOus5qtXd16KaD7kcPbRx2UhMg12dgDtKkaCqww==}
+  '@tuananh/sax-parser-win32-arm64-msvc@1.6.0':
+    resolution: {integrity: sha512-UesR/sqEesf07jftFR6dSSYUUV8obRCfOuIssSWdKUF7iw+q44NvwIQ4q4gyEQru3UU1KvOGc5LlWkH86mYX3Q==}
     engines: {node: '>= 18'}
     cpu: [arm64]
     os: [win32]
 
-  '@tuananh/sax-parser-win32-x64-msvc@1.4.0':
-    resolution: {integrity: sha512-Q+4UC7DYe1ACD6B5Cbzn7GRQQPl1RrdxWz1nMatQoYemsOcCGwBy1ms4B0d0WEVouf2ERDhPaWOJenER0JNQww==}
+  '@tuananh/sax-parser-win32-x64-msvc@1.6.0':
+    resolution: {integrity: sha512-uI/x2jTs55IgOvnvp519DIglRoVaA73+KW8O34fmZzqm3/7MPLmtsid6r7RiS8yNnwSNJJhCgbbUIyJZBqkAww==}
     engines: {node: '>= 18'}
     cpu: [x64]
     os: [win32]
 
-  '@tuananh/sax-parser@1.4.0':
-    resolution: {integrity: sha512-UxdyMxSkCuRg0km8hGfhcH3LROe/1iljMvZzOFxXrOXxJqpDYGIciUB1quTPLZ9X3lShSDiuJkKJDs0dIID8Rg==}
+  '@tuananh/sax-parser@1.6.0':
+    resolution: {integrity: sha512-tgWlt+a0GyKO8HA6oOmf6YGrdJkLTFlcNS/hE6pE53WtweNNU9hJKcBVn2iXkF/V4RHuOFR90ZvsSPuV5A8akg==}
     engines: {node: '>= 18'}
 
   '@tybys/wasm-util@0.10.1':
@@ -4743,6 +4743,10 @@ packages:
   txml@5.2.1:
     resolution: {integrity: sha512-MGKvU6UjehglVhfQAtW/sxeqAky64fJGHAkaxXROh13quYOgKE71C1VPKhKGR8M+AhMWEdz/aaPL/rxpJ9fmKw==}
 
+  txml@6.0.0:
+    resolution: {integrity: sha512-SJ1tLEiSsraRDvSxCHhwhvS5e3YALvRWxNDKR2vCX3gQG4MVepj6dWEclnbnMEOUZ2s690lWC4pgpRjKj6lhkw==}
+    engines: {node: '>=18.0.0'}
+
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
@@ -6744,44 +6748,44 @@ snapshots:
 
   '@tootallnate/once@1.1.2': {}
 
-  '@tuananh/sax-parser-darwin-arm64@1.4.0':
+  '@tuananh/sax-parser-darwin-arm64@1.6.0':
     optional: true
 
-  '@tuananh/sax-parser-darwin-x64@1.4.0':
+  '@tuananh/sax-parser-darwin-x64@1.6.0':
     optional: true
 
-  '@tuananh/sax-parser-linux-arm64-gnu@1.4.0':
+  '@tuananh/sax-parser-linux-arm64-gnu@1.6.0':
     optional: true
 
-  '@tuananh/sax-parser-linux-arm64-musl@1.4.0':
+  '@tuananh/sax-parser-linux-arm64-musl@1.6.0':
     optional: true
 
-  '@tuananh/sax-parser-linux-x64-gnu@1.4.0':
+  '@tuananh/sax-parser-linux-x64-gnu@1.6.0':
     optional: true
 
-  '@tuananh/sax-parser-linux-x64-musl@1.4.0':
+  '@tuananh/sax-parser-linux-x64-musl@1.6.0':
     optional: true
 
-  '@tuananh/sax-parser-win32-arm64-msvc@1.4.0':
+  '@tuananh/sax-parser-win32-arm64-msvc@1.6.0':
     optional: true
 
-  '@tuananh/sax-parser-win32-x64-msvc@1.4.0':
+  '@tuananh/sax-parser-win32-x64-msvc@1.6.0':
     optional: true
 
-  '@tuananh/sax-parser@1.4.0':
+  '@tuananh/sax-parser@1.6.0':
     dependencies:
       bindings: 1.5.0
       detect-libc: 2.1.2
       node-addon-api: 8.9.0
     optionalDependencies:
-      '@tuananh/sax-parser-darwin-arm64': 1.4.0
-      '@tuananh/sax-parser-darwin-x64': 1.4.0
-      '@tuananh/sax-parser-linux-arm64-gnu': 1.4.0
-      '@tuananh/sax-parser-linux-arm64-musl': 1.4.0
-      '@tuananh/sax-parser-linux-x64-gnu': 1.4.0
-      '@tuananh/sax-parser-linux-x64-musl': 1.4.0
-      '@tuananh/sax-parser-win32-arm64-msvc': 1.4.0
-      '@tuananh/sax-parser-win32-x64-msvc': 1.4.0
+      '@tuananh/sax-parser-darwin-arm64': 1.6.0
+      '@tuananh/sax-parser-darwin-x64': 1.6.0
+      '@tuananh/sax-parser-linux-arm64-gnu': 1.6.0
+      '@tuananh/sax-parser-linux-arm64-musl': 1.6.0
+      '@tuananh/sax-parser-linux-x64-gnu': 1.6.0
+      '@tuananh/sax-parser-linux-x64-musl': 1.6.0
+      '@tuananh/sax-parser-win32-arm64-msvc': 1.6.0
+      '@tuananh/sax-parser-win32-x64-msvc': 1.6.0
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
@@ -10353,6 +10357,8 @@ snapshots:
   txml@5.2.1:
     dependencies:
       through2: 3.0.2
+
+  txml@6.0.0: {}
 
   type-check@0.4.0:
     dependencies:

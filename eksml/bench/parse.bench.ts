@@ -20,7 +20,7 @@ import { parseDocument } from 'htmlparser2';
 import {
   parse as txmlParse,
   // @ts-ignore
-} from 'txml/dist/txml.js';
+} from 'txml/txml';
 
 // ---------------------------------------------------------------------------
 // Fixtures
