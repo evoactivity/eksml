@@ -112,6 +112,14 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
     <td align="right"><strong>13,719 op/s</strong></td>
   </tr>
   <tr>
+    <td>@tuananh/sax-parser</td>
+    <td align="right">24,238 op/s</td>
+    <td align="right"><strong>19,238 op/s</strong></td>
+    <td align="right">12,849 op/s</td>
+    <td align="right"><strong>18,062 op/s</strong></td>
+    <td align="right">11,681 op/s</td>
+  </tr>
+  <tr>
     <td>easysax</td>
     <td align="right">66,566 op/s</td>
     <td align="right">13,357 op/s</td>
@@ -128,14 +136,6 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
     <td align="right">9,352 op/s</td>
   </tr>
   <tr>
-    <td>saxes</td>
-    <td align="right">27,902 op/s</td>
-    <td align="right">5,884 op/s</td>
-    <td align="right">6,687 op/s</td>
-    <td align="right">6,013 op/s</td>
-    <td align="right">5,117 op/s</td>
-  </tr>
-  <tr>
     <td>htmlparser2</td>
     <td align="right">26,433 op/s</td>
     <td align="right">7,080 op/s</td>
@@ -144,12 +144,12 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
     <td align="right">6,791 op/s</td>
   </tr>
   <tr>
-    <td>@tuananh/sax-parser</td>
-    <td align="right">24,238 op/s</td>
-    <td align="right"><strong>19,238 op/s</strong></td>
-    <td align="right">12,849 op/s</td>
-    <td align="right"><strong>18,062 op/s</strong></td>
-    <td align="right">11,681 op/s</td>
+    <td>saxes</td>
+    <td align="right">27,902 op/s</td>
+    <td align="right">5,884 op/s</td>
+    <td align="right">6,687 op/s</td>
+    <td align="right">6,013 op/s</td>
+    <td align="right">5,117 op/s</td>
   </tr>
   <tr>
     <td>sax</td>
@@ -207,6 +207,14 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
     <td align="right">11,712 op/s</td>
   </tr>
   <tr>
+    <td>@tuananh/sax-parser</td>
+    <td align="right">22,011 op/s</td>
+    <td align="right">16,577 op/s</td>
+    <td align="right">14,692 op/s</td>
+    <td align="right">15,889 op/s</td>
+    <td align="right">11,361 op/s</td>
+  </tr>
+  <tr>
     <td>saxes</td>
     <td align="right">35,117 op/s</td>
     <td align="right">8,889 op/s</td>
@@ -221,14 +229,6 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
     <td align="right">5,852 op/s</td>
     <td align="right">7,028 op/s</td>
     <td align="right">7,186 op/s</td>
-  </tr>
-  <tr>
-    <td>@tuananh/sax-parser</td>
-    <td align="right">22,011 op/s</td>
-    <td align="right">16,577 op/s</td>
-    <td align="right">14,692 op/s</td>
-    <td align="right">15,889 op/s</td>
-    <td align="right">11,361 op/s</td>
   </tr>
   <tr>
     <td>sax</td>
@@ -348,6 +348,7 @@ All fixtures are in [`test/fixtures/`](./test/fixtures/).
 ## Methodology
 
 - **Tool**: [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) (wraps [tinybench](https://github.com/tinylibs/tinybench))
+- **Table ordering**: Rows are ordered by the geometric mean of op/s across the table's fixtures (an arithmetic mean would be dominated by the smallest, fastest fixture). A library that cannot parse a fixture is ranked against its per-fixture results, not rewarded for the gap: tXml sits below libraries that beat it on every fixture it completes.
 - **Warmup**: Default tinybench warmup iterations
 - **Environment**: Single-threaded, synchronous execution on Node.js
 - **Parser reuse**: In the SAX streaming and tokenization suites, every parser is constructed once and reused across iterations (all measured parsers support this; verified by comparing event streams across runs). This measures steady-state parse throughput rather than constructor cost. XmlParseStream is the exception, web streams are single-use, so it pays its constructor per iteration.
