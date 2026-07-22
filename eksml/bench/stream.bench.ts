@@ -2,7 +2,7 @@
  * Streaming / SAX parsing benchmarks.
  *
  * Compares eksml's parsers against event-driven SAX parsers (sax, saxes,
- * htmlparser2.Parser) and fast-xml-parser (synchronous, for reference).
+ * htmlparser2.Parser).
  *
  * To keep the comparison fair, every parser builds the same DOM subtree
  * structure: { tagName, attributes, children }. This ensures all parsers
@@ -35,7 +35,6 @@ import { createSaxParser } from '#src/sax.ts';
 // --- competitors ---
 import SaxParser from '@tuananh/sax-parser';
 import EasySax from 'easysax';
-import { XMLParser } from 'fast-xml-parser';
 import { Parser as Htmlparser2 } from 'htmlparser2';
 import sax from 'sax';
 import { SaxesParser } from 'saxes';
@@ -130,10 +129,22 @@ async function eksmlStream(chunks: string[]): Promise<void> {
   await drain;
 }
 
+// Comment and processing-instruction listeners are registered for every
+// parser as no-ops (the trees built here do not include them) so this suite
+// exposes the same full event surface as tokenize.bench.ts. Some parsers
+// change behaviour based on which listeners exist — @tuananh/sax-parser's
+// event collector slows measurably once comment/cdata/PI listeners are
+// registered — so a smaller surface here would make the suites
+// incomparable. The no-ops declare parameters for the same reason.
+const noop = (_a?: unknown, _b?: unknown) => {};
+
 // ---------------------------------------------------------------------------
 // sax — persistent parser (close() re-initializes in place)
 // ---------------------------------------------------------------------------
 const saxParser = sax.parser(true); // strict mode
+
+saxParser.oncomment = noop;
+saxParser.onprocessinginstruction = noop;
 
 saxParser.onopentag = (node) => {
   pushElement({
@@ -182,6 +193,8 @@ saxesParser.on('text', (text) => {
 saxesParser.on('cdata', (cdata) => {
   pushChild(cdata);
 });
+saxesParser.on('comment', noop);
+saxesParser.on('processinginstruction', noop);
 saxesParser.on('closetag', () => {
   stack.pop();
 });
@@ -208,6 +221,8 @@ const htmlparser2Parser = new Htmlparser2(
     onclosetag() {
       stack.pop();
     },
+    oncomment: noop,
+    onprocessinginstruction: noop,
   },
   { xmlMode: true },
 );
@@ -239,6 +254,8 @@ tuananhParser.on('cdata', (cdata: string) => {
   pushChild(cdata);
 });
 // Parameter declared so arity probing cannot skip materializing the name
+tuananhParser.on('comment', noop);
+tuananhParser.on('processingInstruction', noop);
 tuananhParser.on('endElement', (_name: string) => {
   stack.pop();
 });
@@ -275,6 +292,8 @@ easysaxParser.on('textNode', (text: string) => {
 easysaxParser.on('cdata', (cdata: string) => {
   pushChild(cdata);
 });
+easysaxParser.on('comment', noop);
+easysaxParser.on('question', noop);
 easysaxParser.on('endNode', () => {
   stack.pop();
 });
@@ -304,6 +323,8 @@ eksmlSaxParser.on('text', (text) => {
 eksmlSaxParser.on('cdata', (cdata) => {
   pushChild(cdata);
 });
+eksmlSaxParser.on('comment', noop);
+eksmlSaxParser.on('processingInstruction', noop);
 eksmlSaxParser.on('closeTag', () => {
   stack.pop();
 });
@@ -314,17 +335,6 @@ function eksmlSaxEngine(chunks: string[]): void {
     eksmlSaxParser.write(chunk);
   }
   eksmlSaxParser.close();
-}
-
-// ---------------------------------------------------------------------------
-// fast-xml-parser — sync, builds its own tree (included for reference)
-// ---------------------------------------------------------------------------
-const fxp = new XMLParser({
-  ignoreAttributes: false,
-  preserveOrder: true,
-});
-function fxpSync(xml: string): void {
-  fxp.parse(xml);
 }
 
 // ---------------------------------------------------------------------------
@@ -357,10 +367,6 @@ describe('stream: RSS feed (256 B chunks)', () => {
 
   bench('easysax', () => {
     easysaxStream(rssChunks256);
-  });
-
-  bench('fast-xml-parser (sync, no streaming)', () => {
-    fxpSync(rssFeed);
   });
 });
 
@@ -395,10 +401,6 @@ describe('stream: XMLTV EPG (256 B chunks)', () => {
   bench('easysax', () => {
     easysaxStream(xmltvChunks256);
   });
-
-  bench('fast-xml-parser (sync, no streaming)', () => {
-    fxpSync(xmltvEpg);
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -431,10 +433,6 @@ describe('stream: Maven POM (256 B chunks)', () => {
 
   bench('easysax', () => {
     easysaxStream(pomChunks256);
-  });
-
-  bench('fast-xml-parser (sync, no streaming)', () => {
-    fxpSync(pomXml);
   });
 });
 
@@ -469,10 +467,6 @@ describe('stream: XMLTV EPG (64 B chunks — stress)', () => {
   bench('easysax', () => {
     easysaxStream(xmltvChunks64);
   });
-
-  bench('fast-xml-parser (sync, no streaming)', () => {
-    fxpSync(xmltvEpg);
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -505,9 +499,5 @@ describe('stream: attr-heavy synthetic (256 B chunks)', () => {
 
   bench('easysax', () => {
     easysaxStream(attrHeavyChunks256);
-  });
-
-  bench('fast-xml-parser (sync, no streaming)', () => {
-    fxpSync(attrHeavy);
   });
 });

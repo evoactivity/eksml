@@ -17,3 +17,9 @@ coverage
 # OS
 .DS_Store
 Thumbs.db
+
+# generated benchmark reports
+eksml/bench-results.json
+
+# generated large benchmark fixtures
+eksml/test/fixtures/large/
