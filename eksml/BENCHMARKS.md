@@ -14,6 +14,8 @@ Parse an XML string into a tree structure.
 
 ### Overview
 
+<!-- bench:table DOM Parsing :: Overview -->
+
 <table>
   <tr>
     <th>Library</th>
@@ -52,10 +54,14 @@ Parse an XML string into a tree structure.
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 > [!note]
 > tXml crashed on the RSS fixture
 
 ### small (~100 B)
+
+<!-- bench:table DOM Parsing :: small (~100 B) -->
 
 <table>
   <tr>
@@ -95,7 +101,11 @@ Parse an XML string into a tree structure.
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### RSS (~3 KB)
+
+<!-- bench:table DOM Parsing :: RSS (~3 KB) -->
 
 <table>
   <tr>
@@ -130,7 +140,11 @@ Parse an XML string into a tree structure.
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### SOAP (~2 KB)
+
+<!-- bench:table DOM Parsing :: SOAP (~2 KB) -->
 
 <table>
   <tr>
@@ -170,7 +184,11 @@ Parse an XML string into a tree structure.
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### Atom (~3 KB)
+
+<!-- bench:table DOM Parsing :: Atom (~3 KB) -->
 
 <table>
   <tr>
@@ -210,7 +228,11 @@ Parse an XML string into a tree structure.
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### POM (~5 KB)
+
+<!-- bench:table DOM Parsing :: POM (~5 KB) -->
 
 <table>
   <tr>
@@ -250,7 +272,11 @@ Parse an XML string into a tree structure.
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### EPG (~9 KB)
+
+<!-- bench:table DOM Parsing :: EPG (~9 KB) -->
 
 <table>
   <tr>
@@ -290,7 +316,11 @@ Parse an XML string into a tree structure.
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### attr-heavy (~10 KB)
+
+<!-- bench:table DOM Parsing :: attr-heavy (~10 KB) -->
 
 <table>
   <tr>
@@ -330,11 +360,15 @@ Parse an XML string into a tree structure.
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ## SAX Streaming (256 B chunks, with tree building)
 
 Chunked streaming parse where each parser tokenizes SAX events and builds a full DOM tree.
 
 ### Overview
+
+<!-- bench:table SAX Streaming (256 B chunks, with tree building) :: Overview -->
 
 <table>
   <tr>
@@ -379,12 +413,16 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 @tuananh/sax-parser 1.6 has largely closed its streaming gap: the EPG 64 B stress fixture is a coin flip between it and Eksml, and it is clear second on EPG, POM, and attr-heavy.
 
 > [!note]
 > @tuananh/sax-parser is a native C++ addon; marshalling event arguments across the JS↔C++ boundary dominates its chunked-streaming cost. Since 1.4 it skips argument materialization for zero-arity listeners, so the no-op benchmark callbacks declare parameters — every other parser materializes arguments unconditionally, and the comparison requires equal work. Its throughput is also sensitive to which listener types exist at all: registering comment/cdata/PI listeners costs it roughly a third on EPG, whose ~12.5 KB produce just 9 comments, 1 processing instruction, and no CDATA — the cost comes from the listeners being registered, not from the events occurring. Both suites register the same full event surface (open/close/text/cdata/comment/PI) so their numbers are comparable.
 
 ### RSS (~3 KB)
+
+<!-- bench:table SAX Streaming (256 B chunks, with tree building) :: RSS (~3 KB) -->
 
 <table>
   <tr>
@@ -429,7 +467,11 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### EPG (~9 KB)
+
+<!-- bench:table SAX Streaming (256 B chunks, with tree building) :: EPG (~9 KB) -->
 
 <table>
   <tr>
@@ -474,7 +516,11 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### POM (~5 KB)
+
+<!-- bench:table SAX Streaming (256 B chunks, with tree building) :: POM (~5 KB) -->
 
 <table>
   <tr>
@@ -519,7 +565,11 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### EPG 64 B stress
+
+<!-- bench:table SAX Streaming (256 B chunks, with tree building) :: EPG 64 B stress -->
 
 <table>
   <tr>
@@ -564,7 +614,11 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### attr-heavy (~10 KB)
+
+<!-- bench:table SAX Streaming (256 B chunks, with tree building) :: attr-heavy (~10 KB) -->
 
 <table>
   <tr>
@@ -609,11 +663,15 @@ Chunked streaming parse where each parser tokenizes SAX events and builds a full
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ## Raw Tokenization (no-op callbacks)
 
 Pure scanner throughput with no downstream work -- isolates the tokenizer's raw speed.
 
 ### Overview
+
+<!-- bench:table Raw Tokenization (no-op callbacks) :: Overview -->
 
 <table>
   <tr>
@@ -653,12 +711,16 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 @tuananh/sax-parser 1.6 is now the clear second on every fixture except RSS, where it trails 5x.
 
 > [!note]
 > easysax parses attributes lazily (`startNode` receives a `getAttr()` thunk); the benchmark invokes it so every parser materializes attributes, the work all other parsers do unconditionally for their open-tag events. The no-op callbacks declare parameters so @tuananh/sax-parser's zero-arity fast path (since 1.4) cannot skip argument materialization.
 
 ### RSS (~3 KB)
+
+<!-- bench:table Raw Tokenization (no-op callbacks) :: RSS (~3 KB) -->
 
 <table>
   <tr>
@@ -698,7 +760,11 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### EPG (~9 KB)
+
+<!-- bench:table Raw Tokenization (no-op callbacks) :: EPG (~9 KB) -->
 
 <table>
   <tr>
@@ -738,7 +804,11 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### POM (~5 KB)
+
+<!-- bench:table Raw Tokenization (no-op callbacks) :: POM (~5 KB) -->
 
 <table>
   <tr>
@@ -778,7 +848,11 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### EPG 64 B stress
+
+<!-- bench:table Raw Tokenization (no-op callbacks) :: EPG 64 B stress -->
 
 <table>
   <tr>
@@ -818,7 +892,11 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### attr-heavy (~10 KB)
+
+<!-- bench:table Raw Tokenization (no-op callbacks) :: attr-heavy (~10 KB) -->
 
 <table>
   <tr>
@@ -858,9 +936,13 @@ Pure scanner throughput with no downstream work -- isolates the tokenizer's raw 
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ## Large document (10 MB, 64 KB chunks)
 
 Chunked tokenization of a 10 MB document — a seeded, faker-generated product catalogue (`bench/generate-large-fixture.mjs`) with real-world shape: mixed attribute density, varied text lengths, comments, and CDATA. The fixture is generated on demand into `test/fixtures/large/` (gitignored); because generation is seeded, every machine benchmarks a byte-identical document. Handler policy matches the tokenization suite. 50 MB and 250 MB runs are available via `pnpm bench:large`.
+
+<!-- bench:table Large document (10 MB, 64 KB chunks) :: catalog (10 MB) -->
 
 <table>
   <tr>
@@ -900,11 +982,15 @@ Chunked tokenization of a 10 MB document — a seeded, faker-generated product c
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ## XML Serialization (tree to string)
 
 Serialize a pre-parsed in-memory tree back to XML.
 
 ### Overview
+
+<!-- bench:table XML Serialization (tree to string) :: Overview -->
 
 <table>
   <tr>
@@ -949,12 +1035,16 @@ Serialize a pre-parsed in-memory tree back to XML.
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 With `validate: false`, Eksml leads every fixture (tXml crashes on RSS). With validation on, Eksml holds SOAP, Atom, and POM while the small and EPG fixtures trade with tXml within run-to-run noise. Unlike tXml's stringify, Eksml's writer validates tag/attribute names by default, guards against circular references, and escapes mixed-quote attribute values — `validate: false` skips only the name validation.
 
 > [!note]
 > tXml crashed on the RSS fixture
 
 ### small (~100 B)
+
+<!-- bench:table XML Serialization (tree to string) :: small (~100 B) -->
 
 <table>
   <tr>
@@ -999,7 +1089,11 @@ With `validate: false`, Eksml leads every fixture (tXml crashes on RSS). With va
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### RSS (~3 KB)
+
+<!-- bench:table XML Serialization (tree to string) :: RSS (~3 KB) -->
 
 <table>
   <tr>
@@ -1039,7 +1133,11 @@ With `validate: false`, Eksml leads every fixture (tXml crashes on RSS). With va
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### SOAP (~3 KB)
+
+<!-- bench:table XML Serialization (tree to string) :: SOAP (~3 KB) -->
 
 <table>
   <tr>
@@ -1084,7 +1182,11 @@ With `validate: false`, Eksml leads every fixture (tXml crashes on RSS). With va
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### Atom (~6 KB)
+
+<!-- bench:table XML Serialization (tree to string) :: Atom (~6 KB) -->
 
 <table>
   <tr>
@@ -1129,7 +1231,11 @@ With `validate: false`, Eksml leads every fixture (tXml crashes on RSS). With va
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### POM (~8 KB)
+
+<!-- bench:table XML Serialization (tree to string) :: POM (~8 KB) -->
 
 <table>
   <tr>
@@ -1174,7 +1280,11 @@ With `validate: false`, Eksml leads every fixture (tXml crashes on RSS). With va
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ### EPG (~30 KB)
+
+<!-- bench:table XML Serialization (tree to string) :: EPG (~30 KB) -->
 
 <table>
   <tr>
@@ -1219,6 +1329,8 @@ With `validate: false`, Eksml leads every fixture (tXml crashes on RSS). With va
   </tr>
 </table>
 
+<!-- /bench:table -->
+
 ## Fixtures
 
 | Fixture    | Size      | Description                                                                                                                                                    |
@@ -1239,7 +1351,7 @@ All fixtures are in [`test/fixtures/`](./test/fixtures/).
 ## Methodology
 
 - **Tool**: [Vitest bench](https://vitest.dev/guide/features.html#benchmarking) (wraps [tinybench](https://github.com/tinylibs/tinybench))
-- **Tables**: Each section opens with an overview ranking libraries by the geometric mean of op/s across the section's fixtures (an arithmetic mean would be dominated by the smallest, fastest fixture; a library that cannot parse a fixture is not rewarded for the gap, anything that beats it on every fixture it completes ranks above it). The per-fixture tables are sorted by op/s and show each library's speedup relative to that fixture's winner. All tables are generated from a bench run by [`bench/benchmarks-to-markdown.mjs`](./bench/benchmarks-to-markdown.mjs) via `pnpm bench:tables`.
+- **Tables**: Each section opens with an overview ranking libraries by the geometric mean of op/s across the section's fixtures (an arithmetic mean would be dominated by the smallest, fastest fixture; a library that cannot parse a fixture is not rewarded for the gap, anything that beats it on every fixture it completes ranks above it). The per-fixture tables are sorted by op/s and show each library's speedup relative to that fixture's winner. All tables are generated from a bench run by [`bench/benchmarks-to-markdown.mjs`](./bench/benchmarks-to-markdown.mjs) and spliced into this document in place, between HTML comment markers, by `pnpm bench:tables`. Prose is written by hand; a newly added fixture needs its marker pair placed once, wherever its table should live.
 - **Warmup**: Default tinybench warmup iterations
 - **Environment**: Single-threaded, synchronous execution on Node.js
 - **Parser reuse**: In the SAX streaming and tokenization suites, every parser is constructed once and reused across iterations (all measured parsers support this; verified by comparing event streams across runs). This measures steady-state parse throughput rather than constructor cost. XmlParseStream is the exception, web streams are single-use, so it pays its constructor per iteration.

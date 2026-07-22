@@ -15,7 +15,7 @@
 // with a missing fixture (for example tXml crashing on RSS) is not
 // rewarded for the gap: any library that beats it on every fixture it
 // completes is ranked above it.
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 // Suite names as they appear in the vitest report, mapped to the fixture
 // headings used in BENCHMARKS.md. Suites not listed here (XHTML, convert,
@@ -262,28 +262,80 @@ function renderFixture(section, entries) {
   return lines.join('\n');
 }
 
-const inputPath = process.argv[2] ?? 'bench-results.json';
-const suites = loadResults(inputPath);
-
-const output = [];
-for (const section of SECTIONS) {
-  const columnData = section.fixtures.map(({ suite }) => {
-    const entries = suites.get(suite);
-    if (!entries) throw new Error(`missing suite in report: ${suite}`);
-    return entries;
-  });
-
-  output.push(`## ${section.title}`, '');
-  // a single-fixture section's overview would duplicate its only table
-  if (section.fixtures.length > 1) {
-    output.push('### Overview', '');
-    output.push(renderOverview(buildOverviewRows(section, columnData)), '');
-    section.fixtures.forEach((fixture, i) => {
-      output.push(`### ${fixture.header}`, '');
-      output.push(renderFixture(section, columnData[i]), '');
+/** Render every table, keyed by "<section title> :: <Overview|fixture header>". */
+function renderAll(suites) {
+  const tables = new Map();
+  for (const section of SECTIONS) {
+    const columnData = section.fixtures.map(({ suite }) => {
+      const entries = suites.get(suite);
+      if (!entries) throw new Error(`missing suite in report: ${suite}`);
+      return entries;
     });
-  } else {
-    output.push(renderFixture(section, columnData[0]), '');
+    // a single-fixture section's overview would duplicate its only table
+    if (section.fixtures.length > 1) {
+      tables.set(
+        `${section.title} :: Overview`,
+        renderOverview(buildOverviewRows(section, columnData)),
+      );
+    }
+    section.fixtures.forEach((fixture, i) => {
+      tables.set(
+        `${section.title} :: ${fixture.header}`,
+        renderFixture(section, columnData[i]),
+      );
+    });
   }
+  return tables;
 }
-console.log(output.join('\n'));
+
+/**
+ * Replace the contents of every marked block in the document:
+ *
+ *   <!-- bench:table <key> -->
+ *   ...replaced...
+ *   <!-- /bench:table -->
+ *
+ * Errors on markers with unknown keys; warns about rendered tables that
+ * have no marker (a newly added fixture needs its marker placed by hand
+ * once, wherever it should live in the document).
+ */
+function spliceIntoDocument(documentPath, tables) {
+  const doc = readFileSync(documentPath, 'utf8');
+  const seen = new Set();
+  const out = doc.replace(
+    /<!-- bench:table (.+?) -->[\s\S]*?<!-- \/bench:table -->/g,
+    (_match, key) => {
+      const table = tables.get(key);
+      if (!table) throw new Error(`marker with unknown key: ${key}`);
+      seen.add(key);
+      return `<!-- bench:table ${key} -->\n\n${table}\n\n<!-- /bench:table -->`;
+    },
+  );
+  for (const key of tables.keys()) {
+    if (!seen.has(key)) {
+      console.warn(`warning: no marker in ${documentPath} for: ${key}`);
+    }
+  }
+  writeFileSync(documentPath, out);
+  return seen.size;
+}
+
+const args = process.argv.slice(2);
+const writeIndex = args.indexOf('--write');
+const documentPath = writeIndex === -1 ? null : args[writeIndex + 1];
+const inputPath =
+  args.filter((a, i) => i !== writeIndex && i !== writeIndex + 1)[0] ??
+  'bench-results.json';
+
+const tables = renderAll(loadResults(inputPath));
+
+if (documentPath) {
+  const count = spliceIntoDocument(documentPath, tables);
+  console.log(`updated ${count} tables in ${documentPath}`);
+} else {
+  const output = [];
+  for (const [key, table] of tables) {
+    output.push(`<!-- ${key} -->`, '', table, '');
+  }
+  console.log(output.join('\n'));
+}

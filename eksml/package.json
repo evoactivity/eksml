@@ -57,7 +57,7 @@
     "test:smoke": "node scripts/smoke-test.mjs",
     "bench": "vitest bench",
     "bench:large": "LARGE_BENCH=1 vitest bench --run bench/large.bench.ts",
-    "bench:tables": "LARGE_BENCH=1 LARGE_BENCH_SIZES=10 vitest bench --run --outputJson=bench-results.json && node bench/benchmarks-to-markdown.mjs bench-results.json",
+    "bench:tables": "LARGE_BENCH=1 LARGE_BENCH_SIZES=10 vitest bench --run --outputJson=bench-results.json && node bench/benchmarks-to-markdown.mjs bench-results.json --write BENCHMARKS.md",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm run build",
     "examples": "vite",
