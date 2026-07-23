@@ -1,5 +1,22 @@
 # Changelog
 
+## Release (2026-07-23)
+
+* @eksml/xml 0.2.1 (patch)
+
+#### :memo: Documentation
+* `@eksml/xml`
+  * [#29](https://github.com/evoactivity/eksml/pull/29) bench: update @tuananh/sax-parser to 1.7, refresh tables ([@evoactivity](https://github.com/evoactivity))
+  * [#28](https://github.com/evoactivity/eksml/pull/28) bench: state benchmark hardware in the methodology ([@evoactivity](https://github.com/evoactivity))
+  * [#24](https://github.com/evoactivity/eksml/pull/24) bench: update @tuananh/sax-parser to 1.6 and txml to 6, refresh numbers ([@evoactivity](https://github.com/evoactivity))
+
+#### :house: Internal
+* `@eksml/xml`
+  * [#27](https://github.com/evoactivity/eksml/pull/27) bench: per-fixture tables with generator, aligned event surfaces, large-document benchmark ([@evoactivity](https://github.com/evoactivity))
+
+#### Committers: 1
+- Liam ([@evoactivity](https://github.com/evoactivity))
+
 ## Release (2026-07-20)
 
 * @eksml/xml 0.2.0 (minor)
