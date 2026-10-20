@@ -62,6 +62,12 @@ Input can be split anywhere, mid-tag, mid-attribute, or mid-entity; the parser b
     <td>Include comments in the output (as strings like <code>'&lt;!-- ... --&gt;'</code>, either emitted directly at the top level or attached as children)</td>
   </tr>
   <tr>
+    <td><code>entities</code></td>
+    <td><code>boolean</code></td>
+    <td><code>false</code></td>
+    <td>Decode XML/HTML entities in text and attribute values, the same way <code>parse()</code> does</td>
+  </tr>
+  <tr>
     <td><code>select</code></td>
     <td><code>string | string[]</code></td>
     <td>--</td>

@@ -18,6 +18,7 @@
  * ```
  */
 
+import { decodeXML, decodeHTML } from 'entities';
 import type { SaxEngineHandlers, Attributes } from '#src/saxEngine.ts';
 import { saxEngine } from '#src/saxEngine.ts';
 import {
@@ -70,6 +71,21 @@ export interface SaxParserOptions {
   selfClosingTags?: string[];
   /** Tag names whose content is raw text. Defaults to `['script', 'style']` when `html: true`. */
   rawContentTags?: string[];
+  /**
+   * Decode XML/HTML entities in text content and attribute values.
+   * When enabled, named entities (`&amp;`, `&lt;`, etc.), decimal character
+   * references (`&#228;`), and hex character references (`&#xe4;`) are decoded.
+   *
+   * In HTML mode (`html: true`), the full set of HTML named entities is
+   * supported (e.g. `&nbsp;`, `&copy;`, `&mdash;`). In XML mode, only the
+   * five standard XML entities plus numeric references are decoded.
+   *
+   * Text is trimmed before it is decoded, so encoded whitespace such as
+   * `&#32;` is kept. CDATA sections and raw content text are never decoded.
+   *
+   * Defaults to `false` — entities are preserved as-is in the output.
+   */
+  entities?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -82,7 +98,7 @@ export interface SaxParserOptions {
  * Uses the internal SAX engine, but wraps it with `.on()` / `.off()` methods
  * so handlers can be added and removed dynamically.
  *
- * @param options - Parser options (html mode, selfClosingTags, rawContentTags).
+ * @param options - Parser options (html mode, selfClosingTags, rawContentTags, entities).
  * @returns A SaxParser with `.on()`, `.off()`, `.write()`, `.close()`.
  */
 export function createSaxParser(options?: SaxParserOptions): SaxParser {
@@ -208,6 +224,8 @@ export function createSaxParser(options?: SaxParserOptions): SaxParser {
     ...handlers,
     selfClosingTags,
     rawContentTags,
+    decode:
+      opts.entities === true ? (isHtml ? decodeHTML : decodeXML) : undefined,
   });
 
   return {

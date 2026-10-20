@@ -782,6 +782,10 @@ export function parse(
         ? decodeHTML
         : decodeXML
       : null;
+  // Text is classified and trimmed on the source, then decoded, matching
+  // the SAX engine. decode of a string without '&' is identity.
+  const decodeText = (text: string): string =>
+    decode !== null && text.indexOf('&') !== -1 ? decode(text) : text;
 
   const selfClosingTagList: string[] =
     resolvedOptions.selfClosingTags ?? (htmlMode ? HTML_VOID_ELEMENTS : []);
@@ -1271,7 +1275,7 @@ export function parse(
       } else {
         // ---- Text (inline parseText) ----
         const textStart = pos;
-        if (decode === null && !trimWhitespace) {
+        if (!trimWhitespace) {
           // Fused scan + classification: walk the (typically short)
           // leading whitespace in JS; the first non-ws char both settles
           // the classification and hands the rest of the scan to the
@@ -1321,7 +1325,9 @@ export function parse(
           }
           if ((flags & HAS_TEXT) !== 0) {
             // Mixed content already established — push directly
-            children[children.length] = src.substring(textStart, textEnd);
+            children[children.length] = decodeText(
+              src.substring(textStart, textEnd),
+            );
           } else if (wsOnly) {
             // Defer: record the range, allocate only if the container
             // turns out to keep its whitespace
@@ -1333,7 +1339,9 @@ export function parse(
           } else {
             if (pendingCount > pendingBase)
               materializePending(S, children, pendingBase);
-            children[children.length] = src.substring(textStart, textEnd);
+            children[children.length] = decodeText(
+              src.substring(textStart, textEnd),
+            );
             flags |= HAS_TEXT;
           }
           continue;
@@ -1345,78 +1353,47 @@ export function parse(
         } else {
           pos = textEnd;
         }
-        if (decode === null) {
-          // No decoding, trimWhitespace mode (the non-trim case took the
-          // fused path above).
-          if (strict && depth === 0 && currentTagName === '') {
-            if (!isWsRange(textStart, textEnd)) {
-              throw strictError('Text content outside of a tag', textStart);
-            }
+        // trimWhitespace mode (the non-trim case took the fused path above).
+        if (strict && depth === 0 && currentTagName === '') {
+          if (!isWsRange(textStart, textEnd)) {
+            throw strictError('Text content outside of a tag', textStart);
           }
-          // Fused trim: compute bounds on the source, substring once;
-          // ws-only runs allocate nothing. Falls back to substring+trim
-          // when a non-ASCII char sits at a boundary (Unicode whitespace).
-          let trimStart = textStart;
-          let trimLast = textEnd - 1;
-          let exact = true;
-          while (trimStart <= trimLast) {
-            const c = src.charCodeAt(trimStart);
+        }
+        // Fused trim: compute bounds on the source, substring once;
+        // ws-only runs allocate nothing. Falls back to substring+trim
+        // when a non-ASCII char sits at a boundary (Unicode whitespace).
+        let trimStart = textStart;
+        let trimLast = textEnd - 1;
+        let exact = true;
+        while (trimStart <= trimLast) {
+          const c = src.charCodeAt(trimStart);
+          if (c === 32 || (c >= 9 && c <= 13)) {
+            trimStart++;
+            continue;
+          }
+          if (c >= 128) exact = false;
+          break;
+        }
+        if (exact && trimStart <= trimLast) {
+          while (trimLast > trimStart) {
+            const c = src.charCodeAt(trimLast);
             if (c === 32 || (c >= 9 && c <= 13)) {
-              trimStart++;
+              trimLast--;
               continue;
             }
             if (c >= 128) exact = false;
             break;
           }
-          if (exact && trimStart <= trimLast) {
-            while (trimLast > trimStart) {
-              const c = src.charCodeAt(trimLast);
-              if (c === 32 || (c >= 9 && c <= 13)) {
-                trimLast--;
-                continue;
-              }
-              if (c >= 128) exact = false;
-              break;
-            }
-          }
-          if (!exact) {
-            const trimmed = src.substring(textStart, textEnd).trim();
-            if (trimmed.length > 0) {
-              children.push(trimmed);
-              flags |= HAS_TEXT;
-            }
-          } else if (trimStart <= trimLast) {
-            children.push(src.substring(trimStart, trimLast + 1));
+        }
+        if (!exact) {
+          const trimmed = src.substring(textStart, textEnd).trim();
+          if (trimmed.length > 0) {
+            children.push(decodeText(trimmed));
             flags |= HAS_TEXT;
           }
-        } else {
-          // Entity decoding active: classification must look at the
-          // decoded string, so no deferral on this path. decode of a
-          // string without '&' is identity, so gate on indexOf.
-          let text = src.substring(textStart, textEnd);
-          if (text.indexOf('&') !== -1) text = decode(text);
-          if (
-            strict &&
-            depth === 0 &&
-            currentTagName === '' &&
-            text.trim().length > 0
-          ) {
-            throw strictError('Text content outside of a tag', textStart);
-          }
-          if (trimWhitespace) {
-            const trimmed = text.trim();
-            if (trimmed.length > 0) {
-              children.push(trimmed);
-              flags |= HAS_TEXT;
-            }
-          } else if (text.length > 0) {
-            if ((flags & HAS_TEXT) === 0) {
-              flags |= isWsString(text)
-                ? HAS_WS_TEXT | HAS_WS_IN_ARRAY
-                : HAS_TEXT;
-            }
-            children[children.length] = text;
-          }
+        } else if (trimStart <= trimLast) {
+          children.push(decodeText(src.substring(trimStart, trimLast + 1)));
+          flags |= HAS_TEXT;
         }
       }
     }

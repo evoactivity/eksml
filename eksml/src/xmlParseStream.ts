@@ -1,3 +1,4 @@
+import { decodeXML, decodeHTML } from 'entities';
 import type { TNode } from '#src/parser.ts';
 import { saxEngine } from '#src/saxEngine.ts';
 import type { Attributes } from '#src/saxEngine.ts';
@@ -19,8 +20,8 @@ import type { LosslessEntry } from '#src/converters/lossless.ts';
  * Options for `XmlParseStream`.
  *
  * Only the fields that the transform layer actually consumes are exposed here.
- * This keeps the API honest — options like `trimWhitespace`, `entities`, and
- * `strict` belong to the synchronous `parse()` function, not the streaming
+ * This keeps the API honest — options like `trimWhitespace` and `strict`
+ * belong to the synchronous `parse()` function, not the streaming
  * tree-builder.
  */
 export interface XmlParseStreamOptions {
@@ -43,6 +44,21 @@ export interface XmlParseStreamOptions {
   rawContentTags?: string[];
   /** Keep XML comments in the output. Defaults to `false`. */
   keepComments?: boolean;
+  /**
+   * Decode XML/HTML entities in text content and attribute values.
+   * When enabled, named entities (`&amp;`, `&lt;`, etc.), decimal character
+   * references (`&#228;`), and hex character references (`&#xe4;`) are decoded.
+   *
+   * In HTML mode (`html: true`), the full set of HTML named entities is
+   * supported (e.g. `&nbsp;`, `&copy;`, `&mdash;`). In XML mode, only the
+   * five standard XML entities plus numeric references are decoded.
+   *
+   * Text is trimmed before it is decoded, so encoded whitespace such as
+   * `&#32;` is kept. CDATA sections and raw content text are never decoded.
+   *
+   * Defaults to `false` — entities are preserved as-is in the output.
+   */
+  entities?: boolean;
   /**
    * Emit only elements matching these tag names instead of waiting for the
    * entire top-level tree to close.
@@ -328,6 +344,12 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
     const rawContentTags =
       resolvedOptions.rawContentTags ?? (isHtml ? HTML_RAW_CONTENT_TAGS : []);
     const keepComments = resolvedOptions.keepComments === true;
+    const decode =
+      resolvedOptions.entities === true
+        ? isHtml
+          ? decodeHTML
+          : decodeXML
+        : undefined;
 
     // Resolve select into a Set for O(1) lookup (null = emit at depth 0)
     const selectSet: Set<string> | null =
@@ -585,6 +607,7 @@ export class XmlParseStream<TOutput = TNode | string> extends TransformStream<
     const parser = saxEngine({
       selfClosingTags,
       rawContentTags,
+      decode,
       onOpenTag: selectSet ? selectOnOpenTag : defaultOnOpenTag,
       onCloseTag: selectSet ? selectOnCloseTag : defaultOnCloseTag,
       onText: selectSet ? selectOnText : defaultOnText,

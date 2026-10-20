@@ -70,6 +70,13 @@ export interface SaxEngineOptions extends SaxEngineHandlers {
    * this limit a `RangeError` is thrown.  Default `undefined` (no limit).
    */
   maxBufferSize?: number;
+  /**
+   * Decodes entities in text runs and attribute values. Applied after
+   * trimming, and only to strings containing `&`. Raw content text, CDATA,
+   * comments, processing instructions and doctypes are never decoded.
+   * Default `undefined` (entities are left as written).
+   */
+  decode?: (text: string) => string;
 }
 
 /** The parser instance returned by `saxEngine()`. */
@@ -148,6 +155,7 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
     rawContentTags = [],
     maxBufferSize,
   } = options;
+  const decode = options.decode ?? null;
 
   const voidSet: Set<string> | null =
     selfClosingTags.length > 0 ? new Set(selfClosingTags) : null;
@@ -265,9 +273,28 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
     if (text.length === 0) return;
     if (onText && !textSuppressed) {
       const trimmed = trimWhitespace(text);
-      if (trimmed.length > 0) onText(trimmed);
+      if (trimmed.length > 0)
+        onText(
+          decode !== null && trimmed.indexOf('&') !== -1
+            ? decode(trimmed)
+            : trimmed,
+        );
     }
     text = '';
+  }
+
+  /** Decode attribute values in place. */
+  function decodeAttributes(
+    attrs: Attributes,
+    decodeValue: (text: string) => string,
+  ): void {
+    // for-in avoids allocating a key array per tag; attribute records are
+    // plain objects with no inherited enumerable keys.
+    for (const name in attrs) {
+      const value = attrs[name];
+      if (value != null && value.indexOf('&') !== -1)
+        setOwnProperty(attrs, name, decodeValue(value));
+    }
   }
 
   /**
@@ -345,7 +372,10 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
 
   /** After we finish parsing an open tag's `>`, handle void/raw transitions. */
   function finishOpenTag(): void {
-    if (onOpenTag) onOpenTag(tagName, attributes);
+    if (onOpenTag) {
+      if (decode !== null) decodeAttributes(attributes, decode);
+      onOpenTag(tagName, attributes);
+    }
     if (voidSet !== null && voidSet.has(tagName)) {
       if (onCloseTag) onCloseTag(tagName);
     } else if (rawSet !== null && rawSet.has(tagName)) {
@@ -429,7 +459,12 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
                     if (c !== SPACE && c !== TAB && c !== LF && c !== CR) break;
                     e--;
                   }
-                  handleText(chunk.substring(s, e + 1));
+                  const run = chunk.substring(s, e + 1);
+                  handleText(
+                    decode !== null && run.indexOf('&') !== -1
+                      ? decode(run)
+                      : run,
+                  );
                 }
               }
             } else {
@@ -703,7 +738,11 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
             }
 
             // --- emit open tag ---
-            if (handleOpenTag !== undefined) handleOpenTag(name, attrs!);
+            if (handleOpenTag !== undefined) {
+              if (decode !== null && attrs !== null)
+                decodeAttributes(attrs, decode);
+              handleOpenTag(name, attrs!);
+            }
             if (selfClosed) {
               if (handleCloseTag !== undefined) handleCloseTag(name);
               continue fastPath;
@@ -1020,7 +1059,10 @@ export function saxEngine(options: SaxEngineOptions = {}): SaxEngineParser {
           if (charCode === GT) {
             state = State.TEXT;
             i++;
-            if (onOpenTag) onOpenTag(tagName, attributes);
+            if (onOpenTag) {
+              if (decode !== null) decodeAttributes(attributes, decode);
+              onOpenTag(tagName, attributes);
+            }
             if (onCloseTag) onCloseTag(tagName);
           } else {
             state = State.OPEN_TAG_BODY;

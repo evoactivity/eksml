@@ -7,12 +7,12 @@ Eksml can parse and serialize HTML through the `html: true` option, which is acc
 
 ## What `html: true` changes per API
 
-| API                 | Effect of `html: true`                                                                                                                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `parse()`           | `selfClosingTags` defaults to `HTML_VOID_ELEMENTS`, `rawContentTags` defaults to `['script', 'style', 'textarea', 'title']`. With `entities: true`, the full HTML named entity set is decoded instead of only the five XML entities. |
-| `write()`           | Void elements serialize as `<br>` with no closing tag. With `entities: true`, reserved characters are escaped with named entities in both text and attributes.                                                                       |
-| `createSaxParser()` | Same `selfClosingTags` and `rawContentTags` defaults as `parse()`. Void elements fire `openTag` followed immediately by `closeTag`. Raw content tags emit their body as a single `text` event.                                       |
-| `XmlParseStream`    | Same `selfClosingTags` and `rawContentTags` defaults as `parse()`. The stream has no `entities` option, decode after the fact if you need it.                                                                                        |
+| API                 | Effect of `html: true`                                                                                                                                                                                                                                           |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `parse()`           | `selfClosingTags` defaults to `HTML_VOID_ELEMENTS`, `rawContentTags` defaults to `['script', 'style', 'textarea', 'title']`. With `entities: true`, the full HTML named entity set is decoded instead of only the five XML entities.                             |
+| `write()`           | Void elements serialize as `<br>` with no closing tag. With `entities: true`, reserved characters are escaped with named entities in both text and attributes.                                                                                                   |
+| `createSaxParser()` | Same `selfClosingTags` and `rawContentTags` defaults as `parse()`. Void elements fire `openTag` followed immediately by `closeTag`. Raw content tags emit their body as a single `text` event. With `entities: true`, the full HTML named entity set is decoded. |
+| `XmlParseStream`    | Same `selfClosingTags` and `rawContentTags` defaults as `parse()`. With `entities: true`, the full HTML named entity set is decoded.                                                                                                                             |
 
 In every API, an explicit `selfClosingTags` or `rawContentTags` array overrides the HTML defaults, so `html: true` is shorthand for sensible defaults rather than a separate parsing algorithm.
 
