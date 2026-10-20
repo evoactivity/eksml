@@ -207,6 +207,13 @@ parse('<a><![CDATA[&amp;]]></a>', { entities: true });
 // => children: ['&amp;']
 ```
 
+Whitespace is judged on the text as written, before decoding. `trimWhitespace` trims the source text and then decodes it, and encoded whitespace such as `&#32;` counts as text, so it is kept. `createSaxParser()` and `XmlParseStream` follow the same order, which means `parse(xml, { entities: true, trimWhitespace: true })` produces the same text as the streaming parsers with `entities: true`:
+
+```ts
+parse('<a> &#32;x </a>', { entities: true, trimWhitespace: true });
+// => children: [' x']
+```
+
 ## Strict mode
 
 `strict: true` makes the parser throw instead of recovering. Errors include line and column position. It catches:

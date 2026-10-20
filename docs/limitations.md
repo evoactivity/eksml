@@ -76,7 +76,7 @@ There is no `//order/item[@status="paid"]` style query language. If your use cas
 
 ## Entity decoding is opt-in
 
-By default, entity references in text and attribute values are preserved exactly as written. Pass `entities: true` to decode them:
+By default, entity references in text and attribute values are preserved exactly as written. Pass `entities: true` to `parse()`, `createSaxParser()` or `XmlParseStream` to decode them:
 
 ```ts
 import { parse } from '@eksml/xml/parser';

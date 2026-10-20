@@ -110,7 +110,25 @@ const parser = createSaxParser({ html: true });
     <td><code>[]</code> / <code>['script','style','textarea','title']</code></td>
     <td>Tag names whose content is raw text (emitted as a single <code>text</code> event, not parsed for child elements)</td>
   </tr>
+  <tr>
+    <td><code>entities</code></td>
+    <td><code>boolean</code></td>
+    <td><code>false</code></td>
+    <td>Decode XML/HTML entities in text and attribute values, the same way <code>parse()</code> does</td>
+  </tr>
 </table>
+
+With `entities: true`, `text` events and `openTag` attribute values arrive decoded. Raw content text, CDATA, comments, processing instructions and doctypes are passed through as written. See [entity decoding](./parsing.md#entity-decoding) for which entities each mode recognizes.
+
+```ts
+const parser = createSaxParser({ entities: true });
+parser.on('openTag', (name, attributes) => console.log(attributes));
+parser.on('text', (text) => console.log(text));
+parser.write('<a title="A &amp; B">Tom &amp; Jerry</a>');
+parser.close();
+// { title: 'A & B' }
+// 'Tom & Jerry'
+```
 
 With `html: true`, void elements like `<br>` fire both `openTag` and `closeTag`, and script and style content arrives as one raw `text` event:
 
